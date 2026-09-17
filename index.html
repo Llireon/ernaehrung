@@ -174,7 +174,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
     <button class="chip" id="g-pipi">nach Pipi</button>
     <button class="chip" id="g-stuhl">nach Stuhlgang</button>
   </div>
-  <p class="hint" id="ref-hint">Referenzmessung = 9 Uhr, nüchtern, nach dem Stuhlgang.
+  <p class="hint" id="ref-hint">Referenzmessung = 9 Uhr, nüchtern, nach dem Pipi.
      Nur diese Werte bestimmen den Trend.</p>
   <button class="go" id="g-send">Gewicht eintragen</button>
   <p class="hint">Der KFA-Wert zählt nur als Trend, nie als absoluter Wert.</p>
@@ -470,11 +470,11 @@ $$(".sl").forEach(b => b.addEventListener("click", () => { pressGroup(".sl", b);
 function markRef(){
   const ref = pressed(".sl")?.slot === "09"
     && $("#g-nuechtern").getAttribute("aria-pressed") === "true"
-    && $("#g-stuhl").getAttribute("aria-pressed") === "true";
+    && $("#g-pipi").getAttribute("aria-pressed") === "true";
   const h = $("#ref-hint");
   h.style.color = ref ? "var(--ok)" : "var(--dim)";
   h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
-    : "Referenzmessung = 9 Uhr, nüchtern, nach dem Stuhlgang. Nur diese Werte bestimmen den Trend.";
+    : "Referenzmessung = 9 Uhr, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
 }
 $("#g-send").addEventListener("click", () => {
   const kg = parseFloat($("#g-kg").value);
@@ -488,7 +488,7 @@ $("#g-send").addEventListener("click", () => {
             nach_stuhl: $("#g-stuhl").getAttribute("aria-pressed") === "true",
             referenz: slot === "09"
               && $("#g-nuechtern").getAttribute("aria-pressed") === "true"
-              && $("#g-stuhl").getAttribute("aria-pressed") === "true" },
+              && $("#g-pipi").getAttribute("aria-pressed") === "true" },
           { label:`${kg} kg${slot ? " ("+slot+")" : ""}` });
   $("#g-kg").value = ""; $("#g-kfa").value = "";
   ["#g-nuechtern","#g-pipi","#g-stuhl"].forEach(s => $(s).setAttribute("aria-pressed","false"));
