@@ -82,7 +82,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
 </head>
 <body>
 <header>
-  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v20</span></h1>
+  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v21</span></h1>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
 </header>
 
@@ -166,6 +166,17 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
     <button class="k w" data-w="kaffee">Kaffee</button>
     <button class="k w" data-w="tee">Tee</button>
     <button class="k w" data-w="sport">Sport<small>mit KH</small></button>
+  </div>
+  <div id="t-kh-box" style="display:none">
+    <h2 style="margin-top:18px">Kohlenhydrate</h2>
+    <div class="grid g4">
+      <button class="k kh" data-kh="75">75<small>g</small></button>
+      <button class="k kh" data-kh="100">100<small>g</small></button>
+      <button class="k kh" data-kh="150">150<small>g</small></button>
+      <button class="k kh" data-kh="200">200<small>g</small></button>
+    </div>
+    <label>Andere Menge in g</label>
+    <input type="number" id="t-kh" inputmode="numeric" placeholder="g KH gesamt">
   </div>
   <label>Andere Menge in ml</label>
   <input type="number" id="t-ml" inputmode="numeric" placeholder="frei eintragen">
@@ -342,7 +353,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   <input type="password" id="tok" placeholder="github_pat_…" autocomplete="off"
          autocapitalize="off" spellcheck="false">
   <button class="go" id="tok-save">Token speichern</button>
-  <p class="hint">Version 20 – 18.09.2026</p>
+  <p class="hint">Version 21 – 18.09.2026</p>
   <details>
     <summary>Warteschlange</summary>
     <p class="hint" id="q-info">—</p>
@@ -625,7 +636,13 @@ $("#f-send").addEventListener("click", () => {
 });
 
 // ---------- Trinken ----------
-$$(".w").forEach(b => b.addEventListener("click", () => pressGroup(".w", b)));
+$$(".w").forEach(b => b.addEventListener("click", () => {
+  pressGroup(".w", b);
+  $("#t-kh-box").style.display = b.dataset.w === "sport" ? "" : "none";
+}));
+$$(".kh").forEach(b => b.addEventListener("click", () => {
+  pressGroup(".kh", b); $("#t-kh").value = b.dataset.kh;
+}));
 $$(".ml").forEach(b => b.addEventListener("click", () => {
   pressGroup(".ml", b); $("#t-ml").value = b.dataset.ml;
 }));
@@ -633,8 +650,24 @@ $("#t-send").addEventListener("click", () => {
   const ml = parseFloat($("#t-ml").value);
   if (!(ml > 0)) return toast("Menge fehlt");
   const was = pressed(".w")?.w || "wasser";
-  enqueue({ type:"trinken", ml, was }, { label:`${ml} ml ${was}` });
+  const nutzlast = { type:"trinken", ml, was };
+  let zusatz = "";
+  if (was === "sport"){
+    const kh = parseFloat($("#t-kh").value);
+    if (kh > 0){
+      nutzlast.kh = kh;
+      zusatz = `, ${kh} g KH`;
+    } else {
+      // Lieber mit Luecke eintragen als gar nicht -- eine fehlende Flasche
+      // verschiebt das Glykogenmodell systematisch, eine unbekannte Menge nur
+      // an dieser einen Stelle.
+      nutzlast.kh_unbekannt = true;
+      zusatz = ", KH unbekannt";
+    }
+  }
+  enqueue(nutzlast, { label:`${ml} ml ${was}${zusatz}` });
   $("#t-ml").value = ""; pressGroup(".ml", null);
+  $("#t-kh").value = ""; pressGroup(".kh", null);
 });
 
 // ---------- Gewicht ----------
