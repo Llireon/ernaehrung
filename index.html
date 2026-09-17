@@ -193,10 +193,18 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
     <button class="k mo" data-mo="wieg">gewogen<small>genauer</small></button>
   </div>
   <div id="wieg-box" style="display:none">
-    <label>Gewicht vorher (kg)</label>
-    <input type="number" id="k-vor" inputmode="decimal" step="0.05" placeholder="78.30">
-    <label>Gewicht nachher (kg)</label>
-    <input type="number" id="k-nach" inputmode="decimal" step="0.05" placeholder="77.95">
+    <p class="hint">Angezogen wiegen ist völlig in Ordnung – bei der Differenz kürzt sich
+       die Kleidung heraus. Es werden <strong>nur</strong> die Gramm gespeichert, nie die
+       absoluten Werte, und sie gehen nie in den Gewichtstrend ein.</p>
+    <label>Differenz direkt in Gramm</label>
+    <input type="number" id="k-diff" inputmode="numeric" step="100" placeholder="300">
+    <details>
+      <summary>lieber beide Werte eintippen</summary>
+      <label>vorher (kg)</label>
+      <input type="number" id="k-vor" inputmode="decimal" step="0.1" placeholder="78.4">
+      <label>nachher (kg)</label>
+      <input type="number" id="k-nach" inputmode="decimal" step="0.1" placeholder="78.1">
+    </details>
     <p class="hint" id="k-delta">–</p>
   </div>
   <h2 style="margin-top:18px">Menge</h2>
@@ -525,10 +533,19 @@ $$(".mo").forEach(b => b.addEventListener("click", () => {
   $$("#kat-box .gr").forEach(x => x.closest(".grid").parentElement);
   $("#kat-box").style.opacity = wieg ? ".45" : "1";
 }));
-["#k-vor", "#k-nach"].forEach(s => $(s).addEventListener("input", () => {
+function kloDelta(){
+  const d = parseFloat($("#k-diff").value);
+  if (d > 0) return Math.round(d);
   const v = parseFloat($("#k-vor").value), n = parseFloat($("#k-nach").value);
-  $("#k-delta").textContent = (v > 0 && n > 0)
-    ? `Differenz: ${((v - n) * 1000).toFixed(0)} g` : "–";
+  return (v > 0 && n > 0) ? Math.round((v - n) * 1000) : null;
+}
+["#k-diff", "#k-vor", "#k-nach"].forEach(s => $(s).addEventListener("input", () => {
+  const g = kloDelta();
+  const h = $("#k-delta");
+  h.textContent = g === null ? "–" : `${g} g  (±58 g bei 100-g-Schritten)`;
+  h.style.color = g !== null && g < 200 ? "var(--warn)" : "var(--dim)";
+  if (g !== null && g < 200)
+    h.textContent += " – unter 200 g ist die Kategorie genauer";
 }));
 [".gr", ".fa", ".ko"].forEach(sel =>
   $$(sel).forEach(b => b.addEventListener("click", () => pressGroup(sel, b))));
@@ -538,13 +555,15 @@ $("#k-send").addEventListener("click", () => {
   const p = { type:"klo", art };
   let lbl = art;
   if (gewogen) {
-    const v = parseFloat($("#k-vor").value), n = parseFloat($("#k-nach").value);
-    if (!(v > 0 && n > 0)) return toast("beide Gewichte nötig");
-    p.kg_vorher = v; p.kg_nachher = n;
-    p.masse_g = Math.round((v - n) * 1000);
+    const g = kloDelta();
+    if (g === null) return toast("Differenz fehlt");
+    p.masse_g = g;
     p.erfassung = "gewogen";
-    lbl = `${art} ${p.masse_g} g`;
-    $("#k-vor").value = ""; $("#k-nach").value = ""; $("#k-delta").textContent = "–";
+    p.bekleidet = true;
+    p.fehler_g = 58;
+    lbl = `${art} ${g} g`;
+    ["#k-diff","#k-vor","#k-nach"].forEach(s => $(s).value = "");
+    $("#k-delta").textContent = "–";
   } else {
     p.groesse = pressed(".gr")?.gr || "mittel";
     p.erfassung = "kategorie";
