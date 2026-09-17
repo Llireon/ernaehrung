@@ -169,10 +169,13 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   <input type="number" id="g-kg" inputmode="decimal" step="0.1" placeholder="77.7">
   <label>Körperfett in % (optional)</label>
   <input type="number" id="g-kfa" inputmode="decimal" step="0.1" placeholder="13.9">
-  <div class="row" style="margin-top:12px">
+  <div class="row" style="margin-top:12px;flex-wrap:wrap">
     <button class="chip" id="g-nuechtern">nüchtern</button>
-    <button class="chip" id="g-klo">nach dem Klo</button>
+    <button class="chip" id="g-pipi">nach Pipi</button>
+    <button class="chip" id="g-stuhl">nach Stuhlgang</button>
   </div>
+  <p class="hint" id="ref-hint">Referenzmessung = 9 Uhr, nüchtern, nach dem Stuhlgang.
+     Nur diese Werte bestimmen den Trend.</p>
   <button class="go" id="g-send">Gewicht eintragen</button>
   <p class="hint">Der KFA-Wert zählt nur als Trend, nie als absoluter Wert.</p>
 </section>
@@ -458,11 +461,21 @@ $("#t-send").addEventListener("click", () => {
   const b = $$(".sl").find(x => x.dataset.slot === slot);
   if (b) pressGroup(".sl", b);
 })();
-$$(".sl").forEach(b => b.addEventListener("click", () => pressGroup(".sl", b)));
-["#g-nuechtern", "#g-klo"].forEach(s => $(s).addEventListener("click", () => {
+$$(".sl").forEach(b => b.addEventListener("click", () => { pressGroup(".sl", b); markRef(); }));
+["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(s => $(s).addEventListener("click", () => {
   const b = $(s), on = b.getAttribute("aria-pressed") === "true";
   b.setAttribute("aria-pressed", on ? "false" : "true");
+  markRef();
 }));
+function markRef(){
+  const ref = pressed(".sl")?.slot === "09"
+    && $("#g-nuechtern").getAttribute("aria-pressed") === "true"
+    && $("#g-stuhl").getAttribute("aria-pressed") === "true";
+  const h = $("#ref-hint");
+  h.style.color = ref ? "var(--ok)" : "var(--dim)";
+  h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
+    : "Referenzmessung = 9 Uhr, nüchtern, nach dem Stuhlgang. Nur diese Werte bestimmen den Trend.";
+}
 $("#g-send").addEventListener("click", () => {
   const kg = parseFloat($("#g-kg").value);
   if (!(kg > 30 && kg < 200)) return toast("Gewicht prüfen");
@@ -471,10 +484,15 @@ $("#g-send").addEventListener("click", () => {
   enqueue({ type: slot && slot.startsWith("ride") ? "ride-gewicht" : "gewicht",
             kg, bf_pct: isNaN(kfa) ? null : kfa, slot,
             fasted: $("#g-nuechtern").getAttribute("aria-pressed") === "true",
-            after_toilet: $("#g-klo").getAttribute("aria-pressed") === "true" },
+            nach_pipi: $("#g-pipi").getAttribute("aria-pressed") === "true",
+            nach_stuhl: $("#g-stuhl").getAttribute("aria-pressed") === "true",
+            referenz: slot === "09"
+              && $("#g-nuechtern").getAttribute("aria-pressed") === "true"
+              && $("#g-stuhl").getAttribute("aria-pressed") === "true" },
           { label:`${kg} kg${slot ? " ("+slot+")" : ""}` });
   $("#g-kg").value = ""; $("#g-kfa").value = "";
-  ["#g-nuechtern","#g-klo"].forEach(s => $(s).setAttribute("aria-pressed","false"));
+  ["#g-nuechtern","#g-pipi","#g-stuhl"].forEach(s => $(s).setAttribute("aria-pressed","false"));
+  markRef();
 });
 
 // ---------- Klo ----------
