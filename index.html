@@ -72,7 +72,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
 </head>
 <body>
 <header>
-  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v10</span></h1>
+  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v11</span></h1>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
 </header>
 
@@ -298,8 +298,9 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   <label>Notiz (optional)</label>
   <input type="text" id="kr-note" placeholder="z. B. Front Lever fühlte sich leicht an">
   <button class="go" id="kr-send">Einheit abschicken</button>
-  <p class="hint">Die Kraft-zu-Gewicht-Übungen sind dein bester Körperfett-Sensor: Werden sie
-     leichter, während das Gewicht fällt, verlierst du Fett und behältst Muskeln.</p>
+  <p class="hint">Oberkörper wird bewusst nicht geloggt – die Limit-Methode lässt sich
+     nicht in Sätze × Wiederholungen fassen. Der Pistol Squat ist die einzige Übung, die
+     hier als Fortschrittssignal ausgewertet wird.</p>
 </section>
 
 <section id="s-mehr">
@@ -316,7 +317,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   <input type="password" id="tok" placeholder="github_pat_…" autocomplete="off"
          autocapitalize="off" spellcheck="false">
   <button class="go" id="tok-save">Token speichern</button>
-  <p class="hint">Version 10 – 17.09.2026</p>
+  <p class="hint">Version 11 – 17.09.2026</p>
   <details>
     <summary>Warteschlange</summary>
     <p class="hint" id="q-info">—</p>
@@ -704,13 +705,11 @@ $("#ko-send").addEventListener("click", () => {
 // ---------- Krafttraining ----------
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
-  nordic:{n:"Rev. Nordic",e:"reps",k:0}, planche:{n:"Tuck Planche",e:"reps",k:1},
-  frontlever:{n:"Front Lever",e:"reps",k:1}, hspu:{n:"HS-Liegestütze",e:"reps",k:1},
-  oapull:{n:"Einarm-Klimmzug",e:"reps",k:1}, handstand:{n:"Handstand",e:"sek",k:1},
-  band:{n:"Bandübung",e:"min",k:0}
+  wallsit:{n:"Wall Sit",e:"sek",k:0}, band:{n:"Band-Hüfte",e:"min",k:0},
+  handstand:{n:"Handstand",e:"sek",k:0}
 };
 // prehab = bewusst submaximal, feste Dosis -- zaehlt nicht als Fortschrittssignal
-const PREHAB = { sissy:1, nordic:1, band:1 };
+const PREHAB = { sissy:1, wallsit:1, band:1 };
 let krSatz = [], krAktiv = null;
 $("#kr-uebungen").innerHTML = Object.entries(UEBUNGEN).map(([k, u]) =>
   `<button class="k ku" data-u="${k}">${u.n}${u.k ? "<small>K/G</small>" : ""}</button>`).join("");
