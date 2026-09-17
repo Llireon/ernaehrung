@@ -182,9 +182,22 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
 
 <section id="s-klo">
   <h2>Was</h2>
-  <div class="grid g2">
+  <div class="grid g3">
     <button class="k art" data-art="pipi" aria-pressed="true">Pipi</button>
     <button class="k art" data-art="stuhl">Stuhl</button>
+    <button class="k art" data-art="beides">beides</button>
+  </div>
+  <h2 style="margin-top:18px">Erfassung</h2>
+  <div class="grid g2">
+    <button class="k mo" data-mo="kat" aria-pressed="true">Kategorie<small>schnell</small></button>
+    <button class="k mo" data-mo="wieg">gewogen<small>genauer</small></button>
+  </div>
+  <div id="wieg-box" style="display:none">
+    <label>Gewicht vorher (kg)</label>
+    <input type="number" id="k-vor" inputmode="decimal" step="0.05" placeholder="78.30">
+    <label>Gewicht nachher (kg)</label>
+    <input type="number" id="k-nach" inputmode="decimal" step="0.05" placeholder="77.95">
+    <p class="hint" id="k-delta">–</p>
   </div>
   <h2 style="margin-top:18px">Menge</h2>
   <div class="grid g3">
@@ -192,6 +205,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
     <button class="k gr" data-gr="mittel" aria-pressed="true">mittel</button>
     <button class="k gr" data-gr="gross">groß</button>
   </div>
+  <div id="kat-box">
   <div id="farbe-box">
     <h2 style="margin-top:18px">Farbe</h2>
     <div class="grid g3">
@@ -207,6 +221,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
       <button class="k ko" data-ko="weich">weich</button>
       <button class="k ko" data-ko="durchfall">Durchfall</button>
     </div>
+  </div>
   </div>
   <button class="go" id="k-send">Eintragen</button>
 </section>
@@ -498,18 +513,46 @@ $("#g-send").addEventListener("click", () => {
 // ---------- Klo ----------
 $$(".art").forEach(b => b.addEventListener("click", () => {
   pressGroup(".art", b);
-  const pipi = b.dataset.art === "pipi";
-  $("#farbe-box").style.display = pipi ? "block" : "none";
-  $("#kons-box").style.display  = pipi ? "none" : "block";
+  const art = b.dataset.art;
+  $("#farbe-box").style.display = art !== "stuhl" ? "block" : "none";
+  $("#kons-box").style.display  = art !== "pipi"  ? "block" : "none";
+}));
+$$(".mo").forEach(b => b.addEventListener("click", () => {
+  pressGroup(".mo", b);
+  const wieg = b.dataset.mo === "wieg";
+  $("#wieg-box").style.display = wieg ? "block" : "none";
+  $("#kat-box").querySelectorAll(".grid").forEach(g => {});
+  $$("#kat-box .gr").forEach(x => x.closest(".grid").parentElement);
+  $("#kat-box").style.opacity = wieg ? ".45" : "1";
+}));
+["#k-vor", "#k-nach"].forEach(s => $(s).addEventListener("input", () => {
+  const v = parseFloat($("#k-vor").value), n = parseFloat($("#k-nach").value);
+  $("#k-delta").textContent = (v > 0 && n > 0)
+    ? `Differenz: ${((v - n) * 1000).toFixed(0)} g` : "–";
 }));
 [".gr", ".fa", ".ko"].forEach(sel =>
   $$(sel).forEach(b => b.addEventListener("click", () => pressGroup(sel, b))));
 $("#k-send").addEventListener("click", () => {
   const art = pressed(".art")?.art || "pipi";
-  const p = { type:"klo", art, groesse: pressed(".gr")?.gr || "mittel" };
-  if (art === "pipi") { const f = pressed(".fa")?.fa; if (f) p.farbe = f; }
-  else p.konsistenz = pressed(".ko")?.ko || "normal";
-  enqueue(p, { label:`${art} ${p.groesse}` });
+  const gewogen = pressed(".mo")?.mo === "wieg";
+  const p = { type:"klo", art };
+  let lbl = art;
+  if (gewogen) {
+    const v = parseFloat($("#k-vor").value), n = parseFloat($("#k-nach").value);
+    if (!(v > 0 && n > 0)) return toast("beide Gewichte nötig");
+    p.kg_vorher = v; p.kg_nachher = n;
+    p.masse_g = Math.round((v - n) * 1000);
+    p.erfassung = "gewogen";
+    lbl = `${art} ${p.masse_g} g`;
+    $("#k-vor").value = ""; $("#k-nach").value = ""; $("#k-delta").textContent = "–";
+  } else {
+    p.groesse = pressed(".gr")?.gr || "mittel";
+    p.erfassung = "kategorie";
+    lbl = `${art} ${p.groesse}`;
+  }
+  if (art !== "stuhl") { const f = pressed(".fa")?.fa; if (f) p.farbe = f; }
+  if (art !== "pipi") p.konsistenz = pressed(".ko")?.ko || "normal";
+  enqueue(p, { label: lbl });
 });
 
 // ---------- Garmin & Token ----------
