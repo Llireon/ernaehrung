@@ -24,7 +24,7 @@ header{display:flex;align-items:center;gap:10px;padding:16px 0 12px;
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
   background:var(--dim);margin-right:5px;vertical-align:1px}
 .dot.ok{background:var(--ok)} .dot.pend{background:var(--warn)} .dot.err{background:var(--bad)}
-nav{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
 nav button{padding:11px 2px;font-size:13px;font-weight:600;border-radius:11px;
   border:1px solid var(--line);background:var(--panel);color:var(--dim)}
 nav button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#0d1017}
@@ -81,6 +81,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   <button data-tab="trinken" aria-pressed="false">Trinken</button>
   <button data-tab="gewicht" aria-pressed="false">Gewicht</button>
   <button data-tab="klo"     aria-pressed="false">Klo</button>
+  <button data-tab="kochen"  aria-pressed="false">Kochen</button>
   <button data-tab="mehr"    aria-pressed="false">Mehr</button>
 </nav>
 
@@ -232,6 +233,40 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   </div>
   </div>
   <button class="go" id="k-send">Eintragen</button>
+</section>
+
+<section id="s-kochen">
+  <h2>Was kochst du?</h2>
+  <input type="text" id="ko-gericht" placeholder="Lasagne, Nudeln, Porridge …">
+
+  <h2 style="margin-top:20px">Zutat hinzufügen</h2>
+  <div class="row">
+    <input type="text" id="z-name" placeholder="Mehl" style="flex:2">
+    <input type="number" id="z-menge" inputmode="decimal" placeholder="400" style="flex:1">
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button class="chip e" data-e="g" aria-pressed="true">g</button>
+    <button class="chip e" data-e="ml">ml</button>
+    <button class="chip e" data-e="stueck">Stück</button>
+  </div>
+  <div class="grid g2" style="margin-top:10px">
+    <button class="k" id="z-foto">Nährwerte fotografieren</button>
+    <button class="k" id="z-add">Zutat merken</button>
+  </div>
+  <input type="file" id="z-file" accept="image/*" capture="environment" hidden>
+  <img id="z-prev" class="prev" hidden alt="">
+  <ul id="z-liste" style="list-style:none;padding:0;margin:14px 0 0;font-size:14px"></ul>
+
+  <h2 style="margin-top:20px">Portionen</h2>
+  <div class="row">
+    <input type="number" id="ko-ergab" inputmode="numeric" placeholder="ergab … Portionen">
+    <input type="number" id="ko-gegessen" inputmode="decimal" placeholder="davon gegessen">
+  </div>
+  <p class="hint">Beides optional. Bei den Crepes wäre „ergab 43, gegessen 9" die richtige
+     Angabe – bei einem Teller Nudeln lässt du es einfach leer.</p>
+  <button class="go" id="ko-send">Kochsession abschicken</button>
+  <p class="hint">Wird nur roh abgelegt. Ob daraus ein Rezept wird, entscheidest du später
+     im Chat – die App legt selbst keine an.</p>
 </section>
 
 <section id="s-mehr">
@@ -572,6 +607,57 @@ $("#k-send").addEventListener("click", () => {
   if (art !== "stuhl") { const f = pressed(".fa")?.fa; if (f) p.farbe = f; }
   if (art !== "pipi") p.konsistenz = pressed(".ko")?.ko || "normal";
   enqueue(p, { label: lbl });
+});
+
+// ---------- Kochen ----------
+let zutaten = [], zFoto = null;
+$$(".e").forEach(b => b.addEventListener("click", () => pressGroup(".e", b)));
+$("#z-foto").addEventListener("click", () => $("#z-file").click());
+$("#z-file").addEventListener("change", async ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  zFoto = await shrink(f);
+  $("#z-prev").src = zFoto.url; $("#z-prev").hidden = false;
+  toast("Foto bereit");
+});
+function renderZutaten(){
+  $("#z-liste").innerHTML = zutaten.map((z, i) =>
+    `<li style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--line)">
+       <span style="flex:1">${z.name || "(ohne Namen)"} – ${z.menge} ${z.einheit}
+       ${z.foto ? " 📷" : ""}</span>
+       <button data-i="${i}" class="zdel chip" style="padding:3px 9px">×</button></li>`).join("");
+  $$(".zdel").forEach(b => b.addEventListener("click", () => {
+    zutaten.splice(+b.dataset.i, 1); renderZutaten();
+  }));
+}
+$("#z-add").addEventListener("click", () => {
+  const name = $("#z-name").value.trim();
+  const menge = parseFloat($("#z-menge").value);
+  if (!name && !zFoto) return toast("Name oder Foto nötig");
+  if (!(menge > 0)) return toast("Menge fehlt");
+  zutaten.push({ name, menge, einheit: pressed(".e")?.e || "g", foto: zFoto });
+  zFoto = null; $("#z-name").value = ""; $("#z-menge").value = "";
+  $("#z-prev").hidden = true; $("#z-prev").src = "";
+  renderZutaten(); toast("gemerkt");
+});
+$("#ko-send").addEventListener("click", () => {
+  if (!zutaten.length) return toast("keine Zutaten");
+  const ts = nowIso(), sid = newId();
+  const liste = zutaten.map((z, i) => {
+    let pfad = null;
+    if (z.foto) {
+      pfad = `fotos/rezepte/${ts.slice(0,10)}-${sid}-${i}.jpg`;
+      enqueue({}, { path: pfad, binary: z.foto.b64, label: "Zutatenfoto", quiet: true });
+    }
+    return { name: z.name || null, menge: z.menge, einheit: z.einheit, foto: pfad };
+  });
+  enqueue({ type: "kochen", session: sid,
+            gericht: $("#ko-gericht").value.trim() || null,
+            zutaten: liste,
+            ergab_portionen: parseFloat($("#ko-ergab").value) || null,
+            davon_gegessen: parseFloat($("#ko-gegessen").value) || null },
+          { label: `Kochen: ${$("#ko-gericht").value.trim() || zutaten.length + " Zutaten"}` });
+  zutaten = []; renderZutaten();
+  ["#ko-gericht","#ko-ergab","#ko-gegessen"].forEach(s => $(s).value = "");
 });
 
 // ---------- Garmin & Token ----------
