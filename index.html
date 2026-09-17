@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11131a">
+<title>Essenslogger</title>
+<style>
+:root{
+  --bg:#11131a; --panel:#1a1d27; --panel2:#222634; --line:#2e3342;
+  --fg:#e8eaf0; --dim:#9aa2b5; --accent:#6ea8fe; --ok:#4ec98a;
+  --warn:#e8b04b; --bad:#e8705b; --r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:0 14px calc(28px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto}
+h1{font-size:19px;margin:0;font-weight:650;letter-spacing:-.01em}
+h2{font-size:13px;margin:0 0 9px;color:var(--dim);font-weight:600;
+  text-transform:uppercase;letter-spacing:.07em}
+header{display:flex;align-items:center;gap:10px;padding:16px 0 12px;
+  position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+#sync{margin-left:auto;font-size:12px;color:var(--dim);white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--dim);margin-right:5px;vertical-align:1px}
+.dot.ok{background:var(--ok)} .dot.pend{background:var(--warn)} .dot.err{background:var(--bad)}
+nav{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0}
+nav button{padding:11px 2px;font-size:13px;font-weight:600;border-radius:11px;
+  border:1px solid var(--line);background:var(--panel);color:var(--dim)}
+nav button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#0d1017}
+section{display:none;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:15px;margin-bottom:12px}
+section.on{display:block}
+.grid{display:grid;gap:8px}
+.g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+button.k{padding:15px 6px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--fg);font-size:15px;font-weight:600}
+button.k:active{transform:scale(.97)}
+button.k[aria-pressed=true]{border-color:var(--accent);background:#243149;color:var(--accent)}
+button.k small{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-top:3px}
+button.go{padding:16px;border-radius:12px;border:0;background:var(--accent);
+  color:#0d1017;font-size:16px;font-weight:700;width:100%;margin-top:12px}
+button.go:disabled{background:var(--panel2);color:var(--dim)}
+input,textarea,select{width:100%;padding:13px;border-radius:11px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--fg);font:inherit}
+textarea{min-height:74px;resize:vertical}
+label{display:block;font-size:12px;color:var(--dim);margin:11px 0 5px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center}
+.chip{padding:7px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--dim);font-size:13px;font-weight:600}
+.chip[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:#243149}
+.hint{font-size:12px;color:var(--dim);margin-top:9px;line-height:1.4}
+#log{list-style:none;padding:0;margin:0;font-size:13px}
+#log li{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+#log li:first-child{border-top:0}
+#log .t{color:var(--dim);font-variant-numeric:tabular-nums;flex:0 0 42px}
+#log .b{flex:1;min-width:0}
+#log .s{font-size:11px;padding:2px 7px;border-radius:999px;background:var(--panel2);color:var(--dim)}
+#log .s.sent{color:var(--ok)} #log .s.err{color:var(--bad)} #log .s.pending{color:var(--warn)}
+img.prev{width:100%;max-height:190px;object-fit:cover;border-radius:11px;margin-top:9px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(90px);
+  background:var(--ok);color:#0d1017;padding:12px 20px;border-radius:999px;font-weight:700;
+  transition:transform .25s;z-index:20;box-shadow:0 8px 24px #0008}
+.toast.on{transform:translateX(-50%) translateY(0)}
+details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
+@media (prefers-color-scheme:light){
+  :root{--bg:#f5f6f9;--panel:#fff;--panel2:#eef0f5;--line:#dde1ea;--fg:#141824;--dim:#5c6478}
+  nav button[aria-pressed=true],button.go{color:#fff}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Essenslogger</h1>
+  <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
+</header>
+
+<nav>
+  <button data-tab="essen"   aria-pressed="true">Essen</button>
+  <button data-tab="trinken" aria-pressed="false">Trinken</button>
+  <button data-tab="gewicht" aria-pressed="false">Gewicht</button>
+  <button data-tab="klo"     aria-pressed="false">Klo</button>
+  <button data-tab="mehr"    aria-pressed="false">Mehr</button>
+</nav>
+
+<section id="s-essen" class="on">
+  <h2>Rezept</h2>
+  <div class="grid g2">
+    <button class="k" id="r-porridge">Porridge<small>Gramm Haferflocken</small></button>
+    <button class="k" id="r-crepes">Crepes<small>nach Belag</small></button>
+  </div>
+  <div id="porridge-box" style="display:none">
+    <label>Haferflocken in Gramm</label>
+    <input type="number" id="p-gramm" inputmode="decimal" value="100" step="5">
+    <button class="go" id="p-send">Porridge eintragen</button>
+  </div>
+  <div id="crepes-box" style="display:none">
+    <label>Anzahl gebackener Crepes (leer = Schätzung)</label>
+    <input type="number" id="c-anzahl" inputmode="numeric" placeholder="z. B. 43">
+    <div class="grid g4" style="margin-top:10px">
+      <button class="k ct" data-belag="kaese">Käse<small class="n">0</small></button>
+      <button class="k ct" data-belag="nutella">Nutella<small class="n">0</small></button>
+      <button class="k ct" data-belag="marmelade">Marm.<small class="n">0</small></button>
+      <button class="k ct" data-belag="kombi">Kombi<small class="n">0</small></button>
+    </div>
+    <p class="hint">Tippen zählt hoch, langes Tippen setzt zurück.</p>
+    <button class="go" id="c-send">Crepes eintragen</button>
+  </div>
+
+  <h2 style="margin-top:20px">Freitext & Foto</h2>
+  <label>Was hast du gegessen?</label>
+  <textarea id="f-text" placeholder="Mensa: Reis, Kichererbsencurry, Salat – etwa eine Kelle Reis"></textarea>
+  <label>Foto</label>
+  <div class="grid g2">
+    <button class="k" id="f-mahlzeit">Mahlzeit</button>
+    <button class="k" id="f-label">Etikett</button>
+  </div>
+  <input type="file" id="f-file" accept="image/*" capture="environment" hidden>
+  <img id="f-prev" class="prev" hidden alt="">
+  <label>Vertrauen</label>
+  <div class="row">
+    <button class="chip v" data-v="exakt">exakt</button>
+    <button class="chip v" data-v="gut" aria-pressed="true">gut</button>
+    <button class="chip v" data-v="grob">grob</button>
+  </div>
+  <button class="go" id="f-send">Eintragen</button>
+  <p class="hint">Lieber grob schätzen als weglassen – fehlende Einträge verschieben die
+     Bilanz systematisch, grobe nur zufällig.</p>
+</section>
+
+<section id="s-trinken">
+  <h2>Menge</h2>
+  <div class="grid g4">
+    <button class="k ml" data-ml="200">200<small>ml</small></button>
+    <button class="k ml" data-ml="330">330<small>ml</small></button>
+    <button class="k ml" data-ml="500">500<small>ml</small></button>
+    <button class="k ml" data-ml="750">750<small>ml</small></button>
+  </div>
+  <h2 style="margin-top:18px">Was</h2>
+  <div class="grid g4">
+    <button class="k w" data-w="wasser" aria-pressed="true">Wasser</button>
+    <button class="k w" data-w="kaffee">Kaffee</button>
+    <button class="k w" data-w="tee">Tee</button>
+    <button class="k w" data-w="sport">Sport<small>mit KH</small></button>
+  </div>
+  <label>Andere Menge in ml</label>
+  <input type="number" id="t-ml" inputmode="numeric" placeholder="frei eintragen">
+  <button class="go" id="t-send">Trinken eintragen</button>
+</section>
+
+<section id="s-gewicht">
+  <h2>Messpunkt</h2>
+  <div class="grid g3">
+    <button class="k sl" data-slot="09">9 Uhr</button>
+    <button class="k sl" data-slot="17">17 Uhr</button>
+    <button class="k sl" data-slot="23">23 Uhr</button>
+  </div>
+  <div class="grid g2" style="margin-top:8px">
+    <button class="k sl" data-slot="ride-vorher">vor Fahrt</button>
+    <button class="k sl" data-slot="ride-nachher">nach Fahrt</button>
+  </div>
+  <label>Gewicht in kg</label>
+  <input type="number" id="g-kg" inputmode="decimal" step="0.1" placeholder="77.7">
+  <label>Körperfett in % (optional)</label>
+  <input type="number" id="g-kfa" inputmode="decimal" step="0.1" placeholder="13.9">
+  <div class="row" style="margin-top:12px">
+    <button class="chip" id="g-nuechtern">nüchtern</button>
+    <button class="chip" id="g-klo">nach dem Klo</button>
+  </div>
+  <button class="go" id="g-send">Gewicht eintragen</button>
+  <p class="hint">Der KFA-Wert zählt nur als Trend, nie als absoluter Wert.</p>
+</section>
+
+<section id="s-klo">
+  <h2>Was</h2>
+  <div class="grid g2">
+    <button class="k art" data-art="pipi" aria-pressed="true">Pipi</button>
+    <button class="k art" data-art="stuhl">Stuhl</button>
+  </div>
+  <h2 style="margin-top:18px">Menge</h2>
+  <div class="grid g3">
+    <button class="k gr" data-gr="klein">klein</button>
+    <button class="k gr" data-gr="mittel" aria-pressed="true">mittel</button>
+    <button class="k gr" data-gr="gross">groß</button>
+  </div>
+  <div id="farbe-box">
+    <h2 style="margin-top:18px">Farbe</h2>
+    <div class="grid g3">
+      <button class="k fa" data-fa="hell">hell</button>
+      <button class="k fa" data-fa="mittel">mittel</button>
+      <button class="k fa" data-fa="dunkel">dunkel</button>
+    </div>
+  </div>
+  <div id="kons-box" style="display:none">
+    <h2 style="margin-top:18px">Konsistenz</h2>
+    <div class="grid g3">
+      <button class="k ko" data-ko="normal" aria-pressed="true">normal</button>
+      <button class="k ko" data-ko="weich">weich</button>
+      <button class="k ko" data-ko="durchfall">Durchfall</button>
+    </div>
+  </div>
+  <button class="go" id="k-send">Eintragen</button>
+</section>
+
+<section id="s-mehr">
+  <h2>Garmin, Tagesabschluss</h2>
+  <label>Gesamtkalorien laut Uhr</label>
+  <input type="number" id="ga-kcal" inputmode="numeric" placeholder="3120">
+  <label>Schritte</label>
+  <input type="number" id="ga-steps" inputmode="numeric" placeholder="8400">
+  <button class="go" id="ga-send">Garmin eintragen</button>
+
+  <h2 style="margin-top:22px">Zugang</h2>
+  <p class="hint">Einmalig: Fine-grained Token mit <strong>Contents: Read and write</strong>
+     nur für <strong>ernaehrung-data</strong>. Bleibt auf diesem Gerät, nie im Seitencode.</p>
+  <input type="password" id="tok" placeholder="github_pat_…" autocomplete="off"
+         autocapitalize="off" spellcheck="false">
+  <button class="go" id="tok-save">Token speichern</button>
+  <details>
+    <summary>Warteschlange</summary>
+    <p class="hint" id="q-info">—</p>
+    <button class="go" id="flush" style="background:var(--panel2);color:var(--fg)">
+      Jetzt synchronisieren</button>
+  </details>
+</section>
+
+<section class="on" style="background:none;border:0;padding:0">
+  <h2>Heute</h2>
+  <ul id="log"></ul>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const OWNER = "Llireon", REPO = "ernaehrung-data";
+const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+
+// ---------- Speicher ----------
+const ls = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }
+             catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  raw(k){ try { return localStorage.getItem(k) || ""; } catch(e){ return ""; } },
+  setRaw(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+};
+let queue = ls.get(QK, []);
+const saveQ = () => ls.set(QK, queue);
+
+// ---------- Hilfen ----------
+const pad = n => String(n).padStart(2, "0");
+function nowIso(){
+  const d = new Date(), o = -d.getTimezoneOffset();
+  const s = o >= 0 ? "+" : "-", a = Math.abs(o);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T` +
+         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` +
+         `${s}${pad(Math.floor(a/60))}:${pad(a%60)}`;
+}
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+function b64(str){
+  return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+}
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 1700);
+}
+function pressGroup(sel, el){
+  $$(sel).forEach(b => b.setAttribute("aria-pressed", b === el ? "true" : "false"));
+}
+function pressed(sel){
+  const b = $$(sel).find(x => x.getAttribute("aria-pressed") === "true");
+  return b ? b.dataset : null;
+}
+
+// ---------- Warteschlange ----------
+function enqueue(payload, opts = {}){
+  const id = newId(), ts = nowIso();
+  const day = ts.slice(0, 10);
+  const entry = {
+    id, ts, sent: false, error: null,
+    path: opts.path || `eintraege/${day}/${ts.slice(11,19).replace(/:/g,"")}-${id}.json`,
+    body: opts.binary ? opts.binary : b64(JSON.stringify({ id, ts, ...payload }, null, 2)),
+    label: opts.label || payload.type
+  };
+  queue.push(entry); saveQ(); render(); flush();
+  toast(opts.quiet ? "gespeichert" : "eingetragen");
+  return entry;
+}
+
+async function pushOne(e){
+  const token = ls.raw(TK);
+  if (!token) throw { retryable:false, reason:"kein Token" };
+  const r = await fetch(
+    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${e.path}`,
+    { method:"PUT",
+      headers:{ "Authorization":"Bearer "+token, "Accept":"application/vnd.github+json",
+                "Content-Type":"application/json" },
+      body: JSON.stringify({ message:`log ${e.label} ${e.ts}`, content:e.body }) });
+  if (r.status === 201 || r.status === 200) return true;
+  if (r.status === 422) return true;               // existiert schon
+  const retryable = r.status >= 500 || r.status === 429;
+  throw { retryable, reason:`HTTP ${r.status}` };
+}
+
+let flushing = false;
+async function flush(){
+  if (flushing || !navigator.onLine || !ls.raw(TK)) { renderSync(); return; }
+  flushing = true;
+  try {
+    for (const e of queue.filter(x => !x.sent)) {
+      try { await pushOne(e); e.sent = true; e.error = null; }
+      catch (err) {
+        e.error = err.reason || "Fehler";
+        if (err.reason === "kein Token") break;
+      }
+      saveQ(); render();
+    }
+  } finally { flushing = false; renderSync(); }
+}
+
+// ---------- Anzeige ----------
+function renderSync(){
+  const pend = queue.filter(x => !x.sent).length;
+  const err  = queue.filter(x => !x.sent && x.error && x.error !== "kein Token").length;
+  const dot = $("#sync .dot"), txt = $("#syncTxt");
+  dot.className = "dot " + (err ? "err" : pend ? "pend" : "ok");
+  txt.textContent = !ls.raw(TK) ? "kein Token"
+                  : pend ? `${pend} offen` : "synchron";
+  $("#q-info").textContent = `${queue.length} Einträge, ${pend} offen, ${err} fehlerhaft`;
+}
+function render(){
+  const today = nowIso().slice(0, 10);
+  const items = queue.filter(e => e.ts.slice(0,10) === today).slice(-40).reverse();
+  $("#log").innerHTML = items.map(e => {
+    const st = e.sent ? "sent" : (e.error && e.error !== "kein Token" ? "err" : "pending");
+    const lbl = e.sent ? "gesendet" : (e.error || "wartet");
+    return `<li><span class="t">${e.ts.slice(11,16)}</span>
+      <span class="b">${e.label}</span><span class="s ${st}">${lbl}</span></li>`;
+  }).join("") || `<li><span class="b" style="color:var(--dim)">noch nichts heute</span></li>`;
+  renderSync();
+}
+
+// ---------- Tabs ----------
+$$("nav button").forEach(b => b.addEventListener("click", () => {
+  pressGroup("nav button", b);
+  $$("section[id^=s-]").forEach(s => s.classList.toggle("on", s.id === "s-" + b.dataset.tab));
+}));
+
+// ---------- Essen ----------
+$("#r-porridge").addEventListener("click", () => {
+  const open = $("#porridge-box").style.display === "block";
+  $("#porridge-box").style.display = open ? "none" : "block";
+  $("#crepes-box").style.display = "none";
+});
+$("#r-crepes").addEventListener("click", () => {
+  const open = $("#crepes-box").style.display === "block";
+  $("#crepes-box").style.display = open ? "none" : "block";
+  $("#porridge-box").style.display = "none";
+});
+$("#p-send").addEventListener("click", () => {
+  const g = parseFloat($("#p-gramm").value);
+  if (!(g > 0)) return toast("Gramm fehlen");
+  enqueue({ type:"essen", rezept:"porridge", haferflocken_g:g, vertrauen:"gut" },
+          { label:`Porridge ${g} g` });
+  $("#porridge-box").style.display = "none";
+});
+const belag = { kaese:0, nutella:0, marmelade:0, kombi:0 };
+$$(".ct").forEach(b => {
+  const k = b.dataset.belag;
+  let timer;
+  const upd = () => b.querySelector(".n").textContent = belag[k];
+  b.addEventListener("click", () => { belag[k]++; upd(); });
+  b.addEventListener("pointerdown", () => {
+    timer = setTimeout(() => { belag[k] = 0; upd(); toast("zurückgesetzt"); }, 550); });
+  ["pointerup","pointerleave","pointercancel"].forEach(ev =>
+    b.addEventListener(ev, () => clearTimeout(timer)));
+});
+$("#c-send").addEventListener("click", () => {
+  const total = Object.values(belag).reduce((a,b) => a+b, 0);
+  if (!total) return toast("keine Crepes gewählt");
+  const anzahl = parseInt($("#c-anzahl").value) || null;
+  enqueue({ type:"essen", rezept:"crepes", variante:"gross",
+            ausbeute:anzahl, belag:{...belag}, vertrauen: anzahl ? "gut" : "grob" },
+          { label:`Crepes ${total}x` });
+  Object.keys(belag).forEach(k => { belag[k] = 0; });
+  $$(".ct .n").forEach(n => n.textContent = "0");
+  $("#c-anzahl").value = ""; $("#crepes-box").style.display = "none";
+});
+
+let foto = null, fotoArt = "mahlzeiten";
+$("#f-mahlzeit").addEventListener("click", () => { fotoArt = "mahlzeiten"; $("#f-file").click(); });
+$("#f-label").addEventListener("click", () => { fotoArt = "labels"; $("#f-file").click(); });
+$("#f-file").addEventListener("change", async ev => {
+  const file = ev.target.files[0]; if (!file) return;
+  foto = await shrink(file);
+  $("#f-prev").src = foto.url; $("#f-prev").hidden = false;
+  toast(fotoArt === "labels" ? "Etikett bereit" : "Foto bereit");
+});
+function shrink(file){
+  return new Promise(res => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 1280, sc = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      const data = c.toDataURL("image/jpeg", 0.82);
+      URL.revokeObjectURL(url);
+      res({ url:data, b64:data.split(",")[1] });
+    };
+    img.src = url;
+  });
+}
+$$(".v").forEach(b => b.addEventListener("click", () => pressGroup(".v", b)));
+$("#f-send").addEventListener("click", () => {
+  const text = $("#f-text").value.trim();
+  if (!text && !foto) return toast("Text oder Foto nötig");
+  const ts = nowIso(), id = newId();
+  let fotoPfad = null;
+  if (foto) {
+    fotoPfad = `fotos/${fotoArt}/${ts.slice(0,10)}-${id}.jpg`;
+    enqueue({}, { path:fotoPfad, binary:foto.b64, label:"Foto", quiet:true });
+  }
+  const v = pressed(".v")?.v || "gut";
+  enqueue({ type: fotoArt === "labels" ? "label" : "essen",
+            beschreibung:text || null, foto:fotoPfad,
+            vertrauen: fotoArt === "labels" ? "exakt" : v },
+          { label: fotoArt === "labels" ? "Etikett" : (text.slice(0,32) || "Foto") });
+  $("#f-text").value = ""; foto = null;
+  $("#f-prev").hidden = true; $("#f-prev").src = "";
+});
+
+// ---------- Trinken ----------
+$$(".w").forEach(b => b.addEventListener("click", () => pressGroup(".w", b)));
+$$(".ml").forEach(b => b.addEventListener("click", () => {
+  pressGroup(".ml", b); $("#t-ml").value = b.dataset.ml;
+}));
+$("#t-send").addEventListener("click", () => {
+  const ml = parseFloat($("#t-ml").value);
+  if (!(ml > 0)) return toast("Menge fehlt");
+  const was = pressed(".w")?.w || "wasser";
+  enqueue({ type:"trinken", ml, was }, { label:`${ml} ml ${was}` });
+  $("#t-ml").value = ""; pressGroup(".ml", null);
+});
+
+// ---------- Gewicht ----------
+(() => {   // Messpunkt aus der Uhrzeit vorbelegen
+  const h = new Date().getHours();
+  const slot = h < 13 ? "09" : h < 20 ? "17" : "23";
+  const b = $$(".sl").find(x => x.dataset.slot === slot);
+  if (b) pressGroup(".sl", b);
+})();
+$$(".sl").forEach(b => b.addEventListener("click", () => pressGroup(".sl", b)));
+["#g-nuechtern", "#g-klo"].forEach(s => $(s).addEventListener("click", () => {
+  const b = $(s), on = b.getAttribute("aria-pressed") === "true";
+  b.setAttribute("aria-pressed", on ? "false" : "true");
+}));
+$("#g-send").addEventListener("click", () => {
+  const kg = parseFloat($("#g-kg").value);
+  if (!(kg > 30 && kg < 200)) return toast("Gewicht prüfen");
+  const kfa = parseFloat($("#g-kfa").value);
+  const slot = pressed(".sl")?.slot || null;
+  enqueue({ type: slot && slot.startsWith("ride") ? "ride-gewicht" : "gewicht",
+            kg, bf_pct: isNaN(kfa) ? null : kfa, slot,
+            fasted: $("#g-nuechtern").getAttribute("aria-pressed") === "true",
+            after_toilet: $("#g-klo").getAttribute("aria-pressed") === "true" },
+          { label:`${kg} kg${slot ? " ("+slot+")" : ""}` });
+  $("#g-kg").value = ""; $("#g-kfa").value = "";
+  ["#g-nuechtern","#g-klo"].forEach(s => $(s).setAttribute("aria-pressed","false"));
+});
+
+// ---------- Klo ----------
+$$(".art").forEach(b => b.addEventListener("click", () => {
+  pressGroup(".art", b);
+  const pipi = b.dataset.art === "pipi";
+  $("#farbe-box").style.display = pipi ? "block" : "none";
+  $("#kons-box").style.display  = pipi ? "none" : "block";
+}));
+[".gr", ".fa", ".ko"].forEach(sel =>
+  $$(sel).forEach(b => b.addEventListener("click", () => pressGroup(sel, b))));
+$("#k-send").addEventListener("click", () => {
+  const art = pressed(".art")?.art || "pipi";
+  const p = { type:"klo", art, groesse: pressed(".gr")?.gr || "mittel" };
+  if (art === "pipi") { const f = pressed(".fa")?.fa; if (f) p.farbe = f; }
+  else p.konsistenz = pressed(".ko")?.ko || "normal";
+  enqueue(p, { label:`${art} ${p.groesse}` });
+});
+
+// ---------- Garmin & Token ----------
+$("#ga-send").addEventListener("click", () => {
+  const kcal = parseFloat($("#ga-kcal").value), steps = parseInt($("#ga-steps").value);
+  if (!(kcal > 0) && !(steps > 0)) return toast("nichts eingetragen");
+  enqueue({ type:"garmin", gesamt_kcal: kcal || null, schritte: steps || null },
+          { label:`Garmin ${kcal || "?"} kcal` });
+  $("#ga-kcal").value = ""; $("#ga-steps").value = "";
+});
+$("#tok-save").addEventListener("click", () => {
+  const v = $("#tok").value.trim();
+  if (!v) return toast("Token fehlt");
+  ls.setRaw(TK, v); $("#tok").value = ""; toast("Token gespeichert"); flush();
+});
+$("#flush").addEventListener("click", flush);
+window.addEventListener("online", flush);
+setInterval(flush, 60000);
+render(); flush();
+})();
+</script>
+</body>
+</html>
