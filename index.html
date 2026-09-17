@@ -366,9 +366,14 @@ async function pushOne(e){
                 "Content-Type":"application/json" },
       body: JSON.stringify({ message:`log ${e.label} ${e.ts}`, content:e.body }) });
   if (r.status === 201 || r.status === 200) return true;
-  if (r.status === 422) return true;               // existiert schon
+  let detail = "";
+  try { const j = await r.json(); detail = j.message ? ` – ${j.message}` : ""; } catch(e){}
+  if (r.status === 422 && /sha|exists/i.test(detail)) return true;   // schon vorhanden
   const retryable = r.status >= 500 || r.status === 429;
-  throw { retryable, reason:`HTTP ${r.status}` };
+  const hinweis = r.status === 404 ? " (Repo nicht gefunden – Token für falsches Repo?)"
+                : r.status === 403 ? " (keine Schreibrechte – Contents: Read and write?)"
+                : r.status === 401 ? " (Token ungültig)" : "";
+  throw { retryable, reason:`HTTP ${r.status}${hinweis}${detail}` };
 }
 
 let flushing = false;
@@ -392,9 +397,11 @@ function renderSync(){
   const pend = queue.filter(x => !x.sent).length;
   const err  = queue.filter(x => !x.sent && x.error && x.error !== "kein Token").length;
   const dot = $("#sync .dot"), txt = $("#syncTxt");
-  dot.className = "dot " + (err ? "err" : pend ? "pend" : "ok");
+  const gesendet = queue.filter(x => x.sent).length;
   txt.textContent = !ls.raw(TK) ? "kein Token"
-                  : pend ? `${pend} offen` : "synchron";
+                  : pend ? `${pend} offen`
+                  : gesendet ? `${gesendet} gesendet` : "bereit, nichts geloggt";
+  dot.className = "dot " + (err ? "err" : pend ? "pend" : gesendet ? "ok" : "");
   $("#q-info").textContent = `${queue.length} Einträge, ${pend} offen, ${err} fehlerhaft`;
 }
 function render(){
