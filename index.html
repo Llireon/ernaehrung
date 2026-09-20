@@ -82,7 +82,7 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
 </head>
 <body>
 <header>
-  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v23</span></h1>
+  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v25</span></h1>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
 </header>
 
@@ -116,6 +116,8 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
   <div id="porridge-box" style="display:none">
     <label>Haferflocken in Gramm</label>
     <input type="number" id="p-gramm" inputmode="decimal" value="100" step="5">
+    <label>Ahornsirup in Gramm <small style="color:var(--dim)">leer = aus dem Rezept geschätzt</small></label>
+    <input type="number" id="p-sirup" inputmode="decimal" step="1" placeholder="22">
     <button class="go" id="p-send">Porridge eintragen</button>
   </div>
   <div id="crepes-box" style="display:none">
@@ -347,12 +349,8 @@ details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
 </section>
 
 <section id="s-mehr">
-  <h2>Garmin, Tagesabschluss</h2>
-  <label>Gesamtkalorien laut Uhr</label>
-  <input type="number" id="ga-kcal" inputmode="numeric" placeholder="3120">
-  <label>Schritte</label>
-  <input type="number" id="ga-steps" inputmode="numeric" placeholder="8400">
-  <button class="go" id="ga-send">Garmin eintragen</button>
+  <p class="hint">Garmin muss nicht mehr abgetippt werden &mdash; Tagesenergie,
+  Schlaf und Fahrten werden seit v25 direkt aus Garmin Connect geholt.</p>
 
   <h2 style="margin-top:22px">Zugang</h2>
   <p class="hint">Einmalig: Fine-grained Token mit <strong>Contents: Read and write</strong>
@@ -569,11 +567,20 @@ $("#r-crepes").addEventListener("click", () => {
   $("#crepes-box").style.display = open ? "none" : "block";
   $("#porridge-box").style.display = "none";
 });
+// Sirup-Platzhalter mitziehen: 22 g je 100 g Flocken ist das Rezeptverhaeltnis.
+$("#p-gramm").addEventListener("input", () => {
+  const g = parseFloat($("#p-gramm").value);
+  $("#p-sirup").placeholder = g > 0 ? Math.round(g * 0.22) : "22";
+});
 $("#p-send").addEventListener("click", () => {
   const g = parseFloat($("#p-gramm").value);
   if (!(g > 0)) return toast("Gramm fehlen");
-  enqueue({ type:"essen", rezept:"porridge", haferflocken_g:g, vertrauen:"gut" },
-          { label:`Porridge ${g} g` });
+  const sirup = parseFloat($("#p-sirup").value);
+  const e = { type:"essen", rezept:"porridge", haferflocken_g:g, vertrauen:"gut" };
+  let label = `Porridge ${g} g`;
+  if (sirup > 0) { e.ahornsirup_g = sirup; label += `, ${sirup} g Sirup`; }
+  enqueue(e, { label });
+  $("#p-sirup").value = "";
   $("#porridge-box").style.display = "none";
 });
 const belag = { kaese:0, nutella:0, marmelade:0, kombi:0 };
@@ -937,14 +944,7 @@ $("#kr-send").addEventListener("click", () => {
   pressGroup(".ku", null); krAktiv = null;
 });
 
-// ---------- Garmin & Token ----------
-$("#ga-send").addEventListener("click", () => {
-  const kcal = parseFloat($("#ga-kcal").value), steps = parseInt($("#ga-steps").value);
-  if (!(kcal > 0) && !(steps > 0)) return toast("nichts eingetragen");
-  enqueue({ type:"garmin", gesamt_kcal: kcal || null, schritte: steps || null },
-          { label:`Garmin ${kcal || "?"} kcal` });
-  $("#ga-kcal").value = ""; $("#ga-steps").value = "";
-});
+// ---------- Token ----------
 $("#tok-save").addEventListener("click", () => {
   const v = $("#tok").value.trim();
   if (!v) return toast("Token fehlt");
