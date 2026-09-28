@@ -168,6 +168,15 @@ textarea{min-height:92px;resize:vertical}
 .thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;
   border:0;background:#000a;color:#fff;font-size:14px;line-height:24px;padding:0}
 .rec{margin-top:10px}
+.fp-kopf{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;
+  background:none;border:0;padding:0;text-align:left;color:var(--fg)}
+.fp-kopf .fp-pfeil{font-size:18px;color:var(--dim);transition:transform .15s}
+.fp-kopf[aria-expanded=true] .fp-pfeil{transform:rotate(180deg)}
+.fp-zeile{display:grid;grid-template-columns:104px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+.fp-zeile:first-child{border-top:0}
+.fp-zeile b{font-weight:700}
+.fp-zeile.stopp b{color:var(--tc)}
+.fp-ergebnis{margin-top:14px;padding:4px 12px;border-radius:13px;background:var(--panel2);border:1px solid var(--line)}
 .ct{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .rb-liste{margin:6px 0 0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--fg)}
 .rb-liste li{margin:3px 0}
@@ -247,7 +256,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v28</small></span>
+  <span class="brand">Logger<small>v29</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -349,6 +358,43 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
 <!-- ======================= TRINKEN ======================= -->
 <section class="tab" id="s-trinken" style="--tc:var(--c-trinken)">
+  <div class="card">
+    <button class="fp-kopf" id="fp-toggle" aria-expanded="false" aria-controls="fp-body">
+      <span><h3 style="margin:0">Fahrt planen</h3>
+        <span class="sub">Distanz rein – Flaschen, Pulver und Stopps raus</span></span>
+      <span class="fp-pfeil" aria-hidden="true">▾</span>
+    </button>
+    <div id="fp-body" hidden>
+      <div class="wz-lab"><span>Distanz</span></div>
+      <div id="fp-km"></div>
+      <h2>Start</h2>
+      <div class="seg" id="fp-tag">
+        <button data-t="heute" aria-pressed="true">heute</button>
+        <button data-t="morgen">morgen</button>
+      </div>
+      <div class="wz-lab"><span>Startzeit</span></div>
+      <div id="fp-uhr"></div>
+      <h2>Zweck</h2>
+      <div class="seg" id="fp-zweck">
+        <button data-z="defizit" aria-pressed="true">Base Defizit</button>
+        <button data-z="base">Base</button>
+        <button data-z="lang">lang/hart</button>
+        <button data-z="intervalle">Intervalle</button>
+      </div>
+      <h2>Wetter</h2>
+      <div class="seg" id="fp-wetter">
+        <button data-w="auto" aria-pressed="true">Vorhersage</button>
+        <button data-w="kuehl">kühl</button>
+        <button data-w="warm">warm</button>
+        <button data-w="heiss">heiß</button>
+      </div>
+      <p class="hint" id="fp-wetter-info">—</p>
+      <div class="fp-ergebnis" id="fp-ergebnis"></div>
+      <p class="hint" id="fp-fuss"></p>
+      <button class="go" id="fp-send">Plan übernehmen</button>
+    </div>
+  </div>
+
   <div class="card">
     <h2>Was</h2>
     <div class="seg" id="t-was">
@@ -591,7 +637,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 28 · 28.09.2026</p>
+      Garmin Connect. Version 29 · 28.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -621,7 +667,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 28;
+const VERSION = 29;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1009,7 +1055,7 @@ async function aufraeumen(){
 
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
-  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag" };
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
   nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
@@ -1075,6 +1121,9 @@ function beschreibe(p){
       else z.push(`${n}: ${u.saetze}×${u.wert ?? ""} ${u.einheit}`);
     });
     text = p.notiz;
+  } else if (t === "fahrtplan"){
+    titel = `Fahrtplan ${p.km} km · ${p.stopps ? p.stopps + " Stopp" + (p.stopps > 1 ? "s" : "") : "ohne Stopp"}`;
+    (p.zeilen || []).forEach(x => z.push(x));
   } else if (t === "tagesrueckblick"){
     const d = new Date(p.datum + "T12:00:00");
     titel = `Tagesrückblick · ${["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()]} ${p.datum.slice(8,10)}.${p.datum.slice(5,7)}.`;
@@ -1295,6 +1344,147 @@ $("#t-send").addEventListener("click", () => {
   }
   wMl.merken(); eintragen(p);
 });
+
+// ---------- Fahrt planen ----------
+// Konstanten aus SKILL.md, Abschnitt "Trinken auf dem Rad". Bei einer Kalibrierung
+// (Wiegen vor/nach Fahrten) BEIDE Stellen aendern.
+const FP = {
+  kmh: 31,              // bewegtes Mittel: 31,4 km/h am 20.09., 31,2 am 27.09.
+  standzeit: 1.05,      // Gesamtzeit / bewegte Zeit
+  budget_l: 1.2,        // Nettoverlust, der am 20.09. ohne Symptome blieb (79,0 -> 77,8 kg)
+  schweiss: { kuehl: 0.73, warm: 0.9, heiss: 1.1 },  // l/h -- kuehl gemessen 20.09., Rest Platzhalter
+  flasche_l: 0.95, halter: 2,
+  pulver_max: 125,      // g je Flasche, Leones Konzentrationsgrenze
+  kh_je_g: 0.90,        // Iso-Pulver dm
+  stopp_trinken_l: 0.4  // am Stopp direkt trinken
+};
+const ZWECK = { defizit: { n: "Base im Defizit", g: 50 }, base: { n: "Base", g: 60 },
+                lang: { n: "lang / harter Folgetag", g: 80 }, intervalle: { n: "Intervalle", g: 90 } };
+const KLASSE = { kuehl: "kühl", warm: "warm", heiss: "heiß" };
+let fpBereit = false, fpWetter = null, fpCache = null, fpPlan = null;
+const komma1 = v => komma(v, 1).replace(",0", "");
+const rund5 = v => Math.round(v / 5) * 5;
+const wFpKm = walze($("#fp-km"), { min: 20, max: 250, step: 5, einheit: "km", key: "fahrt.km", start: 100,
+                                   onChange: () => fpWetterHolen() });
+const wFpUhr = walze($("#fp-uhr"), { min: 5, max: 22, step: 1, einheit: "Uhr",
+                                     start: Math.min(22, Math.max(5, new Date().getHours() + 1)),
+                                     onChange: () => fpWetterHolen() });
+gruppe("#fp-tag", () => fpWetterHolen()); gruppe("#fp-zweck", () => fpRechnen());
+gruppe("#fp-wetter", () => fpWetterHolen());
+$("#fp-toggle").onclick = () => {
+  const auf = $("#fp-body").hidden; $("#fp-body").hidden = !auf;
+  $("#fp-toggle").setAttribute("aria-expanded", String(auf)); merken("fahrt.offen", auf);
+  if (auf) fpWetterHolen();
+};
+if (last["fahrt.offen"]){ $("#fp-body").hidden = false; $("#fp-toggle").setAttribute("aria-expanded", "true"); }
+
+function fpStart(){
+  const d = new Date(); if ((wahl("#fp-tag").t || "heute") === "morgen") d.setDate(d.getDate() + 1);
+  d.setHours(wFpUhr.get(), 0, 0, 0); return d;
+}
+const fpBewegt = () => wFpKm.get() / FP.kmh;
+function fpWetterHolen(){
+  if (!fpBereit) return;
+  clearTimeout(fpWetterHolen._t);
+  fpWetterHolen._t = setTimeout(async () => {
+    const modus = wahl("#fp-wetter").w || "auto";
+    if (modus !== "auto"){ fpWetter = { klasse: modus, text: "von Hand gesetzt", auto: false }; return fpRechnen(); }
+    $("#fp-wetter-info").textContent = "Vorhersage wird geladen …";
+    try {
+      if (!fpCache || Date.now() - fpCache.t > 30 * 60e3){
+        const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=52.40&longitude=13.38" +
+          "&hourly=temperature_2m,shortwave_radiation,cloud_cover,wind_speed_10m&forecast_days=3&timezone=Europe%2FBerlin");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        fpCache = { t: Date.now(), h: (await r.json()).hourly };
+      }
+      const h = fpCache.h, a = fpStart(), dauer = fpBewegt() * FP.standzeit;
+      const schluessel = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
+      const idx = [];
+      for (let k = 0; k < Math.ceil(dauer); k++){
+        const d = new Date(a.getTime() + k * 3600e3), i = h.time.indexOf(schluessel(d));
+        if (i >= 0) idx.push(i);
+      }
+      if (!idx.length) throw new Error("Zeitfenster nicht in der Vorhersage");
+      const mw = arr => idx.reduce((s, i) => s + arr[i], 0) / idx.length;
+      const t = mw(h.temperature_2m), tmax = Math.max(...idx.map(i => h.temperature_2m[i]));
+      const sonne = mw(h.shortwave_radiation), wolken = mw(h.cloud_cover), wind = mw(h.wind_speed_10m);
+      // "warm" wie in SKILL.md: sonnig ODER ab ~22 Grad -- aber Sonne bei 12 Grad macht keinen Sommer
+      const sonnig = sonne >= 300 || wolken < 50;
+      const klasse = (tmax >= 27 || (t >= 25 && sonnig)) ? "heiss"
+                   : (t >= 22 || (sonnig && t >= 18)) ? "warm" : "kuehl";
+      fpWetter = { klasse, auto: true, t: +t.toFixed(1), tmax, sonne: Math.round(sonne), wolken: Math.round(wolken),
+                   wind: Math.round(wind),
+                   text: `${sonnig ? "sonnig" : "bedeckt"}, ${komma1(t)} °C (max ${komma1(tmax)}), Wind ${Math.round(wind)} km/h` };
+    } catch(e){
+      fpWetter = null;
+      $("#fp-wetter-info").textContent = "Keine Vorhersage (" + e.message + ") – oben kühl, warm oder heiß wählen.";
+      $("#fp-ergebnis").innerHTML = ""; $("#fp-fuss").textContent = ""; fpPlan = null;
+      return;
+    }
+    fpRechnen();
+  }, 250);
+}
+
+function fpRechnen(){
+  if (!fpBereit) return;
+  if (!fpWetter){ fpWetterHolen(); return; }
+  const km = wFpKm.get(), zk = wahl("#fp-zweck").z || "defizit", z = ZWECK[zk];
+  const bew = fpBewegt(), ges = bew * FP.standzeit;
+  const kh = z.g * bew, pulver = rund5(kh / FP.kh_je_g);
+  const schweiss = FP.schweiss[fpWetter.klasse] * ges;
+  const trinken = Math.max(0, schweiss - FP.budget_l);
+  const kap = FP.halter * FP.flasche_l;
+  const stopps = trinken > kap + 0.05 || pulver > FP.halter * FP.pulver_max
+    ? Math.max(1, Math.ceil((trinken - kap) / (kap + FP.stopp_trinken_l))) : 0;
+  const zeilen = [];
+  const hm = x => `${Math.floor(x)}:${pad(Math.round((x % 1) * 60))} h`;
+  if (!stopps){
+    if (pulver <= FP.pulver_max){
+      zeilen.push(["Flasche 1", `${pulver} g Pulver + 950 ml Wasser`]);
+      zeilen.push(["Flasche 2", "Wasser + eine Prise Salz"]);
+    } else {
+      const je = rund5(pulver / 2);
+      zeilen.push(["Flasche 1", `${je} g Pulver + 950 ml Wasser`]);
+      zeilen.push(["Flasche 2", `${pulver - je} g Pulver + 950 ml Wasser`]);
+    }
+    zeilen.push(["Stopp", "keiner nötig"]);
+  } else {
+    // Stopps gleichmaessig verteilt. Pro Abschnitt traegt Flasche 1 das Pulver (hoechstens
+    // 125 g), Flasche 2 ist Wasser -- das ist der Punkt des ganzen Plans. Ein Rest ueber
+    // 125 g geht in Flasche 2; 10-30 g auf 950 ml sind praktisch noch Wasser.
+    const abschnitte = stopps + 1, ps = rund5(pulver / abschnitte);
+    const f1 = Math.min(ps, FP.pulver_max), f2 = ps - f1;
+    const f2text = !f2 ? "Wasser + eine Prise Salz"
+      : f2 <= 30 ? `Wasser + ${f2} g Pulver + Prise Salz (fast reines Wasser)`
+      : `${f2} g Pulver + 950 ml Wasser – Rate hoch, am Stopp zusätzlich Wasser trinken`;
+    zeilen.push(["Flasche 1", `${f1} g Pulver + 950 ml Wasser`]);
+    zeilen.push(["Flasche 2", f2text]);
+    for (let k = 1; k <= stopps; k++){
+      const skm = Math.max(30, rund5(km * k / abschnitte));
+      zeilen.push([`Stopp ~km ${skm}`, `${komma1(FP.stopp_trinken_l)} l direkt trinken, beide Flaschen wie oben neu füllen`]);
+    }
+    zeilen.push([stopps > 1 ? `${stopps} Beutel` : "Beutel",
+                 f2 ? `je ${f1} g + ${f2} g Pulver (für Flasche 1 und 2) trocken mitnehmen`
+                    : `je ${f1} g Pulver trocken mitnehmen`]);
+  }
+  $("#fp-wetter-info").textContent = `${fpWetter.auto ? "Vorhersage: " + fpWetter.text : "Wetter von Hand"} → ${KLASSE[fpWetter.klasse]}`;
+  $("#fp-ergebnis").innerHTML = zeilen.map(([a, b]) =>
+    `<div class="fp-zeile${a.startsWith("Stopp ~") ? " stopp" : ""}"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("");
+  $("#fp-fuss").textContent =
+    `Dauer ~${hm(ges)} (${hm(bew)} bewegt). ${Math.round(kh)} g KH = ${z.g} g/h. ` +
+    `Schweiß ~${komma1(schweiss)} l, davon ~${komma1(trinken)} l trinken – ${komma1(FP.budget_l)} l Verlust sind ok (wie am 20.09.). ` +
+    `Trinkalarm alle 15 min. Hände früher taub als sonst → sofort Wasser.`;
+  fpPlan = { km, start: isoAus(fpStart()), zweck: zk, kh_rate_g_h: z.g, wetter: fpWetter,
+             dauer_h: +ges.toFixed(2), kh_g: Math.round(kh), pulver_g: pulver,
+             schweiss_l: +schweiss.toFixed(2), trinken_l: +trinken.toFixed(2), stopps,
+             zeilen: zeilen.map(([a, b]) => `${a}: ${b}`) };
+}
+$("#fp-send").addEventListener("click", () => {
+  if (!fpPlan) return toast("erst Wetter wählen");
+  wFpKm.merken(); eintragen({ type: "fahrtplan", ...fpPlan });
+});
+fpBereit = true;
+if (!$("#fp-body").hidden) fpWetterHolen();
 
 // ---------- Gewicht ----------
 const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 1, einheit: "kg", key: "gewicht.kg", start: 78.0 });
