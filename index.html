@@ -36,6 +36,13 @@ html,body{margin:0;background:var(--bg);color:var(--fg);
 body{padding:0 16px calc(92px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto}
 button{font:inherit;color:inherit;cursor:pointer}
 button:active{transform:scale(.97)}
+/* kein Doppeltipp-Zoom -- sonst zoomt iOS beim schnellen Hochzaehlen der Crepes */
+button,.wz,.chip,nav#tabs{touch-action:manipulation}
+button:focus-visible{outline:2px solid var(--tc,var(--accent));outline-offset:2px}
+button.go.sendet{opacity:.55}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
 button:disabled{opacity:.45}
 [hidden]{display:none!important}
 
@@ -161,6 +168,7 @@ textarea{min-height:92px;resize:vertical}
 .thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;
   border:0;background:#000a;color:#fff;font-size:14px;line-height:24px;padding:0}
 .rec{margin-top:10px}
+.ct{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .rb-liste{margin:6px 0 0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--fg)}
 .rb-liste li{margin:3px 0}
 .rec-btn.lauft{border-color:var(--bad);color:var(--bad);
@@ -233,16 +241,16 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
   background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:999px;font-weight:700;font-size:15px;
   transition:transform .22s,opacity .22s;box-shadow:0 10px 30px #0006;white-space:nowrap}
 .toast.on{transform:translateX(-50%) translateY(0);opacity:1}
-.bild-voll{position:fixed;inset:0;z-index:40;background:#000e;display:grid;place-items:center;padding:16px}
+.bild-voll{position:fixed;inset:0;z-index:40;background:#000e;display:grid;place-items:center;padding:16px;overscroll-behavior:contain}
 .bild-voll img{max-width:100%;max-height:100%;border-radius:10px}
 </style>
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v27</small></span>
+  <span class="brand">Logger<small>v28</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
   </button>
 </header>
 
@@ -252,7 +260,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
   <button class="chip" id="zeitChip" type="button">🕒 jetzt</button>
   <span class="lab" id="zeitLab">Zeitpunkt = jetzt</span>
   <div id="zeitEdit">
-    <input type="time" id="zeitInput">
+    <input type="time" id="zeitInput" aria-label="Uhrzeit für den Eintrag">
     <button class="chip" data-tag="heute" id="zeitHeute">heute</button>
     <button class="chip" data-tag="gestern" id="zeitGestern">gestern</button>
     <button class="chip" id="zeitReset">zurücksetzen</button>
@@ -265,7 +273,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <h3>Was hast du gegessen?</h3>
     <p class="sub">Fotos, Text und Sprachnachricht landen zusammen in <strong>einem</strong> Eintrag.
       Etikett oder Teller ist egal, das sehe ich beim Auswerten.</p>
-    <textarea id="f-text" style="margin-top:12px"
+    <textarea id="f-text" aria-label="Was hast du gegessen" style="margin-top:12px"
       placeholder="z. B. Mensa: Reis, Kichererbsencurry – eine Kelle Reis. Oder: Etikett vom neuen Müsli, 60 g abgewogen"></textarea>
     <div id="f-fotos"></div>
     <div id="f-rec" class="rec"></div>
@@ -311,9 +319,9 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
     <div id="kochen-box" hidden>
       <h2>Gericht</h2>
-      <input type="text" id="ko-gericht" placeholder="Lasagne, Nudeln …">
+      <input type="text" id="ko-gericht" aria-label="Gericht" placeholder="Lasagne, Nudeln …">
       <h2>Zutat</h2>
-      <input type="text" id="z-name" placeholder="Mehl">
+      <input type="text" id="z-name" aria-label="Zutat" placeholder="Mehl">
       <div class="wz-lab"><span>Menge</span></div>
       <div id="z-menge"></div>
       <div class="seg" id="z-einheit" style="margin-top:8px">
@@ -497,7 +505,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
         <div class="wz-lab"><span id="tr-wert-lab">Wiederholungen</span></div>
         <div id="tr-wert"></div>
       </div>
-      <input type="text" id="tr-detail" hidden style="margin-top:12px"
+      <input type="text" id="tr-detail" aria-label="Detail zur Übung" hidden style="margin-top:12px"
              placeholder="optional: wie weit gestreckt, wie es sich anfühlte">
       <h2>Ausführung</h2>
       <div class="seg" id="tr-au">
@@ -523,7 +531,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       </div>
       <ul class="tr-saetze" id="tr-sum"></ul>
       <h2>Notiz</h2>
-      <input type="text" id="tr-note" placeholder="z. B. Front Lever fühlte sich leicht an">
+      <input type="text" id="tr-note" aria-label="Notiz zum Training" placeholder="z. B. Front Lever fühlte sich leicht an">
       <div id="tr-rec" class="rec"></div>
       <button class="go" id="tr-send">Training abschicken</button>
       <button class="go sek" id="tr-zurueck">Zurück zum Training</button>
@@ -548,7 +556,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0">Einstellungen › Bildschirmzeit › Alle Aktivitäten ›
       <strong>Tag</strong>: Screenshot vom Stundenbalken und der App-Liste darunter.</p>
     <div id="rb-fotos"></div>
-    <textarea id="rb-text" style="margin-top:12px" placeholder="optional: Ergänzung als Text"></textarea>
+    <textarea id="rb-text" aria-label="Ergänzung zum Tagesrückblick" style="margin-top:12px" placeholder="optional: Ergänzung als Text"></textarea>
     <button class="go" id="rb-send">Rückblick abschicken</button>
   </div>
   <div class="card">
@@ -574,7 +582,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <h2 style="margin-top:0">Zugang</h2>
     <p class="hint" style="margin-top:0">Einmalig: Fine-grained Token mit <strong>Contents: Read and
       write</strong> nur für <strong>ernaehrung-data</strong>. Bleibt auf diesem Gerät.</p>
-    <input type="password" id="tok" placeholder="github_pat_…" autocomplete="off"
+    <input type="password" id="tok" aria-label="GitHub-Token" placeholder="github_pat_…" autocomplete="off"
            autocapitalize="off" spellcheck="false" style="margin-top:10px">
     <button class="go" id="tok-save">Token speichern</button>
   </div>
@@ -583,7 +591,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 27 · 28.09.2026</p>
+      Garmin Connect. Version 28 · 28.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -595,29 +603,38 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
 <nav id="tabs">
   <button data-tab="essen" aria-pressed="true" style="--tc:var(--c-essen)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3.5H17"/></svg>Essen</button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3.5H17"/></svg>Essen</button>
   <button data-tab="trinken" aria-pressed="false" style="--tc:var(--c-trinken)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3h13l-1.6 16.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8z"/><path d="M6.4 10h11.2"/></svg>Trinken</button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3h13l-1.6 16.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8z"/><path d="M6.4 10h11.2"/></svg>Trinken</button>
   <button data-tab="gewicht" aria-pressed="false" style="--tc:var(--c-gewicht)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 9.5a5.5 5.5 0 0 1 8 0"/><path d="M12 9.8l1.3-2.3"/></svg>Gewicht</button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 9.5a5.5 5.5 0 0 1 8 0"/><path d="M12 9.8l1.3-2.3"/></svg>Gewicht</button>
   <button data-tab="klo" aria-pressed="false" style="--tc:var(--c-klo)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/></svg>Klo</button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/></svg>Klo</button>
   <button data-tab="training" aria-pressed="false" style="--tc:var(--c-training)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Training</button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Training</button>
   <button data-tab="tag" aria-pressed="false" style="--tc:var(--c-tag)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M8 14h3M8 17h6"/></svg>Tag</button>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M8 14h3M8 17h6"/></svg>Tag</button>
 </nav>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (() => {
 "use strict";
-const VERSION = 27;
+const VERSION = 28;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+
+// Doppeltipp-Schutz: ein zweiter Tipp auf denselben Knopf innerhalb von 800 ms
+// wird verschluckt. Ohne das legte ein Doppeltipp auf "Trinken eintragen" zwei
+// Eintraege an (am 2026-09-28 im Browsertest nachgewiesen).
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("button.go"); if (!b) return;
+  if (b.classList.contains("sendet")){ ev.stopImmediatePropagation(); ev.preventDefault(); return; }
+  b.classList.add("sendet"); setTimeout(() => b.classList.remove("sendet"), 800);
+}, true);
 
 // ---------- Speicher ----------
 const ls = {
@@ -807,7 +824,7 @@ function fotoSammler(host){
   const th = host.querySelector(".thumbs");
   const zeig = () => {
     th.innerHTML = fotos.map((f, i) =>
-      `<div class="thumb"><img src="${f.thumb}" alt=""><button type="button" data-i="${i}">×</button></div>`).join("");
+      `<div class="thumb"><img src="${f.thumb}" alt=""><button type="button" data-i="${i}" aria-label="Foto entfernen">×</button></div>`).join("");
     th.querySelectorAll("button").forEach(b => b.onclick = () => { fotos.splice(+b.dataset.i, 1); zeig(); });
   };
   host.querySelectorAll("button[data-a]").forEach(b =>
@@ -1211,7 +1228,7 @@ $("#z-file").onchange = async ev => {
 function renderZutaten(){
   $("#z-liste").innerHTML = zutaten.map((z, i) =>
     `<li><span class="nr">${i + 1}</span><span>${esc(z.name || "(ohne Namen)")} – ${zahl(z.menge)} ${z.einheit}${z.foto ? " 📷" : ""}</span>
-     <button class="x" data-i="${i}">×</button></li>`).join("");
+     <button class="x" data-i="${i}" aria-label="Zutat entfernen">×</button></li>`).join("");
   $$("#z-liste .x").forEach(b => b.onclick = () => { zutaten.splice(+b.dataset.i, 1); renderZutaten(); });
 }
 $("#z-add").onclick = () => {
@@ -1432,6 +1449,7 @@ function trRender(neueWalze){
        ${s.pause_davor_s ? `<span class="sub" style="display:inline"> · Pause davor ${mmss(s.pause_davor_s)}</span>` : ""}</span>
        <button class="x" data-i="${i}" aria-label="Satz löschen">×</button></li>`).join("");
     $$("#tr-akt-saetze .x").forEach(b => b.onclick = () => {
+      if (!confirm(`Satz ${+b.dataset.i + 1} löschen?`)) return;
       saetze.splice(+b.dataset.i, 1); if (!saetze.length) delete tr.uebungen[key]; saveTr(); trRender(false); });
     const gemacht = u.e === "gemacht";
     $("#tr-wert-box").hidden = gemacht; $("#tr-detail").hidden = !gemacht;
