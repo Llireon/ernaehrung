@@ -14,7 +14,7 @@
   --fg:#eef0f4; --dim:#8b93a3; --faint:#5d6472;
   --accent:#8fb4ff; --accent-bg:#1c2740; --on-accent:#0a0d13;
   --ok:#5fd394; --warn:#f2bb5c; --bad:#f27d67; --warn-bg:#33290f;
-  --c-essen:#ffa35c; --c-trinken:#62b8ff; --c-gewicht:#b49bff; --c-klo:#4fd1c0; --c-training:#ff6f7d;
+  --c-essen:#ffa35c; --c-trinken:#62b8ff; --c-gewicht:#b49bff; --c-klo:#4fd1c0; --c-training:#ff6f7d; --c-tag:#f2cf5b;
   --r:18px; --shadow:0 1px 0 #ffffff08 inset, 0 8px 24px #0000004d;
   color-scheme:dark;
 }
@@ -24,7 +24,7 @@
     --fg:#141821; --dim:#5b6374; --faint:#98a0af;
     --accent:#2d6be6; --accent-bg:#e5edfd; --on-accent:#fff;
     --ok:#17985a; --warn:#b3730f; --bad:#c9442c; --warn-bg:#fdf1d8;
-    --c-essen:#e9791f; --c-trinken:#1d8ae0; --c-gewicht:#7a5bec; --c-klo:#119c8a; --c-training:#e23c52;
+    --c-essen:#e9791f; --c-trinken:#1d8ae0; --c-gewicht:#7a5bec; --c-klo:#119c8a; --c-training:#e23c52; --c-tag:#a87d05;
     --shadow:0 1px 2px #0000000d, 0 6px 20px #00000010;
     color-scheme:light;
   }
@@ -69,7 +69,7 @@ header{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:6;
 
 /* ---------- Tabs unten ---------- */
 nav#tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;
-  display:grid;grid-template-columns:repeat(5,1fr);
+  display:grid;grid-template-columns:repeat(6,1fr);
   padding:6px max(6px,calc((100vw - 620px)/2)) calc(6px + env(safe-area-inset-bottom));
   background:color-mix(in srgb,var(--bg) 82%,transparent);
   -webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);
@@ -161,6 +161,8 @@ textarea{min-height:92px;resize:vertical}
 .thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;
   border:0;background:#000a;color:#fff;font-size:14px;line-height:24px;padding:0}
 .rec{margin-top:10px}
+.rb-liste{margin:6px 0 0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--fg)}
+.rb-liste li{margin:3px 0}
 .rec-btn.lauft{border-color:var(--bad);color:var(--bad);
   background:color-mix(in srgb,var(--bad) 12%,var(--panel2));animation:puls 1.2s infinite}
 @keyframes puls{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--bad) 18%,transparent)}}
@@ -237,7 +239,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v26</small></span>
+  <span class="brand">Logger<small>v27</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -530,6 +532,42 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
   </div>
 </section>
 
+<!-- ======================= TAG ======================= -->
+<section class="tab" id="s-tag" style="--tc:var(--c-tag)">
+  <div class="card">
+    <h3>Tagesrückblick</h3>
+    <p class="sub">Abends kurz erzählen, wie der Tag wirklich lief – nichts beschönigen, gerade die
+      Leerlaufzeiten zählen. Uhrzeiten ungefähr reichen.</p>
+    <h2>Für welchen Tag</h2>
+    <div class="seg" id="rb-tag">
+      <button data-tag="heute">heute</button>
+      <button data-tag="gestern">gestern</button>
+    </div>
+    <div id="rb-rec" class="rec" style="margin-top:14px"></div>
+    <h2>Bildschirmzeit</h2>
+    <p class="hint" style="margin-top:0">Einstellungen › Bildschirmzeit › Alle Aktivitäten ›
+      <strong>Tag</strong>: Screenshot vom Stundenbalken und der App-Liste darunter.</p>
+    <div id="rb-fotos"></div>
+    <textarea id="rb-text" style="margin-top:12px" placeholder="optional: Ergänzung als Text"></textarea>
+    <button class="go" id="rb-send">Rückblick abschicken</button>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Worauf du eingehen kannst</h2>
+    <ul class="rb-liste">
+      <li>Wann aufgewacht, wann wirklich aufgestanden</li>
+      <li>Was lief bis zur ersten richtigen Sache – Handy, rumhängen, …</li>
+      <li>Frühstück, Mittag, Abendessen: ja/nein, ungefähr wann</li>
+      <li>Rad oder Kraft: gemacht? Wenn nicht – <strong>was</strong> hat es verhindert</li>
+      <li>Institut: von wann bis wann</li>
+      <li>Gitarre, Haushalt, sonstiges Geplantes</li>
+      <li>Phasen, in denen du „zwischen zwei Sachen“ warst</li>
+      <li>Wann ins Bett, wann Handy weg</li>
+    </ul>
+    <p class="hint">Kein Pflichtformular – was dir einfällt, reicht. Ab 5 Uhr früh zählt der
+      Rückblick automatisch für „heute“, davor für „gestern“.</p>
+  </div>
+</section>
+
 <!-- ======================= EINSTELLUNGEN ======================= -->
 <section class="tab" id="s-mehr" style="--tc:var(--accent)">
   <div class="card">
@@ -545,7 +583,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 26 · 28.09.2026</p>
+      Garmin Connect. Version 27 · 28.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -566,6 +604,8 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/></svg>Klo</button>
   <button data-tab="training" aria-pressed="false" style="--tc:var(--c-training)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Training</button>
+  <button data-tab="tag" aria-pressed="false" style="--tc:var(--c-tag)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M8 14h3M8 17h6"/></svg>Tag</button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -573,7 +613,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 26;
+const VERSION = 27;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -952,7 +992,7 @@ async function aufraeumen(){
 
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
-  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", klo: "--c-klo", kraft: "--c-training" };
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag" };
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
   nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
@@ -1018,6 +1058,12 @@ function beschreibe(p){
       else z.push(`${n}: ${u.saetze}×${u.wert ?? ""} ${u.einheit}`);
     });
     text = p.notiz;
+  } else if (t === "tagesrueckblick"){
+    const d = new Date(p.datum + "T12:00:00");
+    titel = `Tagesrückblick · ${["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()]} ${p.datum.slice(8,10)}.${p.datum.slice(5,7)}.`;
+    text = p.beschreibung;
+    const nf = (p.fotos || []).length;
+    z.push([p.audio ? "Sprachnachricht" : null, nf ? `${nf} Screenshot${nf > 1 ? "s" : ""}` : null].filter(Boolean).join(" · "));
   }
   return { titel, zeilen: z.filter(Boolean), text, farbe: TYP_FARBE[t] || "--accent" };
 }
@@ -1084,7 +1130,7 @@ function renderSync(){
 }
 
 // ---------- Reiter ----------
-const TITEL = { essen: "Essen", trinken: "Trinken", gewicht: "Gewicht", klo: "Klo", training: "Training", mehr: "Einstellungen" };
+const TITEL = { essen: "Essen", trinken: "Trinken", gewicht: "Gewicht", klo: "Klo", training: "Training", tag: "Tag", mehr: "Einstellungen" };
 function zeigeTab(name){
   $$("nav#tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === name)));
   $$("section.tab").forEach(s => s.classList.toggle("on", s.id === "s-" + name));
@@ -1518,6 +1564,23 @@ $("#tok-save").addEventListener("click", () => {
 $("#flush").addEventListener("click", flush);
 window.addEventListener("online", flush);
 setInterval(flush, 60000);
+
+// ---------- Tagesrueckblick ----------
+// Vor 5 Uhr ist der Rueckblick fast immer der vom Vortag.
+const rbFotos = fotoSammler($("#rb-fotos")), rbRec = recorder($("#rb-rec"));
+gruppe("#rb-tag");
+const rbTagSetzen = () => setzeWahl("#rb-tag", "tag", new Date().getHours() < 5 ? "gestern" : "heute");
+rbTagSetzen();
+$("#rb-send").addEventListener("click", async () => {
+  const text = $("#rb-text").value.trim(), fotos = rbFotos.get(), audio = rbRec.get();
+  if (audio === "laeuft") return toast("Aufnahme erst stoppen");
+  if (!text && !fotos.length && !audio) return toast("Sprachnachricht, Text oder Screenshot nötig");
+  const d = new Date(); if ((wahl("#rb-tag").tag || "heute") === "gestern") d.setDate(d.getDate() - 1);
+  const datum = isoAus(d).slice(0, 10);
+  await eintragen({ type: "tagesrueckblick", datum, beschreibung: text || null },
+                  { medien: [...fotos, ...(audio ? [audio] : [])], ordner: "tag" });
+  $("#rb-text").value = ""; rbFotos.reset(); rbRec.reset(); rbTagSetzen();
+});
 
 // ---------- Start ----------
 let startTab = "essen";
