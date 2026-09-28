@@ -259,7 +259,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v30</small></span>
+  <span class="brand">Logger<small>v31</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -644,7 +644,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 30 · 28.09.2026</p>
+      Garmin Connect. Version 31 · 28.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -674,7 +674,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 30;
+const VERSION = 31;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -781,10 +781,12 @@ function spanne(min, max, step){
 function walze(host, o){
   const H = 40;
   host.className = "wz"; host.innerHTML = "";
-  const nk = o.nk === 1;
-  const cols = nk ? [spanne(o.min, o.max, 1), spanne(0, 9, 1)]
+  // nk 1: Zehntel in eigener Spalte. nk 2: Hundertstel in 0,05-Schritten (Renpho).
+  const nk = o.nk === 1 || o.nk === 2, nk2 = o.nk === 2, teil = nk2 ? 100 : 10;
+  const cols = nk ? [spanne(o.min, o.max, 1), nk2 ? spanne(0, 95, 5) : spanne(0, 9, 1)]
                   : [(o.leer ? [null] : []).concat(spanne(o.min, o.max, o.step || 1))];
-  const fmt = (v, ci) => v === null ? o.leer : (nk ? String(v) : (o.step < 1 ? komma(v, 1) : String(v)));
+  const fmt = (v, ci) => v === null ? o.leer : (nk ? (nk2 && ci === 1 ? String(v).padStart(2, "0") : String(v))
+                                                    : (o.step < 1 ? komma(v, 1) : String(v)));
   const idx = cols.map(() => 0);
   const els = cols.map((werte, ci) => {
     const c = document.createElement("div"); c.className = "wz-col";
@@ -802,10 +804,11 @@ function walze(host, o){
     return best;
   };
   const api = {
-    get(){ return nk ? +(cols[0][idx[0]] + cols[1][idx[1]] / 10).toFixed(1) : cols[0][idx[0]]; },
+    get(){ return nk ? +(cols[0][idx[0]] + cols[1][idx[1]] / teil).toFixed(nk2 ? 2 : 1) : cols[0][idx[0]]; },
     set(v, weich){
       let ziel;
-      if (nk){ const r = Math.round((v ?? o.start) * 10); ziel = [naechster(cols[0], Math.floor(r / 10)), ((r % 10) + 10) % 10]; }
+      if (nk2){ const r = Math.round((v ?? o.start) * 20); ziel = [naechster(cols[0], Math.floor(r / 20)), ((r % 20) + 20) % 20]; }
+      else if (nk){ const r = Math.round((v ?? o.start) * 10); ziel = [naechster(cols[0], Math.floor(r / 10)), ((r % 10) + 10) % 10]; }
       else ziel = [naechster(cols[0], v)];
       ziel.forEach((i, ci) => { idx[ci] = i; mark(ci);
         if (weich) els[ci].scrollTo({ top: i * H, behavior: "smooth" }); else els[ci].scrollTop = i * H; });
@@ -1494,7 +1497,7 @@ fpBereit = true;
 if (!$("#fp-body").hidden) fpWetterHolen();
 
 // ---------- Gewicht ----------
-const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 1, einheit: "kg", key: "gewicht.kg", start: 78.0 });
+const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 2, einheit: "kg", key: "gewicht.kg", start: 78.0 });
 const wKfa = walze($("#g-kfa"), { min: 6, max: 30, step: 0.1, einheit: "%", key: "gewicht.kfa", start: 14.0 });
 let ohneKfa = !!last["gewicht.ohne_kfa"];
 function kfaRender(){ $("#g-ohne-kfa").setAttribute("aria-pressed", String(ohneKfa)); $("#g-kfa").style.opacity = ohneKfa ? ".35" : "1"; }
@@ -1563,7 +1566,7 @@ function renderEinordnung(j){
 }
 
 // ---------- Klo ----------
-const wDiff = walze($("#k-diff"), { min: 100, max: 2000, step: 100, einheit: "g", key: "klo.diff", start: 300 });
+const wDiff = walze($("#k-diff"), { min: 50, max: 2000, step: 50, einheit: "g", key: "klo.diff", start: 300 });
 function kloRender(){
   const art = wahl("#k-art").art || "pipi", wieg = wahl("#k-mo").mo === "wieg";
   $("#farbe-box").hidden = art === "stuhl";
