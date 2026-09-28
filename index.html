@@ -239,6 +239,9 @@ textarea{min-height:92px;resize:vertical}
 .pause{border-color:color-mix(in srgb,var(--tc) 45%,var(--line))}
 .pause .tr-uhr{color:var(--tc)}
 .pause.fertig{animation:blink 1s 4}
+.pause.laeuft{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 10%,var(--panel))}
+.pause.laeuft .tr-uhr{color:var(--fg)}
+.pause .go{margin-top:12px}
 @keyframes blink{50%{background:color-mix(in srgb,var(--tc) 22%,var(--panel))}}
 .balken{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin-top:12px}
 .balken i{display:block;height:100%;background:var(--tc);border-radius:3px;transition:width .4s linear}
@@ -256,7 +259,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v29</small></span>
+  <span class="brand">Logger<small>v30</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -515,8 +518,8 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
   <div id="tr-idle">
     <div class="card">
       <h3>Krafttraining</h3>
-      <p class="sub">Die Uhr läuft ab dem Start mit. Übung wählen, jeden Satz einzeln abhaken, dazwischen
-        zählt die Pausenuhr. Die Dauer wird gemessen, nicht geschätzt.</p>
+      <p class="sub">Die Uhr läuft ab dem Start mit. Übung wählen, Satz starten, Satz fertig – dann zählt die
+        Pausenuhr und geht beim Ziel von selbst in den nächsten Satz über. Früher weiter geht per Knopf.</p>
       <button class="go" id="tr-start">Training starten</button>
       <button class="go sek" id="tr-nachtrag">Nachtragen ohne Uhr</button>
     </div>
@@ -533,13 +536,17 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
     <div class="card pause" id="tr-pause" hidden>
       <div class="spread">
-        <div><div class="sub">Pause</div><div class="tr-uhr" id="tr-pause-uhr">0:00</div></div>
-        <div class="sub" style="text-align:right">Ziel<br><b id="tr-pause-ziel" style="color:var(--fg);font-size:17px">2:00</b></div>
+        <div><div class="sub" id="tr-pause-lab">Pause</div><div class="tr-uhr" id="tr-pause-uhr">0:00</div></div>
+        <div class="sub" id="tr-pause-zielbox" style="text-align:right">Ziel<br><b id="tr-pause-ziel" style="color:var(--fg);font-size:17px">2:00</b></div>
       </div>
-      <div class="balken"><i id="tr-pause-balken" style="width:0"></i></div>
-      <div class="quick" id="tr-pause-q">
-        <button class="chip" data-s="60">1:00</button><button class="chip" data-s="90">1:30</button>
-        <button class="chip" data-s="120">2:00</button><button class="chip" data-s="180">3:00</button>
+      <div id="tr-pause-mehr">
+        <div class="balken"><i id="tr-pause-balken" style="width:0"></i></div>
+        <div class="quick" id="tr-pause-q">
+          <button class="chip" data-s="60">1:00</button><button class="chip" data-s="90">1:30</button>
+          <button class="chip" data-s="120">2:00</button><button class="chip" data-s="180">3:00</button>
+          <button class="chip" data-plus="30">+0:30</button>
+        </div>
+        <button class="go" id="tr-pause-ende">Pause beenden – Satz starten</button>
       </div>
     </div>
 
@@ -637,7 +644,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 29 · 28.09.2026</p>
+      Garmin Connect. Version 30 · 28.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -667,7 +674,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 29;
+const VERSION = 30;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1645,17 +1652,33 @@ function trRender(neueWalze){
     $("#tr-wert-box").hidden = gemacht; $("#tr-detail").hidden = !gemacht;
     $("#tr-wert-lab").textContent = { reps: "Wiederholungen", sek: "Haltezeit", min: "Dauer" }[u.e] || "";
     if (neueWalze && !gemacht) wWert = walze($("#tr-wert"), wertKonfig(key));
-    $("#tr-satz").textContent = `Satz ${saetze.length + 1} fertig`;
+    $("#tr-satz").textContent = `Satz ${saetze.length + 1} ` +
+      (tr.modus !== "live" ? "fertig" : tr.satz ? "fertig" : "starten");
   }
   trTick();
 }
+// Live-Modus hat drei Zustaende: bereit (weder satz noch pause), satz laeuft
+// (tr.satz), pause (tr.pause). Die Pause endet per Knopf oder von selbst am Ziel;
+// pause_davor_s ist damit wirklich nur die Pause, die Satzdauer steht daneben.
+function satzStarten(seit){
+  const p = tr.pause;
+  tr.satz = { seit, ...(p ? { pause_davor_s: Math.round((seit - p.seit) / 1000) } : {}) };
+  tr.pause = null;
+  saveTr(); trRender(false);
+}
+$("#tr-pause-ende").onclick = () => { tonFreischalten(); satzStarten(Date.now()); tonPlanen(); };
 $("#tr-satz").onclick = () => {
   tonFreischalten();
   const key = tr.aktiv, u = UEBUNGEN[key]; if (!key) return;
+  if (tr.modus === "live" && !tr.satz){ satzStarten(Date.now()); tonPlanen(); return; }
   const s = { wert: u.e === "gemacht" ? null : wWert.get(), einheit: u.e,
               ausfuehrung: wahl("#tr-au").au || "frei", ts: nowIso() };
   if (u.e === "gemacht"){ s.detail = $("#tr-detail").value.trim() || null; $("#tr-detail").value = ""; }
-  if (tr.modus === "live" && tr.pause) s.pause_davor_s = Math.round((Date.now() - tr.pause.seit) / 1000);
+  if (tr.modus === "live"){
+    if (tr.satz.pause_davor_s) s.pause_davor_s = tr.satz.pause_davor_s;
+    s.satz_dauer_s = Math.round((Date.now() - tr.satz.seit) / 1000);
+    tr.satz = null;
+  }
   (tr.uebungen[key] = tr.uebungen[key] || []).push(s);
   if (s.wert !== null) merken(`tr.${key}`, s.wert);
   if (tr.modus === "live"){
@@ -1667,24 +1690,36 @@ $("#tr-satz").onclick = () => {
 };
 $$("#tr-pause-q .chip").forEach(b => b.onclick = () => {
   if (!tr?.pause) return;
-  tr.pause.ziel = +b.dataset.s; tr.pause.gemeldet = false;
+  tr.pause.ziel = b.dataset.plus ? tr.pause.ziel + +b.dataset.plus : +b.dataset.s; tr.pause.gemeldet = false;
   if (tr.aktiv){ last.pausen = { ...(last.pausen || {}), [tr.aktiv]: tr.pause.ziel }; ls.set(LAST_K, last); }
   saveTr(); tonFreischalten(); tonPlanen(); trTick();
 });
 function trTick(){
   if (!tr || tr.ende || tr.modus !== "live") { $("#tr-pause").hidden = true; return; }
   $("#tr-uhr").textContent = mmss((Date.now() - tr.start) / 1000);
-  const p = tr.pause; $("#tr-pause").hidden = !p;
+  const p = tr.pause, s = tr.satz, karte = $("#tr-pause");
+  karte.hidden = !p && !s;
+  karte.classList.toggle("laeuft", !!s);
+  $("#tr-pause-mehr").hidden = $("#tr-pause-zielbox").hidden = !p;
+  if (s){
+    $("#tr-pause-lab").textContent = "Satz läuft";
+    $("#tr-pause-uhr").textContent = mmss((Date.now() - s.seit) / 1000);
+    return;
+  }
   if (!p) return;
+  $("#tr-pause-lab").textContent = "Pause";
   const vergangen = (Date.now() - p.seit) / 1000;
   $("#tr-pause-uhr").textContent = mmss(vergangen);
   $("#tr-pause-ziel").textContent = mmss(p.ziel);
   $("#tr-pause-balken").style.width = Math.min(100, vergangen / p.ziel * 100) + "%";
   $$("#tr-pause-q .chip").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.s === p.ziel)));
-  if (vergangen >= p.ziel && !p.gemeldet){
-    p.gemeldet = true; saveTr();
-    $("#tr-pause").classList.remove("fertig"); void $("#tr-pause").offsetWidth; $("#tr-pause").classList.add("fertig");
+  if (vergangen >= p.ziel){
+    // Ziel erreicht: von selbst in den Satz. Der Ton laeuft schon (tonPlanen),
+    // deshalb hier nicht neu planen -- das wuerde ihn abschneiden. War das Handy
+    // gesperrt, beginnt der Satz rueckwirkend am Pausenziel.
+    karte.classList.remove("fertig"); void karte.offsetWidth; karte.classList.add("fertig");
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    satzStarten(p.seit + p.ziel * 1000);
   }
 }
 setInterval(trTick, 500);
@@ -1723,7 +1758,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 $("#tr-beenden").onclick = () => {
   const n = Object.values(tr.uebungen).reduce((a, s) => a + s.length, 0);
   if (!n){ if (confirm("Noch kein Satz erfasst – Training verwerfen?")){ tr = null; saveTr(); trRender(); } return; }
-  tr.ende = Date.now(); tr.pause = null; tonPlanen(); saveTr(); trRender();
+  tr.ende = Date.now(); tr.pause = null; tr.satz = null; tonPlanen(); saveTr(); trRender();
 };
 function endeRender(){
   const live = tr.modus === "live";
@@ -1747,14 +1782,15 @@ $("#tr-send").onclick = async () => {
   const dauer = live ? +((tr.ende - tr.start) / 60000).toFixed(1) : (wDauer ? wDauer.get() : null);
   if (!live && wDauer && dauer !== null) wDauer.merken();
   const p = {
-    type: "kraft", modus: tr.modus,
+    type: "kraft", modus: tr.modus, ...(live ? { uhr: 2 } : {}),
     start: live ? isoAus(new Date(tr.start)) : null, ende: live ? isoAus(new Date(tr.ende)) : null,
     dauer_min: dauer,
     uebungen: Object.entries(tr.uebungen).map(([k, saetze]) => ({
       uebung: k, einheit: UEBUNGEN[k].e,
       saetze: saetze.map(s => ({ wert: s.wert, ausfuehrung: s.ausfuehrung, ts: s.ts,
                                  ...(s.detail ? { detail: s.detail } : {}),
-                                 ...(s.pause_davor_s ? { pause_davor_s: s.pause_davor_s } : {}) })) })),
+                                 ...(s.pause_davor_s ? { pause_davor_s: s.pause_davor_s } : {}),
+                                 ...(s.satz_dauer_s ? { satz_dauer_s: s.satz_dauer_s } : {}) })) })),
     notiz: $("#tr-note").value.trim() || null
   };
   await eintragen(p, { medien: audio ? [audio] : [], ts: live ? isoAus(new Date(tr.start)) : null, ordner: "training" });
