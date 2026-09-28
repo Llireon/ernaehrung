@@ -3,443 +3,846 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#11131a">
-<title>Essenslogger</title>
+<meta name="theme-color" content="#0e1014" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Logger</title>
 <style>
 :root{
-  --bg:#11131a; --panel:#1a1d27; --panel2:#222634; --line:#2e3342;
-  --fg:#e8eaf0; --dim:#9aa2b5; --accent:#6ea8fe; --ok:#4ec98a;
-  --warn:#e8b04b; --bad:#e8705b; --r:14px;
+  --bg:#0e1014; --panel:#171a20; --panel2:#1f232b; --line:#282c35; --line2:#343945;
+  --fg:#eef0f4; --dim:#8b93a3; --faint:#5d6472;
+  --accent:#8fb4ff; --accent-bg:#1c2740; --on-accent:#0a0d13;
+  --ok:#5fd394; --warn:#f2bb5c; --bad:#f27d67; --warn-bg:#33290f;
+  --c-essen:#ffa35c; --c-trinken:#62b8ff; --c-gewicht:#b49bff; --c-klo:#4fd1c0; --c-training:#ff6f7d;
+  --r:18px; --shadow:0 1px 0 #ffffff08 inset, 0 8px 24px #0000004d;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg:#f3f4f7; --panel:#ffffff; --panel2:#eef0f4; --line:#e3e6ec; --line2:#d6dae2;
+    --fg:#141821; --dim:#5b6374; --faint:#98a0af;
+    --accent:#2d6be6; --accent-bg:#e5edfd; --on-accent:#fff;
+    --ok:#17985a; --warn:#b3730f; --bad:#c9442c; --warn-bg:#fdf1d8;
+    --c-essen:#e9791f; --c-trinken:#1d8ae0; --c-gewicht:#7a5bec; --c-klo:#119c8a; --c-training:#e23c52;
+    --shadow:0 1px 2px #0000000d, 0 6px 20px #00000010;
+    color-scheme:light;
+  }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--fg);
-  font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-body{padding:0 14px calc(28px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto}
-h1{font-size:19px;margin:0;font-weight:650;letter-spacing:-.01em}
-h2{font-size:13px;margin:0 0 9px;color:var(--dim);font-weight:600;
-  text-transform:uppercase;letter-spacing:.07em}
-header{display:flex;align-items:center;gap:10px;padding:16px 0 12px;
-  position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
-#sync{margin-left:auto;font-size:12px;color:var(--dim);white-space:nowrap}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;
-  background:var(--dim);margin-right:5px;vertical-align:1px}
+  font:16px/1.45 -apple-system,system-ui,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body{padding:0 16px calc(92px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.45}
+[hidden]{display:none!important}
+
+/* ---------- Kopf ---------- */
+header{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:6;
+  padding:calc(10px + env(safe-area-inset-top)) 0 10px;background:var(--bg)}
+.brand{font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--dim)}
+.brand small{font-size:11px;font-weight:500;color:var(--faint);margin-left:3px}
+#sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);
+  background:var(--panel);border:1px solid var(--line);padding:6px 10px;border-radius:999px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}
 .dot.ok{background:var(--ok)} .dot.pend{background:var(--warn)} .dot.err{background:var(--bad)}
-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:12px 0}
-nav button{padding:11px 1px;font-size:12px;font-weight:600;border-radius:11px;
-  border:1px solid var(--line);background:var(--panel);color:var(--dim)}
-nav button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#0d1017}
-section{display:none;background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--r);padding:15px;margin-bottom:12px}
-section.on{display:block}
+.icon-btn{width:34px;height:34px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--dim);display:grid;place-items:center;padding:0}
+.icon-btn svg{width:18px;height:18px}
+
+.title{display:flex;align-items:center;gap:10px;margin:6px 0 14px}
+.title h1{font-size:30px;line-height:1.1;margin:0;font-weight:750;letter-spacing:-.025em}
+.title .badge{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--tc) 18%,transparent);color:var(--tc)}
+.title .badge svg{width:21px;height:21px}
+
+/* ---------- Zeitleiste ---------- */
+#zeitbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+#zeitbar .lab{font-size:13px;color:var(--dim)}
+#zeitbar.aktiv{background:var(--warn-bg);border:1px solid var(--warn);border-radius:14px;padding:8px 10px}
+#zeitbar.aktiv .lab{color:var(--warn);font-weight:650}
+#zeitEdit{display:none;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+#zeitEdit.on{display:flex}
+#zeitEdit input[type=time]{width:auto;padding:7px 10px;font-size:16px}
+
+/* ---------- Tabs unten ---------- */
+nav#tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding:6px max(6px,calc((100vw - 620px)/2)) calc(6px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  -webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);
+  border-top:1px solid var(--line)}
+nav#tabs button{background:none;border:0;padding:6px 0 4px;display:flex;flex-direction:column;
+  align-items:center;gap:3px;font-size:10.5px;font-weight:650;color:var(--faint);letter-spacing:.01em}
+nav#tabs svg{width:25px;height:25px}
+nav#tabs button[aria-pressed=true]{color:var(--tc)}
+
+/* ---------- Karten, Gruppen ---------- */
+section.tab{display:none} section.tab.on{display:block;animation:ein .18s ease-out}
+@keyframes ein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card > h2:first-child{margin-top:0}
+h2{font-size:12px;margin:18px 0 8px;color:var(--dim);font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em}
+h3{font-size:17px;margin:0 0 2px;font-weight:700;letter-spacing:-.01em}
+.sub{font-size:13px;color:var(--dim);margin:0}
 .grid{display:grid;gap:8px}
 .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)}
 .g4{grid-template-columns:repeat(4,1fr)}
-button.k{padding:15px 6px;border-radius:12px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--fg);font-size:15px;font-weight:600}
-button.k:active{transform:scale(.97)}
-button.k[aria-pressed=true]{border-color:var(--accent);background:#243149;color:var(--accent)}
-button.k small{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-top:3px}
-button.go{padding:16px;border-radius:12px;border:0;background:var(--accent);
-  color:#0d1017;font-size:16px;font-weight:700;width:100%;margin-top:12px}
-button.go:disabled{background:var(--panel2);color:var(--dim)}
-input,textarea,select{width:100%;padding:13px;border-radius:11px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--fg);font:inherit}
-textarea{min-height:74px;resize:vertical}
-label{display:block;font-size:12px;color:var(--dim);margin:11px 0 5px;font-weight:600}
-.row{display:flex;gap:8px;align-items:center}
-.chip{padding:7px 11px;border-radius:999px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--dim);font-size:13px;font-weight:600}
-.chip[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:#243149}
-.hint{font-size:12px;color:var(--dim);margin-top:9px;line-height:1.4}
-#zeitbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
-#zeitbar.aktiv{background:#3a2e12;border-bottom-color:var(--warn)}
-:root:not([data-theme=dark]) #zeitbar.aktiv{background:#fdf3dc}
-#zeitbar .lab{font-size:12px;color:var(--dim)}
-#zeitbar.aktiv .lab{color:var(--warn);font-weight:600}
-#zeitEdit{display:none;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
-#zeitEdit.on{display:flex}
-#zeitEdit input[type=time]{padding:6px 9px;border-radius:9px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--fg);font-size:15px}
-#log{list-style:none;padding:0;margin:0;font-size:13px}
-#log li{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
-#log li:first-child{border-top:0}
-#log .t{color:var(--dim);font-variant-numeric:tabular-nums;flex:0 0 42px}
-#log .b{flex:1;min-width:0}
-#log .s{font-size:11px;padding:2px 7px;border-radius:999px;background:var(--panel2);color:var(--dim)}
-#log .s.sent{color:var(--ok)} #log .s.err{color:var(--bad)} #log .s.pending{color:var(--warn)}
-img.prev{width:100%;max-height:190px;object-fit:cover;border-radius:11px;margin-top:9px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(90px);
-  background:var(--ok);color:#0d1017;padding:12px 20px;border-radius:999px;font-weight:700;
-  transition:transform .25s;z-index:20;box-shadow:0 8px 24px #0008}
-.toast.on{transform:translateX(-50%) translateY(0)}
-details{margin-top:10px} summary{color:var(--dim);font-size:13px;cursor:pointer}
-@media (prefers-color-scheme:light){
-  :root{--bg:#f5f6f9;--panel:#fff;--panel2:#eef0f5;--line:#dde1ea;--fg:#141824;--dim:#5c6478}
-  nav button[aria-pressed=true],button.go{color:#fff}
-}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+button.k{padding:13px 6px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);
+  color:var(--fg);font-size:15px;font-weight:650;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;min-height:52px}
+button.k small{font-size:11.5px;font-weight:500;color:var(--dim)}
+button.k[aria-pressed=true]{border-color:var(--tc,var(--accent));
+  background:color-mix(in srgb,var(--tc,var(--accent)) 16%,var(--panel2));color:var(--tc,var(--accent))}
+button.k[aria-pressed=true] small{color:inherit;opacity:.8}
+button.k .n{font-size:20px;font-weight:750;color:var(--fg)}
+
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;padding:9px 4px;border-radius:9px;font-size:14px;
+  font-weight:650;color:var(--dim)}
+.seg button[aria-pressed=true]{background:var(--panel);color:var(--fg);
+  box-shadow:0 1px 3px #0000002e, 0 0 0 1px var(--line2)}
+
+.chip{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);
+  color:var(--dim);font-size:14px;font-weight:650}
+.chip[aria-pressed=true]{border-color:var(--tc,var(--accent));color:var(--tc,var(--accent));
+  background:color-mix(in srgb,var(--tc,var(--accent)) 14%,var(--panel2))}
+
+button.go{display:block;width:100%;margin-top:16px;padding:16px;border:0;border-radius:15px;
+  background:var(--tc,var(--accent));color:var(--on-accent);font-size:16.5px;font-weight:750;
+  letter-spacing:-.01em}
+button.go.sek{background:var(--panel2);color:var(--fg);border:1px solid var(--line)}
+button.go.bad{background:none;color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent)}
+button.link{background:none;border:0;padding:6px 0;color:var(--dim);font-size:14px;
+  text-decoration:underline;text-underline-offset:3px}
+
+input,textarea{width:100%;padding:13px 14px;border-radius:13px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--fg);font:inherit;font-size:16px}
+input:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--tc,var(--accent)) 60%,transparent);outline-offset:0}
+textarea{min-height:92px;resize:vertical}
+.hint{font-size:13px;color:var(--dim);margin:10px 0 0;line-height:1.5}
+.ausgabe{margin-top:10px;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
+.ausgabe b{color:var(--tc,var(--accent))}
+
+/* ---------- Walze ---------- */
+.wz{position:relative;display:flex;justify-content:center;align-items:stretch;gap:2px;height:180px;
+  overflow:hidden;border-radius:15px;background:var(--panel2);border:1px solid var(--line);
+  user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.wz::before{content:"";position:absolute;left:10px;right:10px;top:70px;height:40px;border-radius:10px;
+  background:color-mix(in srgb,var(--tc,var(--accent)) 16%,transparent);pointer-events:none}
+.wz::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(var(--panel2) 0%,transparent 38%,transparent 62%,var(--panel2) 100%)}
+.wz-col{position:relative;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;
+  padding:70px 0;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.wz-col::-webkit-scrollbar{display:none}
+.wz-it{height:40px;line-height:40px;text-align:center;scroll-snap-align:center;
+  font-size:19px;color:var(--faint);font-variant-numeric:tabular-nums;padding:0 12px;
+  transition:color .12s,font-size .12s}
+.wz-it.sel{color:var(--fg);font-size:25px;font-weight:700}
+.wz-sep,.wz-unit{position:relative;z-index:2;align-self:center;font-size:24px;font-weight:700}
+.wz-unit{font-size:16px;color:var(--dim);font-weight:650;margin-left:6px}
+.wz-lab{font-size:13px;color:var(--dim);font-weight:650;margin:14px 0 6px;display:flex;justify-content:space-between}
+.wz-lab span.d{color:var(--faint);font-weight:500}
+.quick{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.quick .chip{flex:1;text-align:center;padding:8px 4px}
+
+/* ---------- Fotos & Audio ---------- */
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.thumbs:empty{display:none}
+.thumb{position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;background:var(--panel2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;
+  border:0;background:#000a;color:#fff;font-size:14px;line-height:24px;padding:0}
+.rec{margin-top:10px}
+.rec-btn.lauft{border-color:var(--bad);color:var(--bad);
+  background:color-mix(in srgb,var(--bad) 12%,var(--panel2));animation:puls 1.2s infinite}
+@keyframes puls{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--bad) 18%,transparent)}}
+.rec-out{display:flex;gap:8px;align-items:center;margin-top:8px}
+.rec-out audio{flex:1;height:38px;min-width:0}
+
+/* ---------- Heute ---------- */
+#heute h2{margin-top:6px}
+#log{list-style:none;padding:0;margin:0}
+#log li{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px 13px;
+  margin-bottom:8px;box-shadow:var(--shadow)}
+.e-kopf{display:flex;gap:10px;align-items:flex-start}
+.e-zeit{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;flex:0 0 40px;padding-top:1px}
+.e-body{flex:1;min-width:0}
+.e-titel{font-weight:700;font-size:15px;display:flex;gap:6px;align-items:center}
+.e-titel i{width:8px;height:8px;border-radius:50%;background:var(--tc);flex:0 0 8px;font-style:normal}
+.e-zeile{font-size:14px;color:var(--dim);margin-top:2px;overflow-wrap:anywhere}
+.e-text{font-size:14.5px;color:var(--fg);margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere}
+.e-st{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--panel2);color:var(--dim);
+  white-space:nowrap;font-weight:650}
+.e-st.sent{color:var(--ok)} .e-st.err{color:var(--bad)} .e-st.pending{color:var(--warn)}
+.e-medien{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.e-medien img{width:58px;height:58px;border-radius:9px;object-fit:cover}
+.e-audio{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel2);font-size:13px;font-weight:650;color:var(--fg)}
+.e-roh{margin:10px 0 0;padding:10px;border-radius:10px;background:var(--panel2);font-size:11.5px;
+  line-height:1.4;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--dim)}
+.leer{color:var(--dim);font-size:14px;padding:6px 2px}
+
+/* ---------- Einordnung Gewicht ---------- */
+.eo-darm{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.eo-darm b{font-size:30px;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.eo-darm span{color:var(--dim);font-size:14px}
+.eo-delta{font-size:15px;margin:12px 0 6px;font-variant-numeric:tabular-nums}
+.eo-row{display:grid;grid-template-columns:1fr 64px 92px;gap:10px;align-items:center;
+  font-size:14px;padding:5px 0;border-top:1px solid var(--line)}
+.eo-row:first-of-type{border-top:0}
+.eo-row .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:650}
+.eo-bar{position:relative;height:8px;border-radius:4px;background:var(--panel2)}
+.eo-bar::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line2)}
+.eo-bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.eo-fazit{margin-top:12px;font-size:14.5px;line-height:1.5}
+
+/* ---------- Training ---------- */
+.tr-uhr{font-size:46px;font-weight:750;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.tr-ueb{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tr-ueb button.k{align-items:flex-start;text-align:left;padding:11px 12px;position:relative}
+.tr-ueb .cnt{position:absolute;right:10px;top:10px;min-width:22px;height:22px;border-radius:11px;
+  background:var(--tc);color:var(--on-accent);font-size:12px;font-weight:750;display:grid;place-items:center;padding:0 6px}
+.tr-saetze{list-style:none;padding:0;margin:10px 0 0}
+.tr-saetze li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.tr-saetze li:first-child{border-top:0}
+.tr-saetze .nr{width:26px;height:26px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;
+  font-size:12px;font-weight:750;color:var(--dim)}
+.tr-saetze .x{margin-left:auto;border:0;background:none;color:var(--faint);font-size:18px;padding:2px 6px}
+#tr-akt{scroll-margin-top:64px}
+.pause{border-color:color-mix(in srgb,var(--tc) 45%,var(--line))}
+.pause .tr-uhr{color:var(--tc)}
+.pause.fertig{animation:blink 1s 4}
+@keyframes blink{50%{background:color-mix(in srgb,var(--tc) 22%,var(--panel))}}
+.balken{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin-top:12px}
+.balken i{display:block;height:100%;background:var(--tc);border-radius:3px;transition:width .4s linear}
+body.training nav#tabs, body.training #zeitbar, body.training #heute{display:none}
+
+/* ---------- Toast & Blatt ---------- */
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));z-index:30;
+  transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:999px;font-weight:700;font-size:15px;
+  transition:transform .22s,opacity .22s;box-shadow:0 10px 30px #0006;white-space:nowrap}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.bild-voll{position:fixed;inset:0;z-index:40;background:#000e;display:grid;place-items:center;padding:16px}
+.bild-voll img{max-width:100%;max-height:100%;border-radius:10px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Logger <span style="font-size:11px;font-weight:400;color:var(--dim)">v25</span></h1>
+  <span class="brand">Logger<small>v26</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
+  <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
 </header>
 
-<nav>
-  <button data-tab="essen"   aria-pressed="true">Essen</button>
-  <button data-tab="trinken" aria-pressed="false">Trinken</button>
-  <button data-tab="gewicht" aria-pressed="false">Gewicht</button>
-  <button data-tab="klo"     aria-pressed="false">Klo</button>
-  <button data-tab="kochen"  aria-pressed="false">Kochen</button>
-  <button data-tab="kraft"   aria-pressed="false">Kraft</button>
-  <button data-tab="mehr"    aria-pressed="false">Mehr</button>
-</nav>
+<div class="title"><span class="badge" id="titelIcon"></span><h1 id="titel">Essen</h1></div>
 
 <div id="zeitbar">
   <button class="chip" id="zeitChip" type="button">🕒 jetzt</button>
   <span class="lab" id="zeitLab">Zeitpunkt = jetzt</span>
   <div id="zeitEdit">
     <input type="time" id="zeitInput">
-    <button class="chip" data-tag="heute"  id="zeitHeute">heute</button>
+    <button class="chip" data-tag="heute" id="zeitHeute">heute</button>
     <button class="chip" data-tag="gestern" id="zeitGestern">gestern</button>
     <button class="chip" id="zeitReset">zurücksetzen</button>
   </div>
 </div>
 
-<section id="s-essen" class="on">
-  <h2>Rezept</h2>
-  <div class="grid g2">
-    <button class="k" id="r-porridge">Porridge<small>Gramm Haferflocken</small></button>
-    <button class="k" id="r-crepes">Crepes<small>nach Belag</small></button>
-  </div>
-  <div id="porridge-box" style="display:none">
-    <label>Haferflocken in Gramm</label>
-    <input type="number" id="p-gramm" inputmode="decimal" value="100" step="5">
-    <label>Ahornsirup in Gramm <small style="color:var(--dim)">leer = aus dem Rezept geschätzt</small></label>
-    <input type="number" id="p-sirup" inputmode="decimal" step="1" placeholder="22">
-    <button class="go" id="p-send">Porridge eintragen</button>
-  </div>
-  <div id="crepes-box" style="display:none">
-    <label>Anzahl gebackener Crepes (leer = Schätzung)</label>
-    <input type="number" id="c-anzahl" inputmode="numeric" placeholder="z. B. 43">
-    <div class="grid g4" style="margin-top:10px">
-      <button class="k ct" data-belag="kaese">Käse<small class="n">0</small></button>
-      <button class="k ct" data-belag="nutella">Nutella<small class="n">0</small></button>
-      <button class="k ct" data-belag="marmelade">Marm.<small class="n">0</small></button>
-      <button class="k ct" data-belag="kombi">Kombi<small class="n">0</small></button>
+<!-- ======================= ESSEN ======================= -->
+<section class="tab on" id="s-essen" style="--tc:var(--c-essen)">
+  <div class="card">
+    <h3>Was hast du gegessen?</h3>
+    <p class="sub">Fotos, Text und Sprachnachricht landen zusammen in <strong>einem</strong> Eintrag.
+      Etikett oder Teller ist egal, das sehe ich beim Auswerten.</p>
+    <textarea id="f-text" style="margin-top:12px"
+      placeholder="z. B. Mensa: Reis, Kichererbsencurry – eine Kelle Reis. Oder: Etikett vom neuen Müsli, 60 g abgewogen"></textarea>
+    <div id="f-fotos"></div>
+    <div id="f-rec" class="rec"></div>
+    <h2>Vertrauen</h2>
+    <div class="seg" id="f-vert">
+      <button data-v="exakt">exakt<br><small style="font-weight:500;opacity:.7">gewogen</small></button>
+      <button data-v="gut" aria-pressed="true">gut<br><small style="font-weight:500;opacity:.7">Etikett/Foto</small></button>
+      <button data-v="grob">grob<br><small style="font-weight:500;opacity:.7">geschätzt</small></button>
     </div>
-    <p class="hint">Tippen zählt hoch, langes Tippen setzt zurück.</p>
-    <button class="go" id="c-send">Crepes eintragen</button>
+    <button class="go" id="f-send">Eintragen</button>
+    <p class="hint">Lieber grob schätzen als weglassen – fehlende Einträge verschieben die Bilanz
+      systematisch, grobe nur zufällig.</p>
   </div>
 
-  <h2 style="margin-top:20px">Freitext & Foto</h2>
-  <label>Was hast du gegessen?</label>
-  <textarea id="f-text" placeholder="Mensa: Reis, Kichererbsencurry, Salat – etwa eine Kelle Reis"></textarea>
-  <label>Foto</label>
-  <div class="grid g2">
-    <button class="k" id="f-mahlzeit">Mahlzeit</button>
-    <button class="k" id="f-label">Etikett</button>
-  </div>
-  <input type="file" id="f-file" accept="image/*" capture="environment" hidden>
-  <img id="f-prev" class="prev" hidden alt="">
-  <label>Vertrauen</label>
-  <div class="row">
-    <button class="chip v" data-v="exakt">exakt</button>
-    <button class="chip v" data-v="gut" aria-pressed="true">gut</button>
-    <button class="chip v" data-v="grob">grob</button>
-  </div>
-  <button class="go" id="f-send">Eintragen</button>
-  <p class="hint">Lieber grob schätzen als weglassen – fehlende Einträge verschieben die
-     Bilanz systematisch, grobe nur zufällig.</p>
-</section>
-
-<section id="s-trinken">
-  <h2>Menge</h2>
-  <div class="grid g4">
-    <button class="k ml" data-ml="200">200<small>ml</small></button>
-    <button class="k ml" data-ml="330">330<small>ml</small></button>
-    <button class="k ml" data-ml="500">500<small>ml</small></button>
-    <button class="k ml" data-ml="750">750<small>ml</small></button>
-  </div>
-  <h2 style="margin-top:18px">Was</h2>
-  <div class="grid g4">
-    <button class="k w" data-w="wasser" aria-pressed="true">Wasser</button>
-    <button class="k w" data-w="kaffee">Kaffee</button>
-    <button class="k w" data-w="tee">Tee</button>
-    <button class="k w" data-w="sport">Sport<small>mit KH</small></button>
-  </div>
-  <div id="t-kh-box" style="display:none">
-    <h2 style="margin-top:18px">Quelle</h2>
+  <div class="card">
+    <h2>Schnell</h2>
     <div class="grid g3">
-      <button class="k q" data-q="iso_dm" aria-pressed="true">ISO dm<small>90 g KH/100 g</small></button>
-      <button class="k q" data-q="zucker">Zucker<small>100 g KH/100 g</small></button>
-      <button class="k q" data-q="direkt">nur KH<small>Menge = KH</small></button>
+      <button class="k" id="r-porridge" aria-pressed="false">Porridge<small>Haferflocken</small></button>
+      <button class="k" id="r-crepes" aria-pressed="false">Crepes<small>nach Belag</small></button>
+      <button class="k" id="r-kochen" aria-pressed="false">Kochen<small>Zutaten</small></button>
     </div>
-    <h2 style="margin-top:18px" id="t-kh-h">Pulver</h2>
-    <div class="grid g4">
-      <button class="k kh" data-kh="75">75<small>g</small></button>
-      <button class="k kh" data-kh="100">100<small>g</small></button>
-      <button class="k kh" data-kh="150">150<small>g</small></button>
-      <button class="k kh" data-kh="200">200<small>g</small></button>
+
+    <div id="porridge-box" hidden>
+      <div class="wz-lab"><span>Haferflocken</span></div>
+      <div id="p-gramm"></div>
+      <div class="wz-lab"><span>Ahornsirup</span><span class="d">ganz oben = aus dem Rezept</span></div>
+      <div id="p-sirup"></div>
+      <button class="go" id="p-send">Porridge eintragen</button>
     </div>
-    <label id="t-kh-lab">Andere Menge in g Pulver</label>
-    <input type="number" id="t-kh" inputmode="numeric" placeholder="g Pulver">
-    <p class="hint" id="t-kh-out">—</p>
-  </div>
-  <label>Andere Menge in ml</label>
-  <input type="number" id="t-ml" inputmode="numeric" placeholder="frei eintragen">
-  <button class="go" id="t-send">Trinken eintragen</button>
-</section>
 
-<section id="s-gewicht">
-  <h2>Messpunkt</h2>
-  <div class="grid g3">
-    <button class="k sl" data-slot="09">9 Uhr</button>
-    <button class="k sl" data-slot="17">17 Uhr</button>
-    <button class="k sl" data-slot="23">23 Uhr</button>
-  </div>
-  <div class="grid g2" style="margin-top:8px">
-    <button class="k sl" data-slot="ride-vorher">vor Fahrt</button>
-    <button class="k sl" data-slot="ride-nachher">nach Fahrt</button>
-    <button class="k sl" data-slot="kraft-vorher">vor Kraft</button>
-    <button class="k sl" data-slot="kraft-nachher">nach Kraft</button>
-  </div>
-  <p class="hint">Vorher/nachher misst Flüssigkeitsverlust, nicht Gewicht – diese Werte
-     gehen nicht in den Gewichtstrend ein. Wichtig ist nur, dass beide Messungen auf
-     derselben Waage passieren.</p>
-  <label>Gewicht in kg</label>
-  <input type="number" id="g-kg" inputmode="decimal" step="0.1" placeholder="77.7">
-  <label>Körperfett in % (optional)</label>
-  <input type="number" id="g-kfa" inputmode="decimal" step="0.1" placeholder="13.9">
-  <div class="row" style="margin-top:12px;flex-wrap:wrap">
-    <button class="chip" id="g-nuechtern">nüchtern</button>
-    <button class="chip" id="g-pipi">nach Pipi</button>
-    <button class="chip" id="g-stuhl">nach Stuhlgang</button>
-  </div>
-  <p class="hint" id="ref-hint">Referenzmessung = 9 Uhr, nüchtern, nach dem Pipi.
-     Nur diese Werte bestimmen den Trend.</p>
-  <button class="go" id="g-send">Gewicht eintragen</button>
-  <p class="hint">Der KFA-Wert zählt nur als Trend, nie als absoluter Wert.</p>
-</section>
+    <div id="crepes-box" hidden>
+      <h2>Belag · tippen zählt hoch, lang tippen setzt zurück</h2>
+      <div class="grid g4">
+        <button class="k ct" data-belag="kaese"><span class="n">0</span><small>Käse</small></button>
+        <button class="k ct" data-belag="nutella"><span class="n">0</span><small>Nutella</small></button>
+        <button class="k ct" data-belag="marmelade"><span class="n">0</span><small>Marm.</small></button>
+        <button class="k ct" data-belag="kombi"><span class="n">0</span><small>Kombi</small></button>
+      </div>
+      <div class="wz-lab"><span>Gebackene Crepes insgesamt</span><span class="d">? = Schätzung</span></div>
+      <div id="c-anzahl"></div>
+      <button class="go" id="c-send">Crepes eintragen</button>
+    </div>
 
-<section id="s-klo">
-  <h2>Was</h2>
-  <div class="grid g3">
-    <button class="k art" data-art="pipi" aria-pressed="true">Pipi</button>
-    <button class="k art" data-art="stuhl">Stuhl</button>
-    <button class="k art" data-art="beides">beides</button>
-  </div>
-  <h2 style="margin-top:18px">Erfassung</h2>
-  <div class="grid g2">
-    <button class="k mo" data-mo="kat" aria-pressed="true">Kategorie<small>schnell</small></button>
-    <button class="k mo" data-mo="wieg">gewogen<small>genauer</small></button>
-  </div>
-  <div id="wieg-box" style="display:none">
-    <p class="hint">Angezogen wiegen ist völlig in Ordnung – bei der Differenz kürzt sich
-       die Kleidung heraus. Es werden <strong>nur</strong> die Gramm gespeichert, nie die
-       absoluten Werte, und sie gehen nie in den Gewichtstrend ein.</p>
-    <label>Differenz direkt in Gramm</label>
-    <input type="number" id="k-diff" inputmode="numeric" step="100" placeholder="300">
-    <details>
-      <summary>lieber beide Werte eintippen</summary>
-      <label>vorher (kg)</label>
-      <input type="number" id="k-vor" inputmode="decimal" step="0.1" placeholder="78.4">
-      <label>nachher (kg)</label>
-      <input type="number" id="k-nach" inputmode="decimal" step="0.1" placeholder="78.1">
-    </details>
-    <p class="hint" id="k-delta">–</p>
-  </div>
-  <h2 style="margin-top:18px">Menge</h2>
-  <div class="grid g3">
-    <button class="k gr" data-gr="klein">klein</button>
-    <button class="k gr" data-gr="mittel" aria-pressed="true">mittel</button>
-    <button class="k gr" data-gr="gross">groß</button>
-  </div>
-  <div id="kat-box">
-  <div id="farbe-box">
-    <h2 style="margin-top:18px">Farbe</h2>
-    <div class="grid g3">
-      <button class="k fa" data-fa="hell">hell</button>
-      <button class="k fa" data-fa="mittel">mittel</button>
-      <button class="k fa" data-fa="dunkel">dunkel</button>
+    <div id="kochen-box" hidden>
+      <h2>Gericht</h2>
+      <input type="text" id="ko-gericht" placeholder="Lasagne, Nudeln …">
+      <h2>Zutat</h2>
+      <input type="text" id="z-name" placeholder="Mehl">
+      <div class="wz-lab"><span>Menge</span></div>
+      <div id="z-menge"></div>
+      <div class="seg" id="z-einheit" style="margin-top:8px">
+        <button data-e="g" aria-pressed="true">g</button>
+        <button data-e="ml">ml</button>
+        <button data-e="stueck">Stück</button>
+      </div>
+      <div class="grid g2" style="margin-top:10px">
+        <button class="k" id="z-foto">📷 Nährwerte</button>
+        <button class="k" id="z-add">+ Zutat merken</button>
+      </div>
+      <input type="file" id="z-file" accept="image/*" capture="environment" hidden>
+      <div class="thumbs" id="z-prev"></div>
+      <ul class="tr-saetze" id="z-liste"></ul>
+      <div class="grid g2">
+        <div><div class="wz-lab"><span>ergab Portionen</span></div><div id="ko-ergab"></div></div>
+        <div><div class="wz-lab"><span>davon gegessen</span></div><div id="ko-gegessen"></div></div>
+      </div>
+      <p class="hint">Beides optional – bei den Crepes wäre „ergab 43, gegessen 9“ richtig, beim
+        Teller Nudeln bleibt es auf „–“.</p>
+      <button class="go" id="ko-send">Kochsession abschicken</button>
     </div>
   </div>
-  <div id="kons-box" style="display:none">
-    <h2 style="margin-top:18px">Konsistenz</h2>
-    <div class="grid g3">
-      <button class="k ko" data-ko="normal" aria-pressed="true">normal</button>
-      <button class="k ko" data-ko="weich">weich</button>
-      <button class="k ko" data-ko="durchfall">Durchfall</button>
+</section>
+
+<!-- ======================= TRINKEN ======================= -->
+<section class="tab" id="s-trinken" style="--tc:var(--c-trinken)">
+  <div class="card">
+    <h2>Was</h2>
+    <div class="seg" id="t-was">
+      <button data-w="wasser" aria-pressed="true">Wasser</button>
+      <button data-w="kaffee">Kaffee</button>
+      <button data-w="tee">Tee</button>
+      <button data-w="sport">Sport</button>
+    </div>
+    <div class="wz-lab"><span>Menge</span></div>
+    <div id="t-ml"></div>
+    <div class="quick" id="t-ml-q">
+      <button class="chip" data-v="200">200</button><button class="chip" data-v="330">330</button>
+      <button class="chip" data-v="500">500</button><button class="chip" data-v="750">750</button>
+    </div>
+
+    <div id="t-kh-box" hidden>
+      <h2>Kohlenhydratquelle</h2>
+      <div class="seg" id="t-quelle">
+        <button data-q="iso_dm" aria-pressed="true">ISO dm</button>
+        <button data-q="zucker">Zucker</button>
+        <button data-q="direkt">nur KH</button>
+      </div>
+      <div class="wz-lab"><span id="t-kh-lab">Pulver</span></div>
+      <div id="t-kh"></div>
+      <div class="quick" id="t-kh-q">
+        <button class="chip" data-v="75">75</button><button class="chip" data-v="100">100</button>
+        <button class="chip" data-v="150">150</button><button class="chip" data-v="200">200</button>
+      </div>
+      <p class="ausgabe" id="t-kh-out">—</p>
+    </div>
+    <button class="go" id="t-send">Trinken eintragen</button>
+  </div>
+</section>
+
+<!-- ======================= GEWICHT ======================= -->
+<section class="tab" id="s-gewicht" style="--tc:var(--c-gewicht)">
+  <div class="card" id="eo-card" hidden></div>
+  <div class="card">
+    <h2>Messpunkt</h2>
+    <div class="seg" id="g-slot1">
+      <button data-slot="09">9 Uhr</button>
+      <button data-slot="17">17 Uhr</button>
+      <button data-slot="23">23 Uhr</button>
+    </div>
+    <div class="seg" id="g-slot2" style="margin-top:6px">
+      <button data-slot="ride-vorher">vor Fahrt</button>
+      <button data-slot="ride-nachher">nach Fahrt</button>
+      <button data-slot="kraft-vorher">vor Kraft</button>
+      <button data-slot="kraft-nachher">nach Kraft</button>
+    </div>
+    <div class="wz-lab"><span>Gewicht</span></div>
+    <div id="g-kg"></div>
+    <div class="wz-lab"><span>Körperfett (nur Trend)</span>
+      <button class="chip" id="g-ohne-kfa" style="padding:3px 10px;font-size:12px">ohne KFA</button></div>
+    <div id="g-kfa"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="chip" id="g-nuechtern">nüchtern</button>
+      <button class="chip" id="g-pipi">nach Pipi</button>
+      <button class="chip" id="g-stuhl">nach Stuhlgang</button>
+    </div>
+    <p class="hint" id="ref-hint"></p>
+    <button class="go" id="g-send">Gewicht eintragen</button>
+    <p class="hint">Vor/nach Fahrt oder Kraft misst Flüssigkeitsverlust, nicht Gewicht – diese Werte
+      gehen nicht in den Trend. Beide Messungen auf derselben Waage.</p>
+  </div>
+</section>
+
+<!-- ======================= KLO ======================= -->
+<section class="tab" id="s-klo" style="--tc:var(--c-klo)">
+  <div class="card">
+    <h2>Was</h2>
+    <div class="seg" id="k-art">
+      <button data-art="pipi" aria-pressed="true">Pipi</button>
+      <button data-art="stuhl">Stuhl</button>
+      <button data-art="beides">beides</button>
+    </div>
+    <h2>Erfassung</h2>
+    <div class="seg" id="k-mo">
+      <button data-mo="kat" aria-pressed="true">Kategorie</button>
+      <button data-mo="wieg">gewogen</button>
+    </div>
+    <div id="wieg-box" hidden>
+      <div class="wz-lab"><span>Differenz vorher – nachher</span><span class="d">Badwaage, ±58 g</span></div>
+      <div id="k-diff"></div>
+      <p class="hint">Angezogen wiegen ist in Ordnung, die Kleidung kürzt sich heraus. Gespeichert
+        wird nur die Differenz, sie geht nie in den Gewichtstrend.</p>
+    </div>
+    <div id="kat-box">
+      <h2>Menge</h2>
+      <div class="seg" id="k-gr">
+        <button data-gr="klein">klein</button>
+        <button data-gr="mittel" aria-pressed="true">mittel</button>
+        <button data-gr="gross">groß</button>
+      </div>
+    </div>
+    <div id="farbe-box">
+      <h2>Farbe</h2>
+      <div class="seg" id="k-fa">
+        <button data-fa="hell">hell</button>
+        <button data-fa="mittel">mittel</button>
+        <button data-fa="dunkel">dunkel</button>
+      </div>
+    </div>
+    <div id="kons-box" hidden>
+      <h2>Konsistenz</h2>
+      <div class="seg" id="k-ko">
+        <button data-ko="normal" aria-pressed="true">normal</button>
+        <button data-ko="weich">weich</button>
+        <button data-ko="durchfall">Durchfall</button>
+      </div>
+    </div>
+    <button class="go" id="k-send">Eintragen</button>
+  </div>
+</section>
+
+<!-- ======================= TRAINING ======================= -->
+<section class="tab" id="s-training" style="--tc:var(--c-training)">
+  <div id="tr-idle">
+    <div class="card">
+      <h3>Krafttraining</h3>
+      <p class="sub">Die Uhr läuft ab dem Start mit. Übung wählen, jeden Satz einzeln abhaken, dazwischen
+        zählt die Pausenuhr. Die Dauer wird gemessen, nicht geschätzt.</p>
+      <button class="go" id="tr-start">Training starten</button>
+      <button class="go sek" id="tr-nachtrag">Nachtragen ohne Uhr</button>
+    </div>
+    <p class="hint">Tuck Planche und Tuck Front Lever werden nur als „gemacht“ erfasst – die
+      Limit-Methode lässt sich nicht in Wiederholungen fassen. Fortschrittssignal sind Pistol Squats
+      und Handstand-Liegestütze.</p>
+  </div>
+
+  <div id="tr-lauf" hidden>
+    <div class="card spread" id="tr-kopf">
+      <div><div class="sub" id="tr-modus">Training läuft</div><div class="tr-uhr" id="tr-uhr">0:00</div></div>
+      <button class="chip" id="tr-beenden" style="--tc:var(--c-training)" aria-pressed="true">Beenden</button>
+    </div>
+
+    <div class="card pause" id="tr-pause" hidden>
+      <div class="spread">
+        <div><div class="sub">Pause</div><div class="tr-uhr" id="tr-pause-uhr">0:00</div></div>
+        <div class="sub" style="text-align:right">Ziel<br><b id="tr-pause-ziel" style="color:var(--fg);font-size:17px">2:00</b></div>
+      </div>
+      <div class="balken"><i id="tr-pause-balken" style="width:0"></i></div>
+      <div class="quick" id="tr-pause-q">
+        <button class="chip" data-s="60">1:00</button><button class="chip" data-s="90">1:30</button>
+        <button class="chip" data-s="120">2:00</button><button class="chip" data-s="180">3:00</button>
+      </div>
+    </div>
+
+    <div class="card" id="tr-akt" hidden>
+      <h3 id="tr-akt-name"></h3>
+      <p class="sub" id="tr-akt-hint"></p>
+      <ul class="tr-saetze" id="tr-akt-saetze"></ul>
+      <div id="tr-wert-box">
+        <div class="wz-lab"><span id="tr-wert-lab">Wiederholungen</span></div>
+        <div id="tr-wert"></div>
+      </div>
+      <input type="text" id="tr-detail" hidden style="margin-top:12px"
+             placeholder="optional: wie weit gestreckt, wie es sich anfühlte">
+      <h2>Ausführung</h2>
+      <div class="seg" id="tr-au">
+        <button data-au="frei" aria-pressed="true">frei</button>
+        <button data-au="unterstuetzt">unterstützt</button>
+      </div>
+      <button class="go" id="tr-satz">Satz fertig</button>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0" id="tr-ueb-h">Übung</h2>
+      <div class="tr-ueb" id="tr-ueb"></div>
+    </div>
+
+  </div>
+
+  <div id="tr-ende" hidden>
+    <div class="card">
+      <h3>Zusammenfassung</h3>
+      <p class="sub" id="tr-sum-kopf"></p>
+      <div id="tr-dauer-box" hidden>
+        <div class="wz-lab"><span>Dauer</span></div>
+        <div id="tr-dauer"></div>
+      </div>
+      <ul class="tr-saetze" id="tr-sum"></ul>
+      <h2>Notiz</h2>
+      <input type="text" id="tr-note" placeholder="z. B. Front Lever fühlte sich leicht an">
+      <div id="tr-rec" class="rec"></div>
+      <button class="go" id="tr-send">Training abschicken</button>
+      <button class="go sek" id="tr-zurueck">Zurück zum Training</button>
+      <button class="go bad" id="tr-verwerfen">Training verwerfen</button>
     </div>
   </div>
-  </div>
-  <button class="go" id="k-send">Eintragen</button>
 </section>
 
-<section id="s-kochen">
-  <h2>Was kochst du?</h2>
-  <input type="text" id="ko-gericht" placeholder="Lasagne, Nudeln, Porridge …">
-
-  <h2 style="margin-top:20px">Zutat hinzufügen</h2>
-  <div class="row">
-    <input type="text" id="z-name" placeholder="Mehl" style="flex:2">
-    <input type="number" id="z-menge" inputmode="decimal" placeholder="400" style="flex:1">
+<!-- ======================= EINSTELLUNGEN ======================= -->
+<section class="tab" id="s-mehr" style="--tc:var(--accent)">
+  <div class="card">
+    <h2 style="margin-top:0">Zugang</h2>
+    <p class="hint" style="margin-top:0">Einmalig: Fine-grained Token mit <strong>Contents: Read and
+      write</strong> nur für <strong>ernaehrung-data</strong>. Bleibt auf diesem Gerät.</p>
+    <input type="password" id="tok" placeholder="github_pat_…" autocomplete="off"
+           autocapitalize="off" spellcheck="false" style="margin-top:10px">
+    <button class="go" id="tok-save">Token speichern</button>
   </div>
-  <div class="row" style="margin-top:8px">
-    <button class="chip e" data-e="g" aria-pressed="true">g</button>
-    <button class="chip e" data-e="ml">ml</button>
-    <button class="chip e" data-e="stueck">Stück</button>
+  <div class="card">
+    <h2 style="margin-top:0">Warteschlange</h2>
+    <p class="hint" style="margin-top:0" id="q-info">—</p>
+    <button class="go sek" id="flush">Jetzt synchronisieren</button>
+    <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
+      Garmin Connect. Version 26 · 28.09.2026</p>
   </div>
-  <div class="grid g2" style="margin-top:10px">
-    <button class="k" id="z-foto">Nährwerte fotografieren</button>
-    <button class="k" id="z-add">Zutat merken</button>
-  </div>
-  <input type="file" id="z-file" accept="image/*" capture="environment" hidden>
-  <img id="z-prev" class="prev" hidden alt="">
-  <ul id="z-liste" style="list-style:none;padding:0;margin:14px 0 0;font-size:14px"></ul>
-
-  <h2 style="margin-top:20px">Portionen</h2>
-  <div class="row">
-    <input type="number" id="ko-ergab" inputmode="numeric" placeholder="ergab … Portionen">
-    <input type="number" id="ko-gegessen" inputmode="decimal" placeholder="davon gegessen">
-  </div>
-  <p class="hint">Beides optional. Bei den Crepes wäre „ergab 43, gegessen 9" die richtige
-     Angabe – bei einem Teller Nudeln lässt du es einfach leer.</p>
-  <button class="go" id="ko-send">Kochsession abschicken</button>
-  <p class="hint">Wird nur roh abgelegt. Ob daraus ein Rezept wird, entscheidest du später
-     im Chat – die App legt selbst keine an.</p>
+  <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
 
-<section id="s-kraft">
-  <h2>Trainingsdauer</h2>
-  <div class="row">
-    <input type="number" id="kr-dauer" inputmode="numeric" placeholder="Minuten (meist ~42)">
-  </div>
-  <p class="hint">Leer lassen ist in Ordnung – dann rechne ich mit deinem Mittelwert
-     statt mit einer Zahl, die du nicht gemessen hast.</p>
-
-  <h2 style="margin-top:20px">Übung</h2>
-  <div class="grid g3" id="kr-uebungen"></div>
-
-  <div id="kr-eingabe" style="display:none">
-    <label id="kr-label">Sätze × Wiederholungen</label>
-    <div class="row" id="kr-zahlen">
-      <input type="number" id="kr-a" inputmode="numeric" placeholder="Sätze">
-      <input type="number" id="kr-b" inputmode="decimal" placeholder="Wdh.">
-    </div>
-    <input type="text" id="kr-detail" style="display:none"
-           placeholder="optional: wie weit gestreckt, wie es sich anfühlte">
-    <label>Ausführung</label>
-    <div class="row">
-      <button class="chip au" data-au="frei" aria-pressed="true">frei</button>
-      <button class="chip au" data-au="unterstuetzt">unterstützt</button>
-    </div>
-    <p class="hint" id="kr-hint"></p>
-    <button class="go" id="kr-add" style="background:var(--panel2);color:var(--fg)">Übung zur Liste</button>
-  </div>
-
-  <ul id="kr-liste" style="list-style:none;padding:0;margin:14px 0 0;font-size:14px"></ul>
-  <label>Notiz (optional)</label>
-  <input type="text" id="kr-note" placeholder="z. B. Front Lever fühlte sich leicht an">
-  <button class="go" id="kr-send">Training abschicken</button>
-  <p class="hint">Tuck Planche und Tuck Front Lever werden nur als „gemacht" erfasst – die Limit-Methode
-     lässt sich nicht in Sätze × Wiederholungen fassen. Als Fortschrittssignal ausgewertet
-     werden nur Pistol Squats und Handstand-Liegestütze.</p>
-</section>
-
-<section id="s-mehr">
-  <p class="hint">Garmin muss nicht mehr abgetippt werden &mdash; Tagesenergie,
-  Schlaf und Fahrten werden seit v25 direkt aus Garmin Connect geholt.</p>
-
-  <h2 style="margin-top:22px">Zugang</h2>
-  <p class="hint">Einmalig: Fine-grained Token mit <strong>Contents: Read and write</strong>
-     nur für <strong>ernaehrung-data</strong>. Bleibt auf diesem Gerät, nie im Seitencode.</p>
-  <input type="password" id="tok" placeholder="github_pat_…" autocomplete="off"
-         autocapitalize="off" spellcheck="false">
-  <button class="go" id="tok-save">Token speichern</button>
-  <p class="hint">Version 23 – 18.09.2026</p>
-  <details>
-    <summary>Warteschlange</summary>
-    <p class="hint" id="q-info">—</p>
-    <button class="go" id="flush" style="background:var(--panel2);color:var(--fg)">
-      Jetzt synchronisieren</button>
-  </details>
-</section>
-
-<section class="on" style="background:none;border:0;padding:0">
+<section id="heute">
   <h2>Heute</h2>
   <ul id="log"></ul>
 </section>
+
+<nav id="tabs">
+  <button data-tab="essen" aria-pressed="true" style="--tc:var(--c-essen)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3.5H17"/></svg>Essen</button>
+  <button data-tab="trinken" aria-pressed="false" style="--tc:var(--c-trinken)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3h13l-1.6 16.2a2 2 0 0 1-2 1.8H9.1a2 2 0 0 1-2-1.8z"/><path d="M6.4 10h11.2"/></svg>Trinken</button>
+  <button data-tab="gewicht" aria-pressed="false" style="--tc:var(--c-gewicht)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 9.5a5.5 5.5 0 0 1 8 0"/><path d="M12 9.8l1.3-2.3"/></svg>Gewicht</button>
+  <button data-tab="klo" aria-pressed="false" style="--tc:var(--c-klo)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/></svg>Klo</button>
+  <button data-tab="training" aria-pressed="false" style="--tc:var(--c-training)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Training</button>
+</nav>
 
 <div class="toast" id="toast"></div>
 
 <script>
 (() => {
 "use strict";
+const VERSION = 26;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
-const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1";
+const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
+      TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 
 // ---------- Speicher ----------
 const ls = {
   get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }
              catch(e){ return d; } },
-  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } },
   raw(k){ try { return localStorage.getItem(k) || ""; } catch(e){ return ""; } },
-  setRaw(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+  setRaw(k, v){ try { localStorage.setItem(k, v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
 };
+
+// Fotos und Audio gehoeren nicht in den localStorage (~5 MB, auf dem iPhone
+// schnell voll). Sie liegen in IndexedDB; die Warteschlange traegt nur Verweise
+// und eine kleine Vorschau.
+const idb = (() => {
+  const mem = new Map(); let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open("ernaehrung", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("blobs");
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    } catch(e){ rej(e); }
+  }));
+  const tx = async (mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction("blobs", mode), req = fn(t.objectStore("blobs"));
+      t.oncomplete = () => res(req ? req.result : undefined);
+      t.onerror = () => rej(t.error);
+    });
+  };
+  return {
+    async put(k, v){ mem.set(k, v); try { await tx("readwrite", s => s.put(v, k)); } catch(e){} },
+    async get(k){ if (mem.has(k)) return mem.get(k);
+                  try { return await tx("readonly", s => s.get(k)); } catch(e){ return undefined; } },
+    async del(k){ mem.delete(k); try { await tx("readwrite", s => s.delete(k)); } catch(e){} }
+  };
+})();
+
 let queue = ls.get(QK, []);
 const saveQ = () => ls.set(QK, queue);
+const last = ls.get(LAST_K, {});
+const merken = (k, v) => { last[k] = v; ls.set(LAST_K, last); };
 
 // ---------- Hilfen ----------
 const pad = n => String(n).padStart(2, "0");
-function nowIso(){
-  const d = new Date(), o = -d.getTimezoneOffset();
-  const s = o >= 0 ? "+" : "-", a = Math.abs(o);
+function isoAus(d){
+  const o = -d.getTimezoneOffset(), s = o >= 0 ? "+" : "-", a = Math.abs(o);
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T` +
          `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` +
          `${s}${pad(Math.floor(a/60))}:${pad(a%60)}`;
 }
+const nowIso = () => isoAus(new Date());
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-function b64(str){
-  return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
-}
+const b64 = str => {
+  const bytes = new TextEncoder().encode(str); let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const komma = (v, n = 1) => Number(v).toFixed(n).replace(".", ",");
+const zahl = v => Number.isInteger(v) ? String(v) : komma(v, 1);
+const mmss = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`; };
 function toast(msg){
   const t = $("#toast"); t.textContent = msg; t.classList.add("on");
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 1700);
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 1800);
 }
-function pressGroup(sel, el){
-  $$(sel).forEach(b => b.setAttribute("aria-pressed", b === el ? "true" : "false"));
+// Segment-Schalter und Knopfgruppen: genau einer gedrueckt
+function gruppe(sel, onChange){
+  $$(sel + " > button").forEach(b => b.addEventListener("click", () => {
+    $$(sel + " > button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    onChange && onChange(b.dataset);
+  }));
 }
-function pressed(sel){
-  const b = $$(sel).find(x => x.getAttribute("aria-pressed") === "true");
-  return b ? b.dataset : null;
+const wahl = sel => { const b = $$(sel + " > button").find(x => x.getAttribute("aria-pressed") === "true");
+  return b ? b.dataset : {}; };
+const setzeWahl = (sel, key, val) => $$(sel + " > button").forEach(x =>
+  x.setAttribute("aria-pressed", String(x.dataset[key] === val)));
+const an = sel => $(sel).getAttribute("aria-pressed") === "true";
+const umschalten = sel => $(sel).setAttribute("aria-pressed", String(!an(sel)));
+
+// ---------- Walze ----------
+// Scroll-Snap-Spalten wie der iOS-Picker. Startet auf dem zuletzt benutzten
+// Wert, damit meist ein kurzer Wisch reicht. nk:1 = zwei Spalten (ganze + Zehntel).
+function spanne(min, max, step){
+  const out = [];
+  for (let i = 0; ; i++){ const v = +(min + i * step).toFixed(3); if (v > max + 1e-9) break; out.push(v); }
+  return out;
 }
+function walze(host, o){
+  const H = 40;
+  host.className = "wz"; host.innerHTML = "";
+  const nk = o.nk === 1;
+  const cols = nk ? [spanne(o.min, o.max, 1), spanne(0, 9, 1)]
+                  : [(o.leer ? [null] : []).concat(spanne(o.min, o.max, o.step || 1))];
+  const fmt = (v, ci) => v === null ? o.leer : (nk ? String(v) : (o.step < 1 ? komma(v, 1) : String(v)));
+  const idx = cols.map(() => 0);
+  const els = cols.map((werte, ci) => {
+    const c = document.createElement("div"); c.className = "wz-col";
+    c.innerHTML = werte.map(v => `<div class="wz-it">${fmt(v, ci)}</div>`).join("");
+    host.appendChild(c);
+    if (nk && ci === 0){ const s = document.createElement("span"); s.className = "wz-sep"; s.textContent = ","; host.appendChild(s); }
+    return c;
+  });
+  if (o.einheit){ const u = document.createElement("span"); u.className = "wz-unit"; u.textContent = o.einheit; host.appendChild(u); }
+  const mark = ci => [...els[ci].children].forEach((d, i) => d.classList.toggle("sel", i === idx[ci]));
+  const naechster = (werte, v) => {
+    if (v === null || v === undefined) return werte[0] === null ? 0 : 0;
+    let best = 0, bd = Infinity;
+    werte.forEach((w, i) => { if (w === null) return; const d = Math.abs(w - v); if (d < bd){ bd = d; best = i; } });
+    return best;
+  };
+  const api = {
+    get(){ return nk ? +(cols[0][idx[0]] + cols[1][idx[1]] / 10).toFixed(1) : cols[0][idx[0]]; },
+    set(v, weich){
+      let ziel;
+      if (nk){ const r = Math.round((v ?? o.start) * 10); ziel = [naechster(cols[0], Math.floor(r / 10)), ((r % 10) + 10) % 10]; }
+      else ziel = [naechster(cols[0], v)];
+      ziel.forEach((i, ci) => { idx[ci] = i; mark(ci);
+        if (weich) els[ci].scrollTo({ top: i * H, behavior: "smooth" }); else els[ci].scrollTop = i * H; });
+      o.onChange && o.onChange(api.get());
+    },
+    merken(){ if (o.key) merken(o.key, api.get()); }
+  };
+  // Beim Sichtbarwerden feuert der Browser ein Scroll-Ereignis mit Position ~0,
+  // bevor die Walze positioniert ist. Bis dahin Scroll-Ereignisse ignorieren.
+  let bereit = !window.ResizeObserver;
+  els.forEach((c, ci) => {
+    let raf = 0;
+    c.addEventListener("scroll", () => {
+      if (raf || !bereit) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (!c.clientHeight) return;
+        const i = Math.max(0, Math.min(cols[ci].length - 1, Math.round(c.scrollTop / H)));
+        if (i !== idx[ci]){ idx[ci] = i; mark(ci); o.onChange && o.onChange(api.get()); }
+      });
+    }, { passive: true });
+    c.addEventListener("click", ev => {
+      const it = ev.target.closest(".wz-it"); if (!it) return;
+      c.scrollTo({ top: [...c.children].indexOf(it) * H, behavior: "smooth" });
+    });
+  });
+  // In einem versteckten Reiter greift scrollTop nicht -- beim Sichtbarwerden nachziehen.
+  if (window.ResizeObserver) new ResizeObserver(() => {
+    bereit = false;
+    if (!host.clientHeight) return;
+    els.forEach((c, ci) => { c.scrollTop = idx[ci] * H; });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      els.forEach((c, ci) => { c.scrollTop = idx[ci] * H; }); bereit = true; }));
+  }).observe(host);
+  const start = o.key && last[o.key] !== undefined ? last[o.key] : o.start;
+  api.set(start === undefined ? null : start);
+  return api;
+}
+
+// ---------- Fotos ----------
+function bildLaden(file){
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const zeichne = (max, q) => {
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        return c.toDataURL("image/jpeg", q);
+      };
+      // 1800 px: Naehrwerttabellen muessen lesbar bleiben (0,5 vs 6,5).
+      const voll = zeichne(1800, 0.86), thumb = zeichne(200, 0.7);
+      URL.revokeObjectURL(url);
+      res({ b64: voll.split(",")[1], mime: "image/jpeg", thumb });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Bild nicht lesbar")); };
+    img.src = url;
+  });
+}
+function fotoSammler(host){
+  host.innerHTML = `<div class="grid g2" style="margin-top:12px">
+      <button class="k" type="button" data-a="cam">📷 Kamera</button>
+      <button class="k" type="button" data-a="gal">🖼 Galerie</button></div>
+    <input type="file" accept="image/*" capture="environment" hidden data-i="cam">
+    <input type="file" accept="image/*" multiple hidden data-i="gal">
+    <div class="thumbs"></div>`;
+  let fotos = [];
+  const th = host.querySelector(".thumbs");
+  const zeig = () => {
+    th.innerHTML = fotos.map((f, i) =>
+      `<div class="thumb"><img src="${f.thumb}" alt=""><button type="button" data-i="${i}">×</button></div>`).join("");
+    th.querySelectorAll("button").forEach(b => b.onclick = () => { fotos.splice(+b.dataset.i, 1); zeig(); });
+  };
+  host.querySelectorAll("button[data-a]").forEach(b =>
+    b.onclick = () => host.querySelector(`input[data-i=${b.dataset.a}]`).click());
+  host.querySelectorAll("input[type=file]").forEach(inp => inp.onchange = async () => {
+    for (const f of inp.files){ try { fotos.push(await bildLaden(f)); } catch(e){ toast("Foto nicht lesbar"); } }
+    inp.value = ""; zeig();
+  });
+  return { get: () => fotos, reset(){ fotos = []; zeig(); } };
+}
+
+// ---------- Sprachnachricht ----------
+function blobB64(blob){
+  return new Promise(res => { const r = new FileReader();
+    r.onload = () => res(String(r.result).split(",")[1]); r.readAsDataURL(blob); });
+}
+function recorder(host){
+  host.innerHTML = `<button class="k rec-btn" type="button" style="width:100%;flex-direction:row;gap:8px">🎙 Sprachnachricht aufnehmen</button>
+    <div class="rec-out" hidden><audio controls preload="metadata"></audio>
+      <button class="chip" type="button">verwerfen</button></div>`;
+  const btn = host.querySelector(".rec-btn"), out = host.querySelector(".rec-out"),
+        au = host.querySelector("audio"), del = out.querySelector("button");
+  const geht = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  const grundtext = "🎙 Sprachnachricht aufnehmen";
+  if (!geht){ btn.disabled = true; btn.textContent = "Sprachnachricht hier nicht verfügbar"; }
+  let mr = null, stream = null, chunks = [], t0 = 0, uhr = 0, erg = null;
+  const typ = () => {
+    for (const m of ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"])
+      if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+    return "";
+  };
+  btn.onclick = async () => {
+    if (mr && mr.state === "recording"){ mr.stop(); return; }
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch(e){ toast("Mikrofon nicht freigegeben"); return; }
+    const m = typ();
+    mr = m ? new MediaRecorder(stream, { mimeType: m }) : new MediaRecorder(stream);
+    chunks = [];
+    mr.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+    mr.onstop = async () => {
+      clearInterval(uhr); stream.getTracks().forEach(t => t.stop());
+      const mime = (mr.mimeType || m || "audio/mp4").split(";")[0];
+      const blob = new Blob(chunks, { type: mime });
+      const sek = Math.round((Date.now() - t0) / 1000);
+      erg = { b64: await blobB64(blob), mime, sek };
+      au.src = URL.createObjectURL(blob); out.hidden = false;
+      btn.classList.remove("lauft"); btn.textContent = `🎙 neu aufnehmen (${mmss(sek)} vorhanden)`;
+    };
+    mr.start(1000); t0 = Date.now(); btn.classList.add("lauft");
+    const tick = () => btn.textContent = `■ Stopp · ${mmss((Date.now() - t0) / 1000)}`;
+    tick(); uhr = setInterval(tick, 250);
+  };
+  const reset = () => { erg = null; out.hidden = true; au.removeAttribute("src"); btn.textContent = grundtext; };
+  del.onclick = reset;
+  return { get: () => (mr && mr.state === "recording") ? "laeuft" : erg, reset };
+}
+const audioEndung = mime => mime.includes("mp4") || mime.includes("aac") ? "m4a"
+                          : mime.includes("ogg") ? "ogg" : "webm";
 
 // ---------- Nachtraeglicher Zeitpunkt ----------
 // Bewusst NICHT in den localStorage: ein vergessener Rueckdatier-Modus wuerde
 // sonst Tage spaeter noch stille Falscheintraege erzeugen. Reload = zurueck auf jetzt.
 let zeitOverride = null;            // {hhmm:"21:20", tag:"heute"|"gestern"}
-
 function isoMit(hhmm, tag){
   const d = new Date();
   if (tag === "gestern") d.setDate(d.getDate() - 1);
   const [h, m] = hhmm.split(":").map(Number);
   d.setHours(h, m, 0, 0);
-  const o = -d.getTimezoneOffset(), sg = o >= 0 ? "+" : "-", a = Math.abs(o);
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T` +
-         `${pad(d.getHours())}:${pad(d.getMinutes())}:00` +
-         `${sg}${pad(Math.floor(a/60))}:${pad(a%60)}`;
+  return isoAus(d);
 }
-
-// Eine in der Zukunft liegende Uhrzeit ist fast immer von gestern -- genau der
-// Fall "um 00:35 die Crepes von 21:20 nachtragen".
+// Eine in der Zukunft liegende Uhrzeit ist fast immer von gestern.
 function tagRaten(hhmm){
   const d = new Date(), [h, m] = hhmm.split(":").map(Number);
   return (h * 60 + m) > (d.getHours() * 60 + d.getMinutes()) ? "gestern" : "heute";
 }
-
 function zeitRender(){
   const bar = $("#zeitbar"), chip = $("#zeitChip"), lab = $("#zeitLab");
   if (zeitOverride){
@@ -449,418 +852,110 @@ function zeitRender(){
     lab.textContent = `Einträge werden auf ${zeitOverride.tag} ${zeitOverride.hhmm} datiert`;
   } else {
     bar.classList.remove("aktiv");
-    chip.textContent = "🕒 jetzt";
-    lab.textContent = "Zeitpunkt = jetzt";
+    chip.textContent = "🕒 jetzt"; lab.textContent = "Zeitpunkt = jetzt";
   }
   $$("#zeitEdit .chip[data-tag]").forEach(b =>
     b.setAttribute("aria-pressed", String(!!zeitOverride && b.dataset.tag === zeitOverride.tag)));
 }
-
-function zeitSetzen(){
-  const v = $("#zeitInput").value;
-  if (!v){ zeitOverride = null; zeitRender(); return; }
-  const tag = zeitOverride ? zeitOverride.tag : tagRaten(v);
-  zeitOverride = { hhmm: v, tag };
-  zeitRender();
-}
-
 $("#zeitChip").onclick = () => $("#zeitEdit").classList.toggle("on");
-$("#zeitInput").onchange = zeitSetzen;
-$("#zeitHeute").onclick  = () => { if ($("#zeitInput").value){ zeitOverride = {hhmm:$("#zeitInput").value, tag:"heute"};  zeitRender(); } };
-$("#zeitGestern").onclick= () => { if ($("#zeitInput").value){ zeitOverride = {hhmm:$("#zeitInput").value, tag:"gestern"}; zeitRender(); } };
-$("#zeitReset").onclick  = () => { zeitOverride = null; $("#zeitInput").value = ""; $("#zeitEdit").classList.remove("on"); zeitRender(); };
+$("#zeitInput").onchange = () => {
+  const v = $("#zeitInput").value;
+  zeitOverride = v ? { hhmm: v, tag: zeitOverride ? zeitOverride.tag : tagRaten(v) } : null;
+  zeitRender();
+};
+$("#zeitHeute").onclick   = () => { if ($("#zeitInput").value){ zeitOverride = { hhmm: $("#zeitInput").value, tag: "heute" }; zeitRender(); } };
+$("#zeitGestern").onclick = () => { if ($("#zeitInput").value){ zeitOverride = { hhmm: $("#zeitInput").value, tag: "gestern" }; zeitRender(); } };
+$("#zeitReset").onclick   = () => { zeitOverride = null; $("#zeitInput").value = ""; $("#zeitEdit").classList.remove("on"); zeitRender(); };
 
 // ---------- Warteschlange ----------
-function enqueue(payload, opts = {}){
-  const id = newId();
-  const jetzt = nowIso();
-  const ts = zeitOverride ? isoMit(zeitOverride.hhmm, zeitOverride.tag) : jetzt;
-  const zeitFelder = zeitOverride ? { geloggt_um: jetzt, zeit_nachgetragen: true } : {};
+// Ein Eintrag = ein JSON im Repo. Fotos und Audio sind eigene Uploads, die ueber
+// `parent` am Eintrag haengen und VOR ihm hochgeladen werden.
+async function eintragen(payload, { medien = [], ts: tsFix = null, ordner = "essen", quiet = false, sammeln = true } = {}){
+  const id = newId(), jetzt = nowIso();
+  const ts = tsFix || (zeitOverride ? isoMit(zeitOverride.hhmm, zeitOverride.tag) : jetzt);
+  const zeitFelder = zeitOverride && !tsFix ? { geloggt_um: jetzt, zeit_nachgetragen: true } : {};
   const day = ts.slice(0, 10);
-  const entry = {
-    id, ts, sent: false, error: null,
-    path: opts.path || `eintraege/${day}/${ts.slice(11,19).replace(/:/g,"")}-${id}.json`,
-    body: opts.binary ? opts.binary : b64(JSON.stringify({ id, ts, ...zeitFelder, ...payload }, null, 2)),
-    label: opts.label || payload.type
-  };
-  queue.push(entry); saveQ(); render(); flush();
-  toast(opts.quiet ? "gespeichert"
-        : zeitOverride ? `eingetragen – ${zeitOverride.tag} ${zeitOverride.hhmm}`
-        : "eingetragen");
-  return entry;
+  const neu = [], fotos = [];
+  let audio = null;
+  for (const [n, m] of medien.entries()){
+    const mid = newId() + n;
+    const istAudio = m.mime.startsWith("audio/");
+    const path = istAudio ? `audio/${day}-${id}.${audioEndung(m.mime)}`
+                          : `fotos/${ordner}/${day}-${id}-${n}.jpg`;
+    await idb.put(mid, { b64: m.b64, mime: m.mime });
+    neu.push({ id: mid, ts, logged: jetzt, kind: "bin", parent: id, path, mime: m.mime,
+               thumb: m.thumb || null, sek: m.sek || null, sent: false, error: null });
+    if (istAudio){ audio = path; } else fotos.push(path);
+    if (m.feld) m.feld(path);
+  }
+  const p = { id, ts, ...zeitFelder, ...payload };
+  // sammeln=false: die Pfade stehen schon an Ort und Stelle (Zutatenfotos beim Kochen)
+  if (sammeln && fotos.length) p.fotos = fotos;
+  if (audio) p.audio = audio;
+  neu.push({ id, ts, logged: jetzt, kind: "json", path: `eintraege/${day}/${ts.slice(11,19).replace(/:/g,"")}-${id}.json`,
+             payload: p, sent: false, error: null });
+  queue.push(...neu);
+  if (!saveQ()) toast("Speicher voll – bitte synchronisieren");
+  render(); flush();
+  if (!quiet) toast(zeitOverride && !tsFix ? `eingetragen – ${zeitOverride.tag} ${zeitOverride.hhmm}` : "eingetragen");
+  return p;
 }
 
+async function inhalt(e){
+  if (e.body) return e.body;                                    // Alt-Eintraege bis v25
+  if (e.kind === "bin"){
+    const b = await idb.get(e.id);
+    if (!b) throw { retryable: false, reason: "Datei nicht mehr auf dem Gerät" };
+    return b.b64;
+  }
+  return b64(JSON.stringify(e.payload, null, 2));
+}
 async function pushOne(e){
   const token = ls.raw(TK);
-  if (!token) throw { retryable:false, reason:"kein Token" };
-  const r = await fetch(
-    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${e.path}`,
-    { method:"PUT",
-      headers:{ "Authorization":"Bearer "+token, "Accept":"application/vnd.github+json",
-                "Content-Type":"application/json" },
-      body: JSON.stringify({ message:`log ${e.label} ${e.ts}`, content:e.body }) });
+  if (!token) throw { retryable: false, reason: "kein Token" };
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${e.path}`,
+    { method: "PUT",
+      headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
+                 "Content-Type": "application/json" },
+      body: JSON.stringify({ message: `log ${e.payload?.type || e.label || e.kind} ${e.ts}`,
+                             content: await inhalt(e) }) });
   if (r.status === 201 || r.status === 200) return true;
   let detail = "";
-  try { const j = await r.json(); detail = j.message ? ` – ${j.message}` : ""; } catch(e){}
+  try { const j = await r.json(); detail = j.message ? ` – ${j.message}` : ""; } catch(_){}
   if (r.status === 422 && /sha|exists/i.test(detail)) return true;   // schon vorhanden
-  const retryable = r.status >= 500 || r.status === 429;
   const hinweis = r.status === 404 ? " (Repo nicht gefunden – Token für falsches Repo?)"
                 : r.status === 403 ? " (keine Schreibrechte – Contents: Read and write?)"
                 : r.status === 401 ? " (Token ungültig)" : "";
-  throw { retryable, reason:`HTTP ${r.status}${hinweis}${detail}` };
+  throw { retryable: r.status >= 500 || r.status === 429, reason: `HTTP ${r.status}${hinweis}${detail}` };
 }
-
 let flushing = false;
 async function flush(){
-  if (flushing || !navigator.onLine || !ls.raw(TK)) { renderSync(); return; }
+  if (flushing || !navigator.onLine || !ls.raw(TK)){ renderSync(); return; }
   flushing = true;
   try {
-    for (const e of queue.filter(x => !x.sent)) {
-      try { await pushOne(e); e.sent = true; e.error = null; }
-      catch (err) {
-        e.error = err.reason || "Fehler";
-        if (err.reason === "kein Token") break;
-      }
+    for (const e of queue.filter(x => !x.sent)){
+      try { await pushOne(e); e.sent = true; e.error = null; if (e.body) e.body = null; }
+      catch(err){ e.error = err.reason || "Fehler"; if (err.reason === "kein Token") break; }
       saveQ(); render();
     }
   } finally { flushing = false; renderSync(); }
 }
-
-// ---------- Anzeige ----------
-function renderSync(){
-  const pend = queue.filter(x => !x.sent).length;
-  const err  = queue.filter(x => !x.sent && x.error && x.error !== "kein Token").length;
-  const dot = $("#sync .dot"), txt = $("#syncTxt");
-  const gesendet = queue.filter(x => x.sent).length;
-  txt.textContent = !ls.raw(TK) ? "kein Token"
-                  : pend ? `${pend} offen`
-                  : gesendet ? `${gesendet} gesendet` : "bereit, nichts geloggt";
-  dot.className = "dot " + (err ? "err" : pend ? "pend" : gesendet ? "ok" : "");
-  $("#q-info").textContent = `${queue.length} Einträge, ${pend} offen, ${err} fehlerhaft`;
-}
-function render(){
-  const today = nowIso().slice(0, 10);
-  const items = queue.filter(e => e.ts.slice(0,10) === today).slice(-40).reverse();
-  $("#log").innerHTML = items.map(e => {
-    const st = e.sent ? "sent" : (e.error && e.error !== "kein Token" ? "err" : "pending");
-    const lbl = e.sent ? "gesendet" : (e.error || "wartet");
-    return `<li><span class="t">${e.ts.slice(11,16)}</span>
-      <span class="b">${e.label}</span><span class="s ${st}">${lbl}</span></li>`;
-  }).join("") || `<li><span class="b" style="color:var(--dim)">noch nichts heute</span></li>`;
-  renderSync();
+// Gesendetes aufraeumen: Queue-Eintraege nach 3 Tagen, Mediendateien nach 2.
+async function aufraeumen(){
+  const grenze = t => Date.now() - t * 864e5;
+  const alt = e => new Date(e.logged || e.ts).getTime() < grenze(e.kind === "bin" ? 2 : 3);
+  for (const e of queue.filter(e => e.sent && alt(e))) if (e.kind === "bin") await idb.del(e.id);
+  queue = queue.filter(e => !(e.sent && alt(e)));
+  queue.forEach(e => { if (e.sent && e.body) e.body = null; });
+  saveQ();
 }
 
-// ---------- Tabs ----------
-$$("nav button").forEach(b => b.addEventListener("click", () => {
-  pressGroup("nav button", b);
-  $$("section[id^=s-]").forEach(s => s.classList.toggle("on", s.id === "s-" + b.dataset.tab));
-}));
-
-// ---------- Essen ----------
-$("#r-porridge").addEventListener("click", () => {
-  const open = $("#porridge-box").style.display === "block";
-  $("#porridge-box").style.display = open ? "none" : "block";
-  $("#crepes-box").style.display = "none";
-});
-$("#r-crepes").addEventListener("click", () => {
-  const open = $("#crepes-box").style.display === "block";
-  $("#crepes-box").style.display = open ? "none" : "block";
-  $("#porridge-box").style.display = "none";
-});
-// Sirup-Platzhalter mitziehen: 22 g je 100 g Flocken ist das Rezeptverhaeltnis.
-$("#p-gramm").addEventListener("input", () => {
-  const g = parseFloat($("#p-gramm").value);
-  $("#p-sirup").placeholder = g > 0 ? Math.round(g * 0.22) : "22";
-});
-$("#p-send").addEventListener("click", () => {
-  const g = parseFloat($("#p-gramm").value);
-  if (!(g > 0)) return toast("Gramm fehlen");
-  const sirup = parseFloat($("#p-sirup").value);
-  const e = { type:"essen", rezept:"porridge", haferflocken_g:g, vertrauen:"gut" };
-  let label = `Porridge ${g} g`;
-  if (sirup > 0) { e.ahornsirup_g = sirup; label += `, ${sirup} g Sirup`; }
-  enqueue(e, { label });
-  $("#p-sirup").value = "";
-  $("#porridge-box").style.display = "none";
-});
-const belag = { kaese:0, nutella:0, marmelade:0, kombi:0 };
-$$(".ct").forEach(b => {
-  const k = b.dataset.belag;
-  let timer;
-  const upd = () => b.querySelector(".n").textContent = belag[k];
-  b.addEventListener("click", () => { belag[k]++; upd(); });
-  b.addEventListener("pointerdown", () => {
-    timer = setTimeout(() => { belag[k] = 0; upd(); toast("zurückgesetzt"); }, 550); });
-  ["pointerup","pointerleave","pointercancel"].forEach(ev =>
-    b.addEventListener(ev, () => clearTimeout(timer)));
-});
-$("#c-send").addEventListener("click", () => {
-  const total = Object.values(belag).reduce((a,b) => a+b, 0);
-  if (!total) return toast("keine Crepes gewählt");
-  const anzahl = parseInt($("#c-anzahl").value) || null;
-  enqueue({ type:"essen", rezept:"crepes", variante:"gross",
-            ausbeute:anzahl, belag:{...belag}, vertrauen: anzahl ? "gut" : "grob" },
-          { label:`Crepes ${total}x` });
-  Object.keys(belag).forEach(k => { belag[k] = 0; });
-  $$(".ct .n").forEach(n => n.textContent = "0");
-  $("#c-anzahl").value = ""; $("#crepes-box").style.display = "none";
-});
-
-let foto = null, fotoArt = "mahlzeiten";
-$("#f-mahlzeit").addEventListener("click", () => { fotoArt = "mahlzeiten"; $("#f-file").click(); });
-$("#f-label").addEventListener("click", () => { fotoArt = "labels"; $("#f-file").click(); });
-$("#f-file").addEventListener("change", async ev => {
-  const file = ev.target.files[0]; if (!file) return;
-  foto = await shrink(file);
-  $("#f-prev").src = foto.url; $("#f-prev").hidden = false;
-  toast(fotoArt === "labels" ? "Etikett bereit" : "Foto bereit");
-});
-function shrink(file){
-  return new Promise(res => {
-    const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => {
-      const max = 1280, sc = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      const data = c.toDataURL("image/jpeg", 0.82);
-      URL.revokeObjectURL(url);
-      res({ url:data, b64:data.split(",")[1] });
-    };
-    img.src = url;
-  });
-}
-$$(".v").forEach(b => b.addEventListener("click", () => pressGroup(".v", b)));
-$("#f-send").addEventListener("click", () => {
-  const text = $("#f-text").value.trim();
-  if (!text && !foto) return toast("Text oder Foto nötig");
-  const ts = nowIso(), id = newId();
-  let fotoPfad = null;
-  if (foto) {
-    fotoPfad = `fotos/${fotoArt}/${ts.slice(0,10)}-${id}.jpg`;
-    enqueue({}, { path:fotoPfad, binary:foto.b64, label:"Foto", quiet:true });
-  }
-  const v = pressed(".v")?.v || "gut";
-  enqueue({ type: fotoArt === "labels" ? "label" : "essen",
-            beschreibung:text || null, foto:fotoPfad,
-            vertrauen: fotoArt === "labels" ? "exakt" : v },
-          { label: fotoArt === "labels" ? "Etikett" : (text.slice(0,32) || "Foto") });
-  $("#f-text").value = ""; foto = null;
-  $("#f-prev").hidden = true; $("#f-prev").src = "";
-});
-
-// ---------- Trinken ----------
-$$(".w").forEach(b => b.addEventListener("click", () => {
-  pressGroup(".w", b);
-  $("#t-kh-box").style.display = b.dataset.w === "sport" ? "" : "none";
-}));
-// Pulver ist nicht Zucker: was Leone abmisst, sind Gramm PULVER, und daraus
-// folgen erst die Kohlenhydrate. Die Quelle legt den Umrechnungsfaktor fest.
-const KH_QUELLEN = {
-  iso_dm: { kh: 0.90, zucker: 0.83, wort: "Pulver", produkt: "iso_pulver_dm" },
-  zucker: { kh: 1.00, zucker: 1.00, wort: "Zucker",  produkt: "zucker" },
-  direkt: { kh: 1.00, zucker: null, wort: "KH",      produkt: null }
-};
-const khQuelle = () => pressed(".q")?.q || "iso_dm";
-
-function khRender(){
-  const q = KH_QUELLEN[khQuelle()], g = parseFloat($("#t-kh").value);
-  $("#t-kh-h").textContent   = q.wort;
-  $("#t-kh-lab").textContent = `Andere Menge in g ${q.wort}`;
-  $("#t-kh").placeholder     = `g ${q.wort}`;
-  if (!(g > 0)){ $("#t-kh-out").textContent = "—"; return; }
-  const kh = g * q.kh;
-  $("#t-kh-out").textContent = q.zucker === null
-    ? `${kh.toFixed(0)} g KH`
-    : `${g} g ${q.wort} = ${kh.toFixed(0)} g KH, davon ${(g*q.zucker).toFixed(0)} g Zucker`;
-}
-$$(".q").forEach(b => b.addEventListener("click", () => { pressGroup(".q", b); khRender(); }));
-$$(".kh").forEach(b => b.addEventListener("click", () => {
-  pressGroup(".kh", b); $("#t-kh").value = b.dataset.kh; khRender();
-}));
-$("#t-kh").addEventListener("input", khRender);
-$$(".ml").forEach(b => b.addEventListener("click", () => {
-  pressGroup(".ml", b); $("#t-ml").value = b.dataset.ml;
-}));
-$("#t-send").addEventListener("click", () => {
-  const ml = parseFloat($("#t-ml").value);
-  if (!(ml > 0)) return toast("Menge fehlt");
-  const was = pressed(".w")?.w || "wasser";
-  const nutzlast = { type:"trinken", ml, was };
-  let zusatz = "";
-  if (was === "sport"){
-    const g = parseFloat($("#t-kh").value), qn = khQuelle(), q = KH_QUELLEN[qn];
-    if (g > 0){
-      nutzlast.kh = +(g * q.kh).toFixed(1);
-      nutzlast.kh_quelle = qn;
-      if (q.produkt) { nutzlast.produkt = q.produkt; nutzlast.menge_g = g; }
-      if (q.zucker !== null) nutzlast.zucker_g = +(g * q.zucker).toFixed(1);
-      zusatz = `, ${nutzlast.kh} g KH`;
-    } else {
-      // Lieber mit Luecke eintragen als gar nicht -- eine fehlende Flasche
-      // verschiebt das Glykogenmodell systematisch, eine unbekannte Menge nur
-      // an dieser einen Stelle.
-      nutzlast.kh_unbekannt = true;
-      zusatz = ", KH unbekannt";
-    }
-  }
-  enqueue(nutzlast, { label:`${ml} ml ${was}${zusatz}` });
-  $("#t-ml").value = ""; pressGroup(".ml", null);
-  $("#t-kh").value = ""; pressGroup(".kh", null); khRender();
-});
-
-// ---------- Gewicht ----------
-(() => {   // Messpunkt aus der Uhrzeit vorbelegen
-  const h = new Date().getHours();
-  const slot = h < 13 ? "09" : h < 20 ? "17" : "23";
-  const b = $$(".sl").find(x => x.dataset.slot === slot);
-  if (b) pressGroup(".sl", b);
-})();
-$$(".sl").forEach(b => b.addEventListener("click", () => { pressGroup(".sl", b); markRef(); }));
-["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(s => $(s).addEventListener("click", () => {
-  const b = $(s), on = b.getAttribute("aria-pressed") === "true";
-  b.setAttribute("aria-pressed", on ? "false" : "true");
-  markRef();
-}));
-function markRef(){
-  const ref = pressed(".sl")?.slot === "09"
-    && $("#g-nuechtern").getAttribute("aria-pressed") === "true"
-    && $("#g-pipi").getAttribute("aria-pressed") === "true";
-  const h = $("#ref-hint");
-  h.style.color = ref ? "var(--ok)" : "var(--dim)";
-  h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
-    : "Referenzmessung = 9 Uhr, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
-}
-$("#g-send").addEventListener("click", () => {
-  const kg = parseFloat($("#g-kg").value);
-  if (!(kg > 30 && kg < 200)) return toast("Gewicht prüfen");
-  const kfa = parseFloat($("#g-kfa").value);
-  const slot = pressed(".sl")?.slot || null;
-  enqueue({ type: slot && slot.startsWith("ride") ? "ride-gewicht" : "gewicht",
-            kg, bf_pct: isNaN(kfa) ? null : kfa, slot,
-            fasted: $("#g-nuechtern").getAttribute("aria-pressed") === "true",
-            nach_pipi: $("#g-pipi").getAttribute("aria-pressed") === "true",
-            nach_stuhl: $("#g-stuhl").getAttribute("aria-pressed") === "true",
-            referenz: slot === "09"
-              && $("#g-nuechtern").getAttribute("aria-pressed") === "true"
-              && $("#g-pipi").getAttribute("aria-pressed") === "true" },
-          { label:`${kg} kg${slot ? " ("+slot+")" : ""}` });
-  $("#g-kg").value = ""; $("#g-kfa").value = "";
-  ["#g-nuechtern","#g-pipi","#g-stuhl"].forEach(s => $(s).setAttribute("aria-pressed","false"));
-  markRef();
-});
-
-// ---------- Klo ----------
-$$(".art").forEach(b => b.addEventListener("click", () => {
-  pressGroup(".art", b);
-  const art = b.dataset.art;
-  $("#farbe-box").style.display = art !== "stuhl" ? "block" : "none";
-  $("#kons-box").style.display  = art !== "pipi"  ? "block" : "none";
-}));
-$$(".mo").forEach(b => b.addEventListener("click", () => {
-  pressGroup(".mo", b);
-  const wieg = b.dataset.mo === "wieg";
-  $("#wieg-box").style.display = wieg ? "block" : "none";
-  $("#kat-box").querySelectorAll(".grid").forEach(g => {});
-  $$("#kat-box .gr").forEach(x => x.closest(".grid").parentElement);
-  $("#kat-box").style.opacity = wieg ? ".45" : "1";
-}));
-function kloDelta(){
-  const d = parseFloat($("#k-diff").value);
-  if (d > 0) return Math.round(d);
-  const v = parseFloat($("#k-vor").value), n = parseFloat($("#k-nach").value);
-  return (v > 0 && n > 0) ? Math.round((v - n) * 1000) : null;
-}
-["#k-diff", "#k-vor", "#k-nach"].forEach(s => $(s).addEventListener("input", () => {
-  const g = kloDelta();
-  const h = $("#k-delta");
-  h.textContent = g === null ? "–" : `${g} g  (±58 g bei 100-g-Schritten)`;
-  h.style.color = g !== null && g < 200 ? "var(--warn)" : "var(--dim)";
-  if (g !== null && g < 200)
-    h.textContent += " – unter 200 g ist die Kategorie genauer";
-}));
-[".gr", ".fa", ".ko"].forEach(sel =>
-  $$(sel).forEach(b => b.addEventListener("click", () => pressGroup(sel, b))));
-$("#k-send").addEventListener("click", () => {
-  const art = pressed(".art")?.art || "pipi";
-  const gewogen = pressed(".mo")?.mo === "wieg";
-  const p = { type:"klo", art };
-  let lbl = art;
-  if (gewogen) {
-    const g = kloDelta();
-    if (g === null) return toast("Differenz fehlt");
-    p.masse_g = g;
-    p.erfassung = "gewogen";
-    p.bekleidet = true;
-    p.fehler_g = 58;
-    lbl = `${art} ${g} g`;
-    ["#k-diff","#k-vor","#k-nach"].forEach(s => $(s).value = "");
-    $("#k-delta").textContent = "–";
-  } else {
-    p.groesse = pressed(".gr")?.gr || "mittel";
-    p.erfassung = "kategorie";
-    lbl = `${art} ${p.groesse}`;
-  }
-  if (art !== "stuhl") { const f = pressed(".fa")?.fa; if (f) p.farbe = f; }
-  if (art !== "pipi") p.konsistenz = pressed(".ko")?.ko || "normal";
-  enqueue(p, { label: lbl });
-});
-
-// ---------- Kochen ----------
-let zutaten = [], zFoto = null;
-$$(".e").forEach(b => b.addEventListener("click", () => pressGroup(".e", b)));
-$("#z-foto").addEventListener("click", () => $("#z-file").click());
-$("#z-file").addEventListener("change", async ev => {
-  const f = ev.target.files[0]; if (!f) return;
-  zFoto = await shrink(f);
-  $("#z-prev").src = zFoto.url; $("#z-prev").hidden = false;
-  toast("Foto bereit");
-});
-function renderZutaten(){
-  $("#z-liste").innerHTML = zutaten.map((z, i) =>
-    `<li style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--line)">
-       <span style="flex:1">${z.name || "(ohne Namen)"} – ${z.menge} ${z.einheit}
-       ${z.foto ? " 📷" : ""}</span>
-       <button data-i="${i}" class="zdel chip" style="padding:3px 9px">×</button></li>`).join("");
-  $$(".zdel").forEach(b => b.addEventListener("click", () => {
-    zutaten.splice(+b.dataset.i, 1); renderZutaten();
-  }));
-}
-$("#z-add").addEventListener("click", () => {
-  const name = $("#z-name").value.trim();
-  const menge = parseFloat($("#z-menge").value);
-  if (!name && !zFoto) return toast("Name oder Foto nötig");
-  if (!(menge > 0)) return toast("Menge fehlt");
-  zutaten.push({ name, menge, einheit: pressed(".e")?.e || "g", foto: zFoto });
-  zFoto = null; $("#z-name").value = ""; $("#z-menge").value = "";
-  $("#z-prev").hidden = true; $("#z-prev").src = "";
-  renderZutaten(); toast("gemerkt");
-});
-$("#ko-send").addEventListener("click", () => {
-  if (!zutaten.length) return toast("keine Zutaten");
-  const ts = nowIso(), sid = newId();
-  const liste = zutaten.map((z, i) => {
-    let pfad = null;
-    if (z.foto) {
-      pfad = `fotos/rezepte/${ts.slice(0,10)}-${sid}-${i}.jpg`;
-      enqueue({}, { path: pfad, binary: z.foto.b64, label: "Zutatenfoto", quiet: true });
-    }
-    return { name: z.name || null, menge: z.menge, einheit: z.einheit, foto: pfad };
-  });
-  enqueue({ type: "kochen", session: sid,
-            gericht: $("#ko-gericht").value.trim() || null,
-            zutaten: liste,
-            ergab_portionen: parseFloat($("#ko-ergab").value) || null,
-            davon_gegessen: parseFloat($("#ko-gegessen").value) || null },
-          { label: `Kochen: ${$("#ko-gericht").value.trim() || zutaten.length + " Zutaten"}` });
-  zutaten = []; renderZutaten();
-  ["#ko-gericht","#ko-ergab","#ko-gegessen"].forEach(s => $(s).value = "");
-});
-
-// ---------- Krafttraining ----------
+// ---------- Anzeige "Heute" ----------
+const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", klo: "--c-klo", kraft: "--c-training" };
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
-  nordic:{n:"Rev. Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
+  nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
   wallsit:{n:"Wall Sit",e:"sek",k:0}, band:{n:"Band-Hüfte",e:"min",k:0},
   hspu:{n:"Handstand",s:"Liegestütze",e:"reps",k:1}, oahang:{n:"Einarm-Hang",e:"sek",k:1},
   planche:{n:"Tuck Planche",s:"Liegestütze",e:"gemacht",k:1},
@@ -868,81 +963,551 @@ const UEBUNGEN = {
 };
 // prehab = bewusst submaximal, feste Dosis -- zaehlt nicht als Fortschrittssignal
 const PREHAB = { sissy:1, nordic:1, nordic_echt:1, wallsit:1, band:1 };
-let krSatz = [], krAktiv = null;
-$("#kr-uebungen").innerHTML = Object.entries(UEBUNGEN).map(([k, u]) =>
-  `<button class="k ku" data-u="${k}">${u.n}` +
-  `${u.s ? `<small>${u.s}</small>` : (u.k ? "<small>K/G</small>" : "")}</button>`).join("");
-$$(".au").forEach(b => b.addEventListener("click", () => pressGroup(".au", b)));
-$$(".ku").forEach(b => b.addEventListener("click", () => {
-  pressGroup(".ku", b);
-  krAktiv = b.dataset.u;
-  const u = UEBUNGEN[krAktiv];
-  $("#kr-eingabe").style.display = "block";
-  const nurGemacht = u.e === "gemacht";
-  $("#kr-zahlen").style.display = nurGemacht ? "none" : "flex";
-  $("#kr-detail").style.display = nurGemacht ? "block" : "none";
-  $("#kr-label").style.display = nurGemacht ? "none" : "block";
-  if (nurGemacht) { $("#kr-hint").textContent =
-    "Nur als gemacht erfasst – die Intensität steckt im Streckungsgrad, nicht in Zahlen."; return; }
-  $("#kr-hint").textContent = PREHAB[krAktiv]
-    ? "Feste Dosis, nicht bis zum Versagen – gleichbleibende Zahlen sind hier das Ziel."
-    : (u.k ? "Bis RIR 0. Gleiche Wiederholungen mit weniger Hilfe = Fortschritt." : "");
-  if (u.e === "reps") {
-    $("#kr-label").textContent = "Sätze × Wiederholungen";
-    $("#kr-a").placeholder = "Sätze"; $("#kr-b").placeholder = "Wdh.";
-    $("#kr-b").style.display = "";
-  } else {
-    $("#kr-label").textContent = u.e === "sek" ? "Sätze × Haltezeit (s)" : "Dauer (min)";
-    $("#kr-a").placeholder = u.e === "sek" ? "Sätze" : "Minuten";
-    $("#kr-b").placeholder = "Sekunden";
-    $("#kr-b").style.display = u.e === "sek" ? "" : "none";
+const EINH = { reps: "Wdh.", sek: "s", min: "min" };
+const satzText = s => s.einheit === "gemacht" ? (s.detail || "gemacht")
+  : `${zahl(s.wert)} ${EINH[s.einheit] || ""}`.trim();
+
+function beschreibe(p){
+  const z = [], t = p.type;
+  let titel = t, text = null;
+  if (t === "essen" && p.rezept === "porridge"){
+    titel = "Porridge";
+    z.push(`${p.haferflocken_g} g Haferflocken · ${p.ahornsirup_g != null ? p.ahornsirup_g + " g Ahornsirup" : "Sirup aus dem Rezept"}`);
+  } else if (t === "essen" && p.rezept === "crepes"){
+    const b = p.belag || {}, n = Object.values(b).reduce((a, x) => a + x, 0);
+    titel = `Crepes · ${n} Stück`;
+    const nm = { kaese: "Käse", nutella: "Nutella", marmelade: "Marmelade", kombi: "Kombi" };
+    z.push(Object.entries(b).filter(([, v]) => v).map(([k, v]) => `${v}× ${nm[k]}`).join(", "));
+    z.push(p.ausbeute ? `Ausbeute ${p.ausbeute} gebacken` : "Ausbeute geschätzt");
+  } else if (t === "essen" || t === "label"){
+    titel = t === "label" ? "Essen (Etikett)" : "Essen";
+    text = p.beschreibung;
+    const nf = (p.fotos || []).length + (p.foto ? 1 : 0);
+    z.push([nf ? `${nf} Foto${nf > 1 ? "s" : ""}` : null, p.audio ? "Sprachnachricht" : null,
+            `Vertrauen ${p.vertrauen}`].filter(Boolean).join(" · "));
+  } else if (t === "trinken"){
+    const nm = { wasser: "Wasser", kaffee: "Kaffee", tee: "Tee", sport: "Sportgetränk" };
+    titel = `${p.ml} ml ${nm[p.was] || p.was}`;
+    if (p.was === "sport") z.push(p.kh_unbekannt ? "KH-Menge unbekannt"
+      : p.menge_g ? `${p.menge_g} g ${p.kh_quelle === "zucker" ? "Zucker" : "Pulver"} = ${zahl(p.kh)} g KH` : `${zahl(p.kh)} g KH`);
+  } else if (t === "gewicht" || t === "ride-gewicht"){
+    titel = `${komma(p.kg)} kg`;
+    const slot = { "09": "9 Uhr", "17": "17 Uhr", "23": "23 Uhr", "ride-vorher": "vor Fahrt",
+      "ride-nachher": "nach Fahrt", "kraft-vorher": "vor Kraft", "kraft-nachher": "nach Kraft" }[p.slot] || p.slot || "";
+    z.push([slot, p.fasted ? "nüchtern" : null, p.nach_pipi ? "nach Pipi" : null,
+            p.nach_stuhl ? "nach Stuhlgang" : null].filter(Boolean).join(" · "));
+    z.push([p.bf_pct != null ? `KFA ${komma(p.bf_pct)} %` : "ohne KFA",
+            p.referenz ? "✓ Referenzmessung" : "kein Trendwert"].join(" · "));
+  } else if (t === "klo"){
+    const art = { pipi: "Pipi", stuhl: "Stuhl", beides: "Pipi + Stuhl" }[p.art] || p.art;
+    titel = art;
+    z.push([p.erfassung === "gewogen" ? `gewogen ${p.masse_g} g` : p.groesse,
+            p.farbe ? `Farbe ${p.farbe}` : null, p.konsistenz].filter(Boolean).join(" · "));
+  } else if (t === "kochen"){
+    titel = `Kochen: ${p.gericht || "ohne Namen"}`;
+    (p.zutaten || []).forEach(x => z.push(`${x.name || "(Foto)"} – ${zahl(x.menge)} ${x.einheit}`));
+    if (p.ergab_portionen || p.davon_gegessen)
+      z.push(`ergab ${p.ergab_portionen ?? "–"}, gegessen ${p.davon_gegessen ?? "–"}`);
+  } else if (t === "kraft"){
+    titel = `Training${p.dauer_min ? " · " + Math.round(p.dauer_min) + " min" : ""}`;
+    (p.uebungen || []).forEach(u => {
+      const n = UEBUNGEN[u.uebung]?.n || u.uebung;
+      if (u.saetze && Array.isArray(u.saetze))
+        z.push(`${n}: ${u.saetze.map(s => satzText({ ...s, einheit: s.einheit || u.einheit }) +
+          (s.ausfuehrung === "unterstuetzt" ? " (unterst.)" : "")).join(" / ")}`);
+      else z.push(`${n}: ${u.saetze}×${u.wert ?? ""} ${u.einheit}`);
+    });
+    text = p.notiz;
   }
-}));
-function renderKraft(){
-  $("#kr-liste").innerHTML = krSatz.map((s, i) => {
-    const u = UEBUNGEN[s.uebung];
-    const wert = u.e === "gemacht" ? (s.detail || "gemacht")
-               : u.e === "reps" ? `${s.a}×${s.b}`
-               : u.e === "sek"  ? `${s.a}×${s.b} s` : `${s.a} min`;
-    const hilfe = s.ausfuehrung === "unterstuetzt" ? " (unterstützt)" : "";
-    return `<li style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--line)">
-      <span style="flex:1">${u.n} – ${wert}${hilfe}</span>
-      <button data-i="${i}" class="kdel chip" style="padding:3px 9px">×</button></li>`;
-  }).join("");
-  $$(".kdel").forEach(b => b.addEventListener("click", () => {
-    krSatz.splice(+b.dataset.i, 1); renderKraft();
-  }));
+  return { titel, zeilen: z.filter(Boolean), text, farbe: TYP_FARBE[t] || "--accent" };
 }
-$("#kr-add").addEventListener("click", () => {
-  if (!krAktiv) return toast("keine Übung gewählt");
-  const u = UEBUNGEN[krAktiv];
-  if (u.e === "gemacht") {
-    krSatz.push({ uebung: krAktiv, a: null, b: null, einheit: "gemacht",
-                  detail: $("#kr-detail").value.trim() || null,
-                  ausfuehrung: pressed(".au")?.au || "frei" });
-    $("#kr-detail").value = ""; renderKraft(); toast("gemerkt"); return;
+
+let offen = new Set();
+function status(list){
+  if (list.every(x => x.sent)) return ["sent", "gesendet"];
+  const err = list.find(x => !x.sent && x.error && x.error !== "kein Token");
+  return err ? ["err", err.error] : ["pending", "wartet"];
+}
+function render(){
+  const heute = nowIso().slice(0, 10);
+  const tops = queue.filter(e => e.kind !== "bin" && (e.logged || e.ts).slice(0, 10) === heute
+                                 && !(e.label === "Foto" || e.label === "Zutatenfoto")).slice(-40).reverse();
+  $("#log").innerHTML = tops.map(e => {
+    const kinder = queue.filter(m => m.parent === e.id);
+    const [st, lbl] = status([e, ...kinder]);
+    const zeit = `<span class="e-zeit">${e.ts.slice(11, 16)}</span>`;
+    if (!e.payload){                                           // Alt-Eintrag
+      return `<li>${`<div class="e-kopf">${zeit}<div class="e-body"><div class="e-titel">${esc(e.label)}</div></div>
+        <span class="e-st ${st}">${esc(lbl)}</span></div>`}</li>`;
+    }
+    const d = beschreibe(e.payload);
+    const nach = e.payload.zeit_nachgetragen ? `<div class="e-zeile">nachgetragen, datiert auf ${e.ts.slice(0,10) === heute ? "heute" : "gestern"} ${e.ts.slice(11,16)}</div>` : "";
+    const medien = kinder.map(m => m.mime.startsWith("audio/")
+      ? `<button class="e-audio" data-play="${m.id}">▶ Sprachnachricht ${m.sek ? mmss(m.sek) : ""}</button>`
+      : m.thumb ? `<img src="${m.thumb}" data-voll="${m.id}" alt="">` : "").join("");
+    const roh = offen.has(e.id) ? `<pre class="e-roh">${esc(JSON.stringify(e.payload, null, 2))}</pre>` : "";
+    return `<li data-id="${e.id}"><div class="e-kopf">${zeit}<div class="e-body">
+        <div class="e-titel" style="--tc:var(${d.farbe})"><i></i>${esc(d.titel)}</div>
+        ${d.text ? `<div class="e-text">${esc(d.text)}</div>` : ""}
+        ${d.zeilen.map(x => `<div class="e-zeile">${esc(x)}</div>`).join("")}${nach}
+        ${medien ? `<div class="e-medien">${medien}</div>` : ""}
+      </div><span class="e-st ${st}">${esc(lbl)}</span></div>${roh}</li>`;
+  }).join("") || `<li class="leer">Noch nichts heute.</li>`;
+  renderSync();
+}
+$("#log").addEventListener("click", async ev => {
+  const play = ev.target.closest("[data-play]"), voll = ev.target.closest("[data-voll]");
+  if (play){
+    const b = await idb.get(play.dataset.play);
+    if (!b) return toast("nicht mehr auf dem Gerät");
+    new Audio(`data:${b.mime};base64,${b.b64}`).play().catch(() => toast("Wiedergabe nicht möglich"));
+    return;
   }
-  const a = parseFloat($("#kr-a").value);
-  const b = u.e === "min" ? null : parseFloat($("#kr-b").value);
-  if (!(a > 0)) return toast("Wert fehlt");
-  if (u.e !== "min" && !(b > 0)) return toast("zweiter Wert fehlt");
-  krSatz.push({ uebung: krAktiv, a, b, einheit: u.e,
-                ausfuehrung: pressed(".au")?.au || "frei" });
-  $("#kr-a").value = ""; $("#kr-b").value = "";
-  renderKraft(); toast("gemerkt");
+  if (voll){
+    const b = await idb.get(voll.dataset.voll);
+    const src = b ? `data:${b.mime};base64,${b.b64}` : voll.src;
+    const o = document.createElement("div"); o.className = "bild-voll";
+    o.innerHTML = `<img src="${src}" alt="">`; o.onclick = () => o.remove(); document.body.appendChild(o);
+    return;
+  }
+  const li = ev.target.closest("li[data-id]"); if (!li) return;
+  offen.has(li.dataset.id) ? offen.delete(li.dataset.id) : offen.add(li.dataset.id);
+  render();
 });
-$("#kr-send").addEventListener("click", () => {
-  if (!krSatz.length) return toast("keine Übungen");
-  enqueue({ type:"kraft", dauer_min: parseFloat($("#kr-dauer").value) || null,
-            uebungen: krSatz.map(s => ({ uebung:s.uebung, saetze:s.a, wert:s.b,
-                                         einheit:s.einheit, detail:s.detail || null,
-                                         ausfuehrung:s.ausfuehrung })),
-            notiz: $("#kr-note").value.trim() || null },
-          { label:`Kraft ${krSatz.length} Übungen` });
-  krSatz = []; renderKraft();
-  $("#kr-note").value = ""; $("#kr-eingabe").style.display = "none";
-  pressGroup(".ku", null); krAktiv = null;
+function renderSync(){
+  const pend = queue.filter(x => !x.sent).length;
+  const err  = queue.filter(x => !x.sent && x.error && x.error !== "kein Token").length;
+  const gesendet = queue.filter(x => x.sent).length;
+  $("#syncTxt").textContent = !ls.raw(TK) ? "kein Token" : pend ? `${pend} offen` : gesendet ? "synchron" : "bereit";
+  $("#sync .dot").className = "dot " + (err ? "err" : pend ? "pend" : gesendet ? "ok" : "");
+  $("#q-info").textContent = `${queue.length} Einträge auf dem Gerät, ${pend} offen, ${err} fehlerhaft`;
+}
+
+// ---------- Reiter ----------
+const TITEL = { essen: "Essen", trinken: "Trinken", gewicht: "Gewicht", klo: "Klo", training: "Training", mehr: "Einstellungen" };
+function zeigeTab(name){
+  $$("nav#tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === name)));
+  $$("section.tab").forEach(s => s.classList.toggle("on", s.id === "s-" + name));
+  $("#titel").textContent = TITEL[name];
+  const nb = $(`nav#tabs button[data-tab=${name}]`);
+  const t = $(".title"); t.style.setProperty("--tc", nb ? nb.style.getPropertyValue("--tc") : "var(--accent)");
+  $("#titelIcon").innerHTML = nb ? nb.querySelector("svg").outerHTML : $("#zahnrad svg").outerHTML;
+  $("#heute").hidden = name === "mehr";
+  if (name === "gewicht") holeEinordnung();
+  try { sessionStorage.setItem("ernaehrung.tab", name); } catch(e){}
+}
+$$("nav#tabs button").forEach(b => b.addEventListener("click", () => zeigeTab(b.dataset.tab)));
+$("#zahnrad").onclick = () => zeigeTab($("#s-mehr").classList.contains("on") ? "essen" : "mehr");
+$("#mehr-zu").onclick = () => zeigeTab("essen");
+
+// ---------- Essen ----------
+const fFotos = fotoSammler($("#f-fotos")), fRec = recorder($("#f-rec"));
+gruppe("#f-vert");
+$("#f-send").addEventListener("click", async () => {
+  const text = $("#f-text").value.trim(), fotos = fFotos.get(), audio = fRec.get();
+  if (audio === "laeuft") return toast("Aufnahme erst stoppen");
+  if (!text && !fotos.length && !audio) return toast("Text, Foto oder Sprachnachricht nötig");
+  const medien = [...fotos, ...(audio ? [audio] : [])];
+  await eintragen({ type: "essen", beschreibung: text || null, vertrauen: wahl("#f-vert").v || "gut" },
+                  { medien, ordner: "essen" });
+  $("#f-text").value = ""; fFotos.reset(); fRec.reset();
 });
+
+// Schnellrezepte
+const boxen = { porridge: "#porridge-box", crepes: "#crepes-box", kochen: "#kochen-box" };
+Object.entries(boxen).forEach(([k, sel]) => $("#r-" + k).addEventListener("click", () => {
+  const war = !$(sel).hidden;
+  Object.entries(boxen).forEach(([k2, s2]) => { $(s2).hidden = true; $("#r-" + k2).setAttribute("aria-pressed", "false"); });
+  if (!war){ $(sel).hidden = false; $("#r-" + k).setAttribute("aria-pressed", "true"); }
+}));
+const wPorr = walze($("#p-gramm"), { min: 20, max: 250, step: 5, einheit: "g", key: "porridge.g", start: 100 });
+const wSirup = walze($("#p-sirup"), { min: 0, max: 60, step: 1, einheit: "g", leer: "Rezept", start: null });
+$("#p-send").addEventListener("click", () => {
+  const g = wPorr.get(), sirup = wSirup.get();
+  const e = { type: "essen", rezept: "porridge", haferflocken_g: g, vertrauen: "gut" };
+  if (sirup !== null) e.ahornsirup_g = sirup;
+  wPorr.merken(); eintragen(e);
+  wSirup.set(null); $("#r-porridge").click();
+});
+const belag = { kaese: 0, nutella: 0, marmelade: 0, kombi: 0 };
+$$(".ct").forEach(b => {
+  const k = b.dataset.belag; let timer, lang = false;
+  const upd = () => { b.querySelector(".n").textContent = belag[k]; b.setAttribute("aria-pressed", String(belag[k] > 0)); };
+  b.addEventListener("click", () => { if (lang){ lang = false; return; } belag[k]++; upd(); });
+  b.addEventListener("pointerdown", () => { lang = false;
+    timer = setTimeout(() => { lang = true; belag[k] = 0; upd(); toast("zurückgesetzt"); }, 550); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, () => clearTimeout(timer)));
+});
+const wCrepes = walze($("#c-anzahl"), { min: 10, max: 80, step: 1, leer: "?", start: null });
+$("#c-send").addEventListener("click", () => {
+  const total = Object.values(belag).reduce((a, b) => a + b, 0);
+  if (!total) return toast("keine Crepes gewählt");
+  const anzahl = wCrepes.get();
+  eintragen({ type: "essen", rezept: "crepes", variante: "gross", ausbeute: anzahl,
+              belag: { ...belag }, vertrauen: anzahl ? "gut" : "grob" });
+  Object.keys(belag).forEach(k => belag[k] = 0);
+  $$(".ct").forEach(b => { b.querySelector(".n").textContent = "0"; b.setAttribute("aria-pressed", "false"); });
+  wCrepes.set(null); $("#r-crepes").click();
+});
+
+// Kochen
+let zutaten = [], zFoto = null;
+gruppe("#z-einheit");
+const wZMenge = walze($("#z-menge"), { min: 0, max: 1500, step: 5, key: "kochen.menge", start: 100 });
+const wErgab = walze($("#ko-ergab"), { min: 1, max: 80, step: 1, leer: "–", start: null });
+const wGegessen = walze($("#ko-gegessen"), { min: 0.5, max: 30, step: 0.5, leer: "–", start: null });
+$("#z-foto").onclick = () => $("#z-file").click();
+$("#z-file").onchange = async ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  zFoto = await bildLaden(f); ev.target.value = "";
+  $("#z-prev").innerHTML = `<div class="thumb"><img src="${zFoto.thumb}" alt=""></div>`;
+};
+function renderZutaten(){
+  $("#z-liste").innerHTML = zutaten.map((z, i) =>
+    `<li><span class="nr">${i + 1}</span><span>${esc(z.name || "(ohne Namen)")} – ${zahl(z.menge)} ${z.einheit}${z.foto ? " 📷" : ""}</span>
+     <button class="x" data-i="${i}">×</button></li>`).join("");
+  $$("#z-liste .x").forEach(b => b.onclick = () => { zutaten.splice(+b.dataset.i, 1); renderZutaten(); });
+}
+$("#z-add").onclick = () => {
+  const name = $("#z-name").value.trim(), menge = wZMenge.get();
+  if (!name && !zFoto) return toast("Name oder Foto nötig");
+  if (!(menge > 0)) return toast("Menge fehlt");
+  zutaten.push({ name, menge, einheit: wahl("#z-einheit").e || "g", foto: zFoto });
+  wZMenge.merken(); zFoto = null; $("#z-name").value = ""; $("#z-prev").innerHTML = "";
+  renderZutaten(); toast("gemerkt");
+};
+$("#ko-send").onclick = async () => {
+  if (!zutaten.length) return toast("keine Zutaten");
+  const medien = [], liste = zutaten.map(z => {
+    const eintrag = { name: z.name || null, menge: z.menge, einheit: z.einheit, foto: null };
+    if (z.foto) medien.push({ ...z.foto, feld: p => { eintrag.foto = p; } });
+    return eintrag;
+  });
+  await eintragen({ type: "kochen", session: newId(), gericht: $("#ko-gericht").value.trim() || null,
+                    zutaten: liste, ergab_portionen: wErgab.get(), davon_gegessen: wGegessen.get() },
+                  { medien, ordner: "rezepte", sammeln: false });
+  zutaten = []; renderZutaten(); $("#ko-gericht").value = "";
+  wErgab.set(null); wGegessen.set(null); $("#r-kochen").click();
+};
+
+// ---------- Trinken ----------
+// Pulver ist nicht Zucker: was Leone abmisst, sind Gramm PULVER, und daraus
+// folgen erst die Kohlenhydrate. Die Quelle legt den Umrechnungsfaktor fest.
+const KH_QUELLEN = {
+  iso_dm: { kh: 0.90, zucker: 0.83, wort: "Pulver", produkt: "iso_pulver_dm" },
+  zucker: { kh: 1.00, zucker: 1.00, wort: "Zucker", produkt: "zucker" },
+  direkt: { kh: 1.00, zucker: null, wort: "KH",     produkt: null }
+};
+const wMl = walze($("#t-ml"), { min: 50, max: 2000, step: 10, einheit: "ml", key: "trinken.ml", start: 500 });
+let wKh = null;
+function khRender(){
+  if (!wKh) return;
+  const qn = wahl("#t-quelle").q || "iso_dm", q = KH_QUELLEN[qn], g = wKh.get();
+  $("#t-kh-lab").textContent = `Menge ${q.wort}`;
+  $("#t-kh-out").innerHTML = !(g > 0) ? "Menge unbekannt – wird trotzdem eingetragen"
+    : q.zucker === null ? `<b>${zahl(g)} g KH</b>`
+    : `${g} g ${q.wort} = <b>${(g * q.kh).toFixed(0)} g KH</b>, davon ${(g * q.zucker).toFixed(0)} g Zucker`;
+}
+wKh = walze($("#t-kh"), { min: 0, max: 400, step: 5, einheit: "g", leer: "?", key: "trinken.kh", start: 100, onChange: khRender });
+gruppe("#t-was", d => { $("#t-kh-box").hidden = d.w !== "sport"; });
+gruppe("#t-quelle", khRender);
+$$("#t-ml-q .chip").forEach(b => b.onclick = () => wMl.set(+b.dataset.v, true));
+$$("#t-kh-q .chip").forEach(b => b.onclick = () => wKh.set(+b.dataset.v, true));
+khRender();
+$("#t-send").addEventListener("click", () => {
+  const ml = wMl.get(), was = wahl("#t-was").w || "wasser";
+  const p = { type: "trinken", ml, was };
+  if (was === "sport"){
+    const g = wKh.get(), qn = wahl("#t-quelle").q || "iso_dm", q = KH_QUELLEN[qn];
+    if (g > 0){
+      p.kh = +(g * q.kh).toFixed(1); p.kh_quelle = qn;
+      if (q.produkt){ p.produkt = q.produkt; p.menge_g = g; }
+      if (q.zucker !== null) p.zucker_g = +(g * q.zucker).toFixed(1);
+      wKh.merken();
+    } else {
+      // Lieber mit Luecke eintragen als gar nicht -- eine fehlende Flasche
+      // verschiebt das Glykogenmodell systematisch.
+      p.kh_unbekannt = true;
+    }
+  }
+  wMl.merken(); eintragen(p);
+});
+
+// ---------- Gewicht ----------
+const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 1, einheit: "kg", key: "gewicht.kg", start: 78.0 });
+const wKfa = walze($("#g-kfa"), { min: 6, max: 30, step: 0.1, einheit: "%", key: "gewicht.kfa", start: 14.0 });
+let ohneKfa = !!last["gewicht.ohne_kfa"];
+function kfaRender(){ $("#g-ohne-kfa").setAttribute("aria-pressed", String(ohneKfa)); $("#g-kfa").style.opacity = ohneKfa ? ".35" : "1"; }
+$("#g-ohne-kfa").onclick = () => { ohneKfa = !ohneKfa; kfaRender(); };
+kfaRender();
+const slot = () => wahl("#g-slot1").slot || wahl("#g-slot2").slot || null;
+$$("#g-slot1 > button, #g-slot2 > button").forEach(b => b.addEventListener("click", () => {
+  $$("#g-slot1 > button, #g-slot2 > button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  markRef();
+}));
+(() => {   // Messpunkt aus der Uhrzeit vorbelegen
+  const h = new Date().getHours();
+  const s = h < 13 ? "09" : h < 20 ? "17" : "23";
+  $$("#g-slot1 > button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.slot === s)));
+})();
+["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(s => $(s).addEventListener("click", () => { umschalten(s); markRef(); }));
+const istRef = () => slot() === "09" && an("#g-nuechtern") && an("#g-pipi");
+function markRef(){
+  const h = $("#ref-hint"), ref = istRef();
+  h.style.color = ref ? "var(--ok)" : "var(--dim)";
+  h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
+    : "Referenzmessung = 9 Uhr, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
+}
+markRef();
+$("#g-send").addEventListener("click", () => {
+  const kg = wKg.get(), s = slot();
+  eintragen({ type: s && s.startsWith("ride") ? "ride-gewicht" : "gewicht",
+              kg, bf_pct: ohneKfa ? null : wKfa.get(), slot: s,
+              fasted: an("#g-nuechtern"), nach_pipi: an("#g-pipi"), nach_stuhl: an("#g-stuhl"),
+              referenz: istRef() });
+  wKg.merken(); if (!ohneKfa) wKfa.merken(); merken("gewicht.ohne_kfa", ohneKfa);
+  ["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(x => $(x).setAttribute("aria-pressed", "false"));
+  markRef();
+});
+
+// Einordnung: schreibt Claude beim Sync nach feedback/gewicht.json
+async function holeEinordnung(){
+  const alt = ls.get(EOK, null); if (alt) renderEinordnung(alt);
+  const token = ls.raw(TK); if (!token || !navigator.onLine) return;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/feedback/gewicht.json?t=${Date.now()}`,
+      { headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github.raw+json" }, cache: "no-store" });
+    if (!r.ok) return;
+    const j = await r.json(); ls.set(EOK, j); renderEinordnung(j);
+  } catch(e){}
+}
+function renderEinordnung(j){
+  const c = $("#eo-card"); if (!j) return;
+  const vz = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + komma(Math.abs(v), 2).replace(/0$/, "");
+  const max = Math.max(0.3, ...(j.posten || []).map(p => Math.abs(p.kg)), Math.abs(j.rest_kg || 0));
+  const bar = v => { const w = Math.min(50, Math.abs(v) / max * 50);
+    return `<div class="eo-bar"><i style="${v >= 0 ? `left:50%` : `right:50%`};width:${w}%;background:${v >= 0 ? "var(--warn)" : "var(--ok)"}"></i></div>`; };
+  const dat = s => s ? new Date(s).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" }) : "";
+  const d = j.darm;
+  c.innerHTML = `<h2 style="margin-top:0">Einordnung · ${esc(dat(j.erstellt))}</h2>
+    ${d ? `<div class="sub">noch im Darm, über dem Grundfüllstand</div>
+      <div class="eo-darm"><b>~${Math.round(d.g / 50) * 50} g</b>
+      <span>${d.lo != null ? `(${Math.round(d.lo / 50) * 50}–${Math.round(d.hi / 50) * 50})` : ""}
+      ${d.tage_seit != null ? ` · letzter Stuhlgang vor ${komma(d.tage_seit, 1).replace(",0", "")} Tagen` : ""}</span></div>` : ""}
+    ${j.messung ? `<div class="eo-delta">${esc(dat(j.vergleich?.datum))} ${j.vergleich ? komma(j.vergleich.kg) : ""} → ${esc(dat(j.messung.datum))} <b>${komma(j.messung.kg)} kg</b>
+      ${j.delta_kg != null ? ` (${vz(j.delta_kg)} kg)` : ""}</div>` : ""}
+    ${(j.posten || []).map(p => `<div class="eo-row"><span>${esc(p.name)}</span><span class="v">${vz(p.kg)}</span>${bar(p.kg)}</div>`).join("")}
+    ${j.rest_kg != null ? `<div class="eo-row"><span>Rest (Rauschen ±${komma(j.rauschen_kg || 0.3, 1)})</span><span class="v">${vz(j.rest_kg)}</span>${bar(j.rest_kg)}</div>` : ""}
+    ${j.fazit ? `<div class="eo-fazit">${esc(j.fazit)}</div>` : ""}`;
+  c.hidden = false;
+}
+
+// ---------- Klo ----------
+const wDiff = walze($("#k-diff"), { min: 100, max: 2000, step: 100, einheit: "g", key: "klo.diff", start: 300 });
+function kloRender(){
+  const art = wahl("#k-art").art || "pipi", wieg = wahl("#k-mo").mo === "wieg";
+  $("#farbe-box").hidden = art === "stuhl";
+  $("#kons-box").hidden = art === "pipi";
+  $("#wieg-box").hidden = !wieg; $("#kat-box").hidden = wieg;
+}
+gruppe("#k-art", kloRender); gruppe("#k-mo", kloRender);
+gruppe("#k-gr"); gruppe("#k-fa"); gruppe("#k-ko");
+kloRender();
+$("#k-send").addEventListener("click", () => {
+  const art = wahl("#k-art").art || "pipi", gewogen = wahl("#k-mo").mo === "wieg";
+  const p = { type: "klo", art };
+  if (gewogen){
+    p.masse_g = wDiff.get(); p.erfassung = "gewogen"; p.bekleidet = true; p.fehler_g = 58;
+    wDiff.merken();
+  } else { p.groesse = wahl("#k-gr").gr || "mittel"; p.erfassung = "kategorie"; }
+  if (art !== "stuhl"){ const f = wahl("#k-fa").fa; if (f) p.farbe = f; }
+  if (art !== "pipi") p.konsistenz = wahl("#k-ko").ko || "normal";
+  eintragen(p);
+});
+
+// ---------- Training ----------
+// Der Zustand liegt im localStorage und die Uhren rechnen aus Zeitstempeln --
+// so ueberlebt eine laufende Einheit Bildschirmsperre und Neuladen.
+let tr = ls.get(TRK, null);
+const saveTr = () => { if (tr) ls.set(TRK, tr); else ls.del(TRK); };
+const trRec = recorder($("#tr-rec"));
+let wWert = null, wDauer = null;
+
+$("#tr-ueb").innerHTML = Object.entries(UEBUNGEN).map(([k, u]) =>
+  `<button class="k" data-u="${k}">${u.n}<small>${u.s || (PREHAB[k] ? "Prehab" : u.k ? "Kraft" : "")}</small>
+   <span class="cnt" hidden></span></button>`).join("");
+$$("#tr-ueb button").forEach(b => b.addEventListener("click", () => {
+  tr.aktiv = b.dataset.u; saveTr(); trRender(true);
+  $("#tr-akt").scrollIntoView({ behavior: "smooth", block: "start" });
+}));
+gruppe("#tr-au");
+
+function trStart(modus){
+  tr = { modus, start: Date.now(), uebungen: {}, aktiv: null, pause: null, ende: null };
+  saveTr(); wachHalten(); trRender(true);
+}
+$("#tr-start").onclick = () => { tonFreischalten(); trStart("live"); };
+$("#tr-nachtrag").onclick = () => trStart("nachtrag");
+
+function wertKonfig(key){
+  const u = UEBUNGEN[key], saetze = tr.uebungen[key] || [];
+  const vorher = saetze.length ? saetze[saetze.length - 1].wert : undefined;
+  const k = `tr.${key}`;
+  const start = vorher ?? (last[k] !== undefined ? last[k] : { reps: 5, sek: 30, min: 6 }[u.e]);
+  return u.e === "reps" ? { min: 0, max: 40, step: 1, einheit: "Wdh.", start }
+       : u.e === "sek"  ? { min: 5, max: 180, step: 5, einheit: "s", start }
+       : { min: 1, max: 30, step: 1, einheit: "min", start };
+}
+function trRender(neueWalze){
+  document.body.classList.toggle("training", !!tr);
+  $("#tr-idle").hidden = !!tr;
+  $("#tr-lauf").hidden = !tr || !!tr.ende;
+  $("#tr-ende").hidden = !tr || !tr.ende;
+  if (!tr) return;
+  if (tr.ende) return endeRender();
+  $("#tr-modus").textContent = tr.modus === "live" ? "Training läuft" : "Nachtragen – ohne Uhr";
+  $("#tr-uhr").hidden = tr.modus !== "live";
+  $$("#tr-ueb button").forEach(b => {
+    const n = (tr.uebungen[b.dataset.u] || []).length, c = b.querySelector(".cnt");
+    c.hidden = !n; c.textContent = n;
+    b.setAttribute("aria-pressed", String(b.dataset.u === tr.aktiv));
+  });
+  $("#tr-akt").hidden = !tr.aktiv;
+  $("#tr-ueb-h").textContent = tr.aktiv ? "Übung wechseln" : "Übung wählen";
+  if (tr.aktiv){
+    const key = tr.aktiv, u = UEBUNGEN[key], saetze = tr.uebungen[key] || [];
+    $("#tr-akt-name").textContent = u.n + (u.s ? " – " + u.s : "");
+    $("#tr-akt-hint").textContent = u.e === "gemacht"
+      ? "Nur als gemacht erfasst – die Intensität steckt im Streckungsgrad, nicht in Zahlen."
+      : PREHAB[key] ? "Feste Dosis, nicht bis zum Versagen – gleichbleibende Zahlen sind hier das Ziel."
+      : u.k ? "Bis RIR 0. Gleiche Wiederholungen mit weniger Hilfe = Fortschritt." : "";
+    $("#tr-akt-saetze").innerHTML = saetze.map((s, i) =>
+      `<li><span class="nr">${i + 1}</span><span>${esc(satzText(s))}${s.ausfuehrung === "unterstuetzt" ? " · unterstützt" : ""}
+       ${s.pause_davor_s ? `<span class="sub" style="display:inline"> · Pause davor ${mmss(s.pause_davor_s)}</span>` : ""}</span>
+       <button class="x" data-i="${i}" aria-label="Satz löschen">×</button></li>`).join("");
+    $$("#tr-akt-saetze .x").forEach(b => b.onclick = () => {
+      saetze.splice(+b.dataset.i, 1); if (!saetze.length) delete tr.uebungen[key]; saveTr(); trRender(false); });
+    const gemacht = u.e === "gemacht";
+    $("#tr-wert-box").hidden = gemacht; $("#tr-detail").hidden = !gemacht;
+    $("#tr-wert-lab").textContent = { reps: "Wiederholungen", sek: "Haltezeit", min: "Dauer" }[u.e] || "";
+    if (neueWalze && !gemacht) wWert = walze($("#tr-wert"), wertKonfig(key));
+    $("#tr-satz").textContent = `Satz ${saetze.length + 1} fertig`;
+  }
+  trTick();
+}
+$("#tr-satz").onclick = () => {
+  tonFreischalten();
+  const key = tr.aktiv, u = UEBUNGEN[key]; if (!key) return;
+  const s = { wert: u.e === "gemacht" ? null : wWert.get(), einheit: u.e,
+              ausfuehrung: wahl("#tr-au").au || "frei", ts: nowIso() };
+  if (u.e === "gemacht"){ s.detail = $("#tr-detail").value.trim() || null; $("#tr-detail").value = ""; }
+  if (tr.modus === "live" && tr.pause) s.pause_davor_s = Math.round((Date.now() - tr.pause.seit) / 1000);
+  (tr.uebungen[key] = tr.uebungen[key] || []).push(s);
+  if (s.wert !== null) merken(`tr.${key}`, s.wert);
+  if (tr.modus === "live"){
+    const ziel = (last.pausen || {})[key] || (PREHAB[key] ? 60 : 120);
+    tr.pause = { seit: Date.now(), ziel, gemeldet: false };
+    tonPlanen();
+  }
+  saveTr(); trRender(false); toast(`Satz ${tr.uebungen[key].length} ✓`);
+};
+$$("#tr-pause-q .chip").forEach(b => b.onclick = () => {
+  if (!tr?.pause) return;
+  tr.pause.ziel = +b.dataset.s; tr.pause.gemeldet = false;
+  if (tr.aktiv){ last.pausen = { ...(last.pausen || {}), [tr.aktiv]: tr.pause.ziel }; ls.set(LAST_K, last); }
+  saveTr(); tonFreischalten(); tonPlanen(); trTick();
+});
+function trTick(){
+  if (!tr || tr.ende || tr.modus !== "live") { $("#tr-pause").hidden = true; return; }
+  $("#tr-uhr").textContent = mmss((Date.now() - tr.start) / 1000);
+  const p = tr.pause; $("#tr-pause").hidden = !p;
+  if (!p) return;
+  const vergangen = (Date.now() - p.seit) / 1000;
+  $("#tr-pause-uhr").textContent = mmss(vergangen);
+  $("#tr-pause-ziel").textContent = mmss(p.ziel);
+  $("#tr-pause-balken").style.width = Math.min(100, vergangen / p.ziel * 100) + "%";
+  $$("#tr-pause-q .chip").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.s === p.ziel)));
+  if (vergangen >= p.ziel && !p.gemeldet){
+    p.gemeldet = true; saveTr();
+    $("#tr-pause").classList.remove("fertig"); void $("#tr-pause").offsetWidth; $("#tr-pause").classList.add("fertig");
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  }
+}
+setInterval(trTick, 500);
+
+// Signalton: WebAudio braucht auf iOS eine Beruehrung zum Freischalten, danach
+// laesst sich der Ton im Voraus auf das Pausenende legen.
+let actx = null, geplant = [];
+function tonFreischalten(){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+  } catch(e){}
+}
+function tonPlanen(){
+  geplant.forEach(o => { try { o.stop(); } catch(e){} }); geplant = [];
+  if (!actx || !tr?.pause) return;
+  const rest = tr.pause.ziel - (Date.now() - tr.pause.seit) / 1000;
+  if (rest <= 0) return;
+  const g = actx.createGain(); g.gain.value = 0.28; g.connect(actx.destination);
+  [0, 0.28, 0.56].forEach((d, i) => {
+    const o = actx.createOscillator(); o.type = "sine"; o.frequency.value = i === 2 ? 1175 : 880;
+    o.connect(g); o.start(actx.currentTime + rest + d); o.stop(actx.currentTime + rest + d + 0.18);
+    geplant.push(o);
+  });
+}
+// Bildschirm anlassen, solange die Uhr laeuft
+let sperre = null;
+async function wachHalten(){
+  try {
+    if (tr && tr.modus === "live" && !tr.ende && navigator.wakeLock && document.visibilityState === "visible")
+      sperre = await navigator.wakeLock.request("screen");
+  } catch(e){}
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ wachHalten(); trTick(); } });
+
+$("#tr-beenden").onclick = () => {
+  const n = Object.values(tr.uebungen).reduce((a, s) => a + s.length, 0);
+  if (!n){ if (confirm("Noch kein Satz erfasst – Training verwerfen?")){ tr = null; saveTr(); trRender(); } return; }
+  tr.ende = Date.now(); tr.pause = null; tonPlanen(); saveTr(); trRender();
+};
+function endeRender(){
+  const live = tr.modus === "live";
+  const dauer = live ? (tr.ende - tr.start) / 60000 : null;
+  const n = Object.values(tr.uebungen).reduce((a, s) => a + s.length, 0);
+  $("#tr-sum-kopf").textContent = live
+    ? `${Math.round(dauer)} min · ${Object.keys(tr.uebungen).length} Übungen · ${n} Sätze`
+    : `${Object.keys(tr.uebungen).length} Übungen · ${n} Sätze`;
+  $("#tr-dauer-box").hidden = live;
+  if (!live && !wDauer) wDauer = walze($("#tr-dauer"), { min: 5, max: 120, step: 1, einheit: "min", leer: "?", key: "tr.dauer", start: 42 });
+  $("#tr-sum").innerHTML = Object.entries(tr.uebungen).map(([k, saetze]) =>
+    `<li><span class="nr">${saetze.length}</span><span><b>${esc(UEBUNGEN[k].n)}</b><br>
+     <span class="sub" style="display:inline">${saetze.map(s => esc(satzText(s)) + (s.ausfuehrung === "unterstuetzt" ? " (u)" : "")).join(" · ")}</span></span></li>`).join("");
+}
+$("#tr-zurueck").onclick = () => { tr.ende = null; saveTr(); wachHalten(); trRender(true); };
+$("#tr-verwerfen").onclick = () => { if (confirm("Training wirklich verwerfen?")){ tr = null; saveTr(); trRec.reset(); trRender(); } };
+$("#tr-send").onclick = async () => {
+  const audio = trRec.get();
+  if (audio === "laeuft") return toast("Aufnahme erst stoppen");
+  const live = tr.modus === "live";
+  const dauer = live ? +((tr.ende - tr.start) / 60000).toFixed(1) : (wDauer ? wDauer.get() : null);
+  if (!live && wDauer && dauer !== null) wDauer.merken();
+  const p = {
+    type: "kraft", modus: tr.modus,
+    start: live ? isoAus(new Date(tr.start)) : null, ende: live ? isoAus(new Date(tr.ende)) : null,
+    dauer_min: dauer,
+    uebungen: Object.entries(tr.uebungen).map(([k, saetze]) => ({
+      uebung: k, einheit: UEBUNGEN[k].e,
+      saetze: saetze.map(s => ({ wert: s.wert, ausfuehrung: s.ausfuehrung, ts: s.ts,
+                                 ...(s.detail ? { detail: s.detail } : {}),
+                                 ...(s.pause_davor_s ? { pause_davor_s: s.pause_davor_s } : {}) })) })),
+    notiz: $("#tr-note").value.trim() || null
+  };
+  await eintragen(p, { medien: audio ? [audio] : [], ts: live ? isoAus(new Date(tr.start)) : null, ordner: "training" });
+  tr = null; saveTr(); trRec.reset(); $("#tr-note").value = ""; wDauer = null;
+  if (sperre){ try { sperre.release(); } catch(e){} sperre = null; }
+  trRender(); zeigeTab("training");
+};
 
 // ---------- Token ----------
 $("#tok-save").addEventListener("click", () => {
@@ -953,7 +1518,15 @@ $("#tok-save").addEventListener("click", () => {
 $("#flush").addEventListener("click", flush);
 window.addEventListener("online", flush);
 setInterval(flush, 60000);
-render(); flush();
+
+// ---------- Start ----------
+let startTab = "essen";
+try { startTab = sessionStorage.getItem("ernaehrung.tab") || "essen"; } catch(e){}
+if (tr) startTab = "training";
+zeigeTab(TITEL[startTab] ? startTab : "essen");
+trRender(true); if (tr) wachHalten();
+aufraeumen().then(() => { render(); flush(); });
+holeEinordnung();
 })();
 </script>
 </body>
