@@ -259,7 +259,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v31</small></span>
+  <span class="brand">Logger<small>v32</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -438,9 +438,10 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
   <div class="card">
     <h2>Messpunkt</h2>
     <div class="seg" id="g-slot1">
-      <button data-slot="09">9 Uhr</button>
-      <button data-slot="17">17 Uhr</button>
-      <button data-slot="23">23 Uhr</button>
+      <button data-slot="aufwachen">aufgewacht</button>
+      <button data-slot="morgen">morgens</button>
+      <button data-slot="zwischendurch">zwischen­durch</button>
+      <button data-slot="schlafen">vorm Schlafen</button>
     </div>
     <div class="seg" id="g-slot2" style="margin-top:6px">
       <button data-slot="ride-vorher">vor Fahrt</button>
@@ -453,6 +454,12 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <div class="wz-lab"><span>Körperfett (nur Trend)</span>
       <button class="chip" id="g-ohne-kfa" style="padding:3px 10px;font-size:12px">ohne KFA</button></div>
     <div id="g-kfa"></div>
+    <div class="wz-lab"><span>Kleidung</span></div>
+    <div class="seg" id="g-kleidung">
+      <button data-kleidung="nackt">nackt</button>
+      <button data-kleidung="unterwaesche">Unterwäsche</button>
+      <button data-kleidung="angezogen">angezogen</button>
+    </div>
     <div class="row" style="margin-top:14px">
       <button class="chip" id="g-nuechtern">nüchtern</button>
       <button class="chip" id="g-pipi">nach Pipi</button>
@@ -460,8 +467,9 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     </div>
     <p class="hint" id="ref-hint"></p>
     <button class="go" id="g-send">Gewicht eintragen</button>
-    <p class="hint">Vor/nach Fahrt oder Kraft misst Flüssigkeitsverlust, nicht Gewicht – diese Werte
-      gehen nicht in den Trend. Beide Messungen auf derselben Waage.</p>
+    <p class="hint">Alle Messungen außer „morgens“ erklären den Tagesverlauf (Schweiß, Urin, Atemwasser),
+      gehen aber nicht in den Trend. „aufgewacht“ = direkt nach dem Schlafen, vor dem Pipi.
+      Immer dieselbe Waage.</p>
   </div>
 </section>
 
@@ -644,7 +652,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 31 · 28.09.2026</p>
+      Garmin Connect. Version 32 · 29.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -674,7 +682,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 31;
+const VERSION = 32;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1105,9 +1113,11 @@ function beschreibe(p){
       : p.menge_g ? `${p.menge_g} g ${p.kh_quelle === "zucker" ? "Zucker" : "Pulver"} = ${zahl(p.kh)} g KH` : `${zahl(p.kh)} g KH`);
   } else if (t === "gewicht" || t === "ride-gewicht"){
     titel = `${komma(p.kg)} kg`;
-    const slot = { "09": "9 Uhr", "17": "17 Uhr", "23": "23 Uhr", "ride-vorher": "vor Fahrt",
+    const slot = { "09": "9 Uhr", "17": "17 Uhr", "23": "23 Uhr", "aufwachen": "aufgewacht",
+      "morgen": "morgens", "zwischendurch": "zwischendurch", "schlafen": "vorm Schlafen", "ride-vorher": "vor Fahrt",
       "ride-nachher": "nach Fahrt", "kraft-vorher": "vor Kraft", "kraft-nachher": "nach Kraft" }[p.slot] || p.slot || "";
-    z.push([slot, p.fasted ? "nüchtern" : null, p.nach_pipi ? "nach Pipi" : null,
+    const kl = { nackt: "nackt", unterwaesche: "Unterwäsche", angezogen: "angezogen" }[p.kleidung];
+    z.push([slot, kl, p.fasted ? "nüchtern" : null, p.nach_pipi ? "nach Pipi" : null,
             p.nach_stuhl ? "nach Stuhlgang" : null].filter(Boolean).join(" · "));
     z.push([p.bf_pct != null ? `KFA ${komma(p.bf_pct)} %` : "ohne KFA",
             p.referenz ? "✓ Referenzmessung" : "kein Trendwert"].join(" · "));
@@ -1504,32 +1514,39 @@ function kfaRender(){ $("#g-ohne-kfa").setAttribute("aria-pressed", String(ohneK
 $("#g-ohne-kfa").onclick = () => { ohneKfa = !ohneKfa; kfaRender(); };
 kfaRender();
 const slot = () => wahl("#g-slot1").slot || wahl("#g-slot2").slot || null;
+const slotSetzen = s => $$("#g-slot1 > button, #g-slot2 > button")
+  .forEach(x => x.setAttribute("aria-pressed", String(x.dataset.slot === s)));
 $$("#g-slot1 > button, #g-slot2 > button").forEach(b => b.addEventListener("click", () => {
-  $$("#g-slot1 > button, #g-slot2 > button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  slotSetzen(b.dataset.slot);
+  // direkt nach dem Schlafen: noch nichts gegessen, noch nicht auf Klo
+  if (b.dataset.slot === "aufwachen"){
+    $("#g-nuechtern").setAttribute("aria-pressed", "true"); $("#g-pipi").setAttribute("aria-pressed", "false");
+  }
+  if (b.dataset.slot === "morgen") $("#g-nuechtern").setAttribute("aria-pressed", "true");
   markRef();
 }));
-(() => {   // Messpunkt aus der Uhrzeit vorbelegen
-  const h = new Date().getHours();
-  const s = h < 13 ? "09" : h < 20 ? "17" : "23";
-  $$("#g-slot1 > button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.slot === s)));
-})();
+slotSetzen("zwischendurch");   // seit v32 keine Uhrzeit-Slots mehr, der Zeitpunkt steht im ts
+gruppe("#g-kleidung");
+setzeWahl("#g-kleidung", "kleidung", last["gewicht.kleidung"] || "unterwaesche");
 ["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(s => $(s).addEventListener("click", () => { umschalten(s); markRef(); }));
-const istRef = () => slot() === "09" && an("#g-nuechtern") && an("#g-pipi");
+const istRef = () => slot() === "morgen" && an("#g-nuechtern") && an("#g-pipi");
 function markRef(){
   const h = $("#ref-hint"), ref = istRef();
   h.style.color = ref ? "var(--ok)" : "var(--dim)";
   h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
-    : "Referenzmessung = 9 Uhr, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
+    : "Referenzmessung = morgens, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
 }
 markRef();
 $("#g-send").addEventListener("click", () => {
-  const kg = wKg.get(), s = slot();
+  const kg = wKg.get(), s = slot(), kl = wahl("#g-kleidung").kleidung || null;
   eintragen({ type: s && s.startsWith("ride") ? "ride-gewicht" : "gewicht",
-              kg, bf_pct: ohneKfa ? null : wKfa.get(), slot: s,
+              kg, bf_pct: ohneKfa ? null : wKfa.get(), slot: s, kleidung: kl,
               fasted: an("#g-nuechtern"), nach_pipi: an("#g-pipi"), nach_stuhl: an("#g-stuhl"),
               referenz: istRef() });
   wKg.merken(); if (!ohneKfa) wKfa.merken(); merken("gewicht.ohne_kfa", ohneKfa);
+  if (kl) merken("gewicht.kleidung", kl);
   ["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(x => $(x).setAttribute("aria-pressed", "false"));
+  slotSetzen("zwischendurch");
   markRef();
 });
 
