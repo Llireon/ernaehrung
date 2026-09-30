@@ -259,7 +259,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v33</small></span>
+  <span class="brand">Logger<small>v34</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -503,9 +503,13 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       <button data-mo="wieg">gewogen</button>
     </div>
     <div id="wieg-box" hidden>
-      <div class="wz-lab"><span>Differenz vorher – nachher</span><span class="d">Badwaage, ±58 g</span></div>
+      <div class="seg" id="k-waage" style="margin-top:12px">
+        <button data-waage="renpho">Renpho</button>
+        <button data-waage="bad">Badwaage</button>
+      </div>
+      <div class="wz-lab"><span>Differenz vorher – nachher</span><span class="d" id="k-fehler"></span></div>
       <div id="k-diff"></div>
-      <p class="hint">Angezogen wiegen ist in Ordnung, die Kleidung kürzt sich heraus. Gespeichert
+      <p class="hint">Vorher und nachher auf derselben Waage. Angezogen wiegen ist in Ordnung, die Kleidung kürzt sich heraus. Gespeichert
         wird nur die Differenz, sie geht nie in den Gewichtstrend.</p>
     </div>
     <div id="kat-box">
@@ -667,7 +671,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 33 · 30.09.2026</p>
+      Garmin Connect. Version 34 · 30.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -697,7 +701,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 33;
+const VERSION = 34;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1144,7 +1148,8 @@ function beschreibe(p){
   } else if (t === "klo"){
     const art = { pipi: "Pipi", stuhl: "Stuhl", beides: "Pipi + Stuhl" }[p.art] || p.art;
     titel = art;
-    z.push([p.erfassung === "gewogen" ? `gewogen ${p.masse_g} g` : p.groesse,
+    z.push([p.erfassung === "gewogen" ? `gewogen ${p.masse_g} g` +
+              ({ renpho: " (Renpho)", bad: " (Badwaage)" }[p.waage] || "") : p.groesse,
             p.farbe ? `Farbe ${p.farbe}` : null, p.konsistenz].filter(Boolean).join(" · "));
   } else if (t === "kochen"){
     titel = `Kochen: ${p.gericht || "ohne Namen"}`;
@@ -1622,12 +1627,22 @@ function kloRender(){
 gruppe("#k-art", kloRender); gruppe("#k-mo", kloRender);
 gruppe("#k-gr"); gruppe("#k-fa"); gruppe("#k-ko");
 kloRender();
+// Fehler der Differenz zweier Ablesungen: Raster / Wurzel 3 (Bad 100 g -> 58, Renpho 50 g -> 29)
+const KLO_FEHLER = { renpho: 29, bad: 58 };
+const kloWaage = () => wahl("#k-waage").waage || "renpho";
+const kloFehlerRender = () => $("#k-fehler").textContent =
+  `${kloWaage() === "bad" ? "Badwaage" : "Renpho"}, ±${KLO_FEHLER[kloWaage()]} g`;
+gruppe("#k-waage", kloFehlerRender);
+setzeWahl("#k-waage", "waage", last["klo.waage"] || "renpho");
+kloFehlerRender();
 $("#k-send").addEventListener("click", () => {
   const art = wahl("#k-art").art || "pipi", gewogen = wahl("#k-mo").mo === "wieg";
   const p = { type: "klo", art };
   if (gewogen){
-    p.masse_g = wDiff.get(); p.erfassung = "gewogen"; p.bekleidet = true; p.fehler_g = 58;
-    wDiff.merken();
+    const wg = kloWaage();
+    p.masse_g = wDiff.get(); p.erfassung = "gewogen"; p.bekleidet = true;
+    p.waage = wg; p.fehler_g = KLO_FEHLER[wg];
+    wDiff.merken(); merken("klo.waage", wg);
   } else { p.groesse = wahl("#k-gr").gr || "mittel"; p.erfassung = "kategorie"; }
   if (art !== "stuhl"){ const f = wahl("#k-fa").fa; if (f) p.farbe = f; }
   if (art !== "pipi") p.konsistenz = wahl("#k-ko").ko || "normal";
