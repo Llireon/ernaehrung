@@ -262,7 +262,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v35</small></span>
+  <span class="brand">Logger<small>v36</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -680,7 +680,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 35 · 30.09.2026</p>
+      Garmin Connect. Version 36 · 30.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -710,7 +710,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 35;
+const VERSION = 36;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1409,8 +1409,9 @@ const FP = {
   // Waermebilanz: Mehrleistung wird zu (1/eta - 1) Waerme, die verdunsten muss.
   // eta 0,22 Bruttowirkungsgrad, 674 W je l/h Verdunstung, 85 % verdunsten statt abzutropfen
   schweiss_je_w: (1 / 0.22 - 1) / (674 * 0.85),     // ~0,006 l/h je W
-  flasche_l: 0.95, halter: 2,
-  pulver_max: 125,      // g je Flasche, Leones Konzentrationsgrenze (125 g/l)
+  halter_ml: [500, 750, 950],   // Leones Flaschen fuer die zwei Halter (2026-09-30)
+  trikot_ml: 750,               // dritte Flasche im Trikot, nur Wasser, nur statt eines Stopps
+  pulver_je_l: 125 / 0.95,      // ~132 g/l: Leones Grenze, 125 g in der 950er
   kh_je_g: 0.90,        // Iso-Pulver dm
   stopp_trinken_l: 0.4  // am Stopp direkt trinken
 };
@@ -1514,6 +1515,41 @@ function fpWetterHolen(){
   }, 250);
 }
 
+// Flaschen packen fuer einen Abschnitt (ganze Fahrt oder Strecke zwischen zwei Stopps):
+// alle Kombinationen Halter 1/2 (leer, 500, 750, 950) x Trikot (leer, 750) durchprobieren,
+// die billigste zulaessige nehmen. Kosten: Trikot vermeiden, dann wenige Flaschen, dann wenig Volumen.
+// Pulver nur in den Haltern, das Trikot ist immer Wasser (Leone, 2026-09-30).
+function fpPacken(P, T, klasse){
+  const k = P <= 0 ? 0 : P <= FP.pulver_je_l * 0.95 + 0.5 ? 1 : 2;
+  const maxP = ml => ml * FP.pulver_je_l / 1000;
+  let best = null;
+  for (const h1 of [0, ...FP.halter_ml]) for (const h2 of [0, ...FP.halter_ml]) for (const tr of [0, FP.trikot_ml]){
+    if (h2 > h1) continue;                                   // Halter symmetrisch
+    const n = [h1, h2, tr].filter(Boolean).length, sum = h1 + h2 + tr;
+    if (!n || sum < T * 1000 - 1) continue;
+    let fl;
+    if (k === 0){
+      fl = [["Halter 1", h1, 0], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
+    } else if (k === 1){
+      if (!h1 || P > maxP(h1) + 0.5) continue;
+      // eine reine Wasserflasche, sobald es warm ist oder die KH-Flasche nicht reicht
+      if ((klasse !== "kuehl" || T * 1000 > h1 + 50) && !h2 && !tr) continue;
+      fl = [["Halter 1", h1, P], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
+    } else {
+      // zwei KH-Flaschen, Wasser kommt dann aus dem Trikot
+      if (!h2 || !tr || P > maxP(h1) + maxP(h2) + 0.5) continue;
+      const p1 = Math.min(rund5(P * h1 / (h1 + h2)), Math.floor(maxP(h1) / 5) * 5);
+      if (P - p1 > maxP(h2) + 0.5) continue;
+      fl = [["Halter 1", h1, p1], ["Halter 2", h2, P - p1], ["Trikot", tr, 0]];
+    }
+    const kosten = [tr && k < 2 ? 1 : 0, n, sum];
+    const i = best ? kosten.findIndex((x, j) => x !== best.kosten[j]) : -1;
+    if (!best || (i >= 0 && kosten[i] < best.kosten[i]))
+      best = { kosten, k, flaschen: fl.filter(f => f[1]).map(([ort, ml, pulver_g]) => ({ ort, ml, pulver_g })) };
+  }
+  return best;
+}
+
 // Kern ohne DOM, damit er sich nachrechnen laesst
 function fpModell({ zk, klasse, bew }){
   const z = ZWECK[zk], ges = bew * z.stand, km = Math.round(bew * z.kmh);
@@ -1524,49 +1560,34 @@ function fpModell({ zk, klasse, bew }){
   const rateS = FP.schweiss[klasse] + zuschlag;
   const schweiss = rateS * ges;
   const trinken = Math.max(0, schweiss - FP.budget_l);
-  const kap = FP.halter * FP.flasche_l;
-  const stopps = trinken > kap + 0.05 || pulver > FP.halter * FP.pulver_max
-    ? Math.max(1, Math.ceil((trinken - kap) / (kap + FP.stopp_trinken_l))) : 0;
-  const ml50 = l => Math.min(950, Math.max(250, Math.ceil(l * 20) * 50));   // auf 50 ml, 250-950
+  // Stopps erst, wenn auch die Trikotflasche nicht reicht; am Stopp 0,4 l direkt trinken
+  let stopps = 0, pack = null;
+  for (; stopps <= 4; stopps++){
+    const n = stopps + 1;
+    pack = fpPacken(rund5(pulver / n), Math.max(0, trinken - stopps * FP.stopp_trinken_l) / n, klasse);
+    if (pack) break;
+  }
   const zeilen = [];
-  if (!stopps){
-    // Zweite Flasche nur, wenn das Wasser sie verlangt oder es warm ist
-    if (!pulver){
-      const zwei = trinken > FP.flasche_l + 0.05;
-      zeilen.push(["Flasche 1", "Wasser + eine Prise Salz" + (trinken < 0.3 ? ", nach Durst" : "")]);
-      zeilen.push(["Flasche 2", zwei ? "Wasser + eine Prise Salz" : klasse !== "kuehl" ? "Wasser als Reserve (warm)" : "nicht nötig"]);
-    } else if (pulver <= FP.pulver_max){
-      // mindestens so viel Wasser, wie die Konzentrationsgrenze verlangt
-      const ml = Math.max(ml50(pulver / FP.pulver_max), Math.min(950, ml50(trinken)));
-      const zwei = trinken > ml / 1000 + 0.05 || klasse !== "kuehl";
-      zeilen.push(["Flasche 1", `${pulver} g Pulver + ${ml} ml Wasser`]);
-      zeilen.push(["Flasche 2", zwei ? "Wasser + eine Prise Salz" : "nicht nötig"]);
-    } else {
-      const je = rund5(pulver / 2);
-      zeilen.push(["Flasche 1", `${je} g Pulver + 950 ml Wasser`]);
-      zeilen.push(["Flasche 2", `${pulver - je} g Pulver + 950 ml Wasser`]);
-    }
-    zeilen.push(["Stopp", "keiner nötig"]);
+  if (!pack){
+    stopps = 0;
+    zeilen.push(["Achtung", "mit 4 Stopps nicht zu packen – Fahrt aufteilen oder Stopps selbst planen"]);
   } else {
-    // Stopps gleichmaessig verteilt. Pro Abschnitt traegt Flasche 1 das Pulver (hoechstens
-    // 125 g), Flasche 2 ist Wasser -- das ist der Punkt des ganzen Plans. Ein Rest ueber
-    // 125 g geht in Flasche 2; 10-30 g auf 950 ml sind praktisch noch Wasser.
-    const abschnitte = stopps + 1, ps = rund5(pulver / abschnitte);
-    const f1 = Math.min(ps, FP.pulver_max), f2 = ps - f1;
-    const f2text = !f2 ? "Wasser + eine Prise Salz"
-      : f2 <= 30 ? `Wasser + ${f2} g Pulver + Prise Salz (fast reines Wasser)`
-      : `${f2} g Pulver + 950 ml Wasser – Rate hoch, am Stopp zusätzlich Wasser trinken`;
-    zeilen.push(["Flasche 1", f1 ? `${f1} g Pulver + 950 ml Wasser` : "Wasser + eine Prise Salz"]);
-    zeilen.push(["Flasche 2", f2text]);
+    const nachDurst = !pulver && trinken < 0.3;
+    pack.flaschen.forEach(f => zeilen.push([`${f.ort} · ${f.ml} ml`,
+      f.pulver_g ? `${f.pulver_g} g Pulver, mit Wasser auffüllen`
+      : f.ort === "Trikot" ? "Wasser" : "Wasser + eine Prise Salz" + (nachDurst ? ", nach Durst" : "")]));
+    if (!stopps) zeilen.push(["Stopp", "keiner nötig"]);
+    const abschnitte = stopps + 1;
     for (let k = 1; k <= stopps; k++){
       const skm = Math.max(10, rund5(km * k / abschnitte));
-      zeilen.push([`Stopp ~km ${skm}`, `nach ~${hm(ges * k / abschnitte)}: ${komma1(FP.stopp_trinken_l)} l direkt trinken, beide Flaschen wie oben neu füllen`]);
+      zeilen.push([`Stopp ~km ${skm}`, `nach ~${hm(ges * k / abschnitte)}: ${komma1(FP.stopp_trinken_l)} l direkt trinken, alle Flaschen wie oben neu füllen`]);
     }
-    if (f1) zeilen.push([stopps > 1 ? `${stopps} Beutel` : "Beutel",
-                 f2 ? `je ${f1} g + ${f2} g Pulver (für Flasche 1 und 2) trocken mitnehmen`
-                    : `je ${f1} g Pulver trocken mitnehmen`]);
+    const khFl = pack.flaschen.filter(f => f.pulver_g).map(f => f.pulver_g);
+    if (stopps && khFl.length) zeilen.push([stopps > 1 ? `${stopps} Beutel` : "Beutel",
+      `je ${khFl.join(" g + ")} g Pulver${khFl.length > 1 ? " (für Halter 1 und 2)" : ""} trocken mitnehmen`]);
   }
-  return { z, bew, ges, km, rate, deckel, kh, pulver, zuschlag, rateS, schweiss, trinken, stopps, zeilen };
+  return { z, bew, ges, km, rate, deckel, kh, pulver, zuschlag, rateS, schweiss, trinken, stopps, zeilen,
+           flaschen: pack ? pack.flaschen : [] };
 }
 
 function fpRechnen(){
@@ -1576,8 +1597,9 @@ function fpRechnen(){
   const m = fpModell({ zk, klasse: fpWetter.klasse, bew: fpBewegt() });
   const km = dauerModus ? m.km : wFpKm.get();
   $("#fp-wetter-info").textContent = `${fpWetter.auto ? "Vorhersage: " + fpWetter.text : "Wetter von Hand"} → ${KLASSE[fpWetter.klasse]}`;
-  $("#fp-ergebnis").innerHTML = m.zeilen.map(([a, b]) =>
-    `<div class="fp-zeile${a.startsWith("Stopp ~") ? " stopp" : ""}"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("");
+  // "Halter 1 · 750 ml" -> Ort fett, Groesse klein darunter
+  $("#fp-ergebnis").innerHTML = m.zeilen.map(([a, b]) => { const [ort, gr] = a.split(" · ");
+    return `<div class="fp-zeile${a.startsWith("Stopp ~") ? " stopp" : ""}"><b>${esc(ort)}${gr ? `<br><small style="font-weight:500;opacity:.7">${esc(gr)}</small>` : ""}</b><span>${esc(b)}</span></div>`; }).join("");
   const vz = v => (v >= 0 ? "+" : "−") + komma(Math.abs(v), 2);
   const hinweis = zk === "intervalle"
     ? " Intervalle: auf der Anfahrt und in den Satzpausen trinken, nicht in den Wiederholungen – über ~75 % VO2max entleert sich der Magen langsamer."
@@ -1596,7 +1618,7 @@ function fpRechnen(){
              kh_rate_g_h: m.rate, kh_deckel: m.deckel, wetter: fpWetter,
              dauer_h: +m.ges.toFixed(2), bewegt_h: +m.bew.toFixed(2), kh_g: Math.round(m.kh), pulver_g: m.pulver,
              schweiss_l_h: +m.rateS.toFixed(2), schweiss_l: +m.schweiss.toFixed(2), trinken_l: +m.trinken.toFixed(2),
-             stopps: m.stopps, zeilen: m.zeilen.map(([a, b]) => `${a}: ${b}`) };
+             stopps: m.stopps, flaschen: m.flaschen, zeilen: m.zeilen.map(([a, b]) => `${a}: ${b}`) };
 }
 $("#fp-send").addEventListener("click", () => {
   if (!fpPlan) return toast("erst Wetter wählen");
