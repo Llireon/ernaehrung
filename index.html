@@ -168,16 +168,14 @@ textarea{min-height:92px;resize:vertical}
 .thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;
   border:0;background:#000a;color:#fff;font-size:14px;line-height:24px;padding:0}
 .rec{margin-top:10px}
-.fp-kopf{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;
-  background:none;border:0;padding:0;text-align:left;color:var(--fg)}
-.fp-kopf .fp-pfeil{font-size:18px;color:var(--dim);transition:transform .15s}
-.fp-kopf[aria-expanded=true] .fp-pfeil{transform:rotate(180deg)}
+.fp-bloecke{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+.fp-bloecke .wz-lab span{font-size:13px}
 .fp-zeile{display:grid;grid-template-columns:104px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
 .fp-zeile:first-child{border-top:0}
 .fp-zeile b{font-weight:700}
 .fp-zeile.stopp b{color:var(--tc)}
 .fp-zweck{flex-wrap:wrap}
-.fp-zweck button{flex:1 1 30%}
+.fp-zweck button{flex:1 1 40%}
 .fp-zweck small{font-weight:500;opacity:.7;font-size:11px}
 .fp-ergebnis{margin-top:14px;padding:4px 12px;border-radius:13px;background:var(--panel2);border:1px solid var(--line)}
 .ct{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -262,7 +260,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v37</small></span>
+  <span class="brand">Logger<small>v38</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -364,13 +362,14 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
 <!-- ======================= TRINKEN ======================= -->
 <section class="tab" id="s-trinken" style="--tc:var(--c-trinken)">
-  <div class="card">
-    <button class="fp-kopf" id="fp-toggle" aria-expanded="false" aria-controls="fp-body">
-      <span><h3 style="margin:0">Fahrt planen</h3>
-        <span class="sub">Distanz oder Dauer rein – Flaschen, Pulver und Stopps raus</span></span>
-      <span class="fp-pfeil" aria-hidden="true">▾</span>
-    </button>
-    <div id="fp-body" hidden>
+  <div class="seg" id="tr-ansicht" style="margin-bottom:12px">
+    <button data-a="eintragen" aria-pressed="true">Eintragen</button>
+    <button data-a="plan">Fahrt planen</button>
+  </div>
+  <div class="card" id="fp-karte" hidden>
+    <h3 style="margin:0">Fahrt planen</h3>
+    <span class="sub">Dauer oder Distanz plus Intervallblöcke rein – Flaschen, Pulver und Stopps raus</span>
+    <div id="fp-body">
       <div class="seg" id="fp-modus" style="margin-top:12px">
         <button data-m="km" aria-pressed="true">Distanz</button>
         <button data-m="dauer">Dauer</button>
@@ -385,14 +384,26 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       </div>
       <div class="wz-lab"><span>Startzeit</span></div>
       <div id="fp-uhr"></div>
-      <h2>Zweck</h2>
+      <h2>Grundfahrt</h2>
       <div class="seg fp-zweck" id="fp-zweck">
         <button data-z="defizit" aria-pressed="true">Base Defizit<br><small>Folgetag frei</small></button>
         <button data-z="base">Base<br><small>normal</small></button>
         <button data-z="lang">lang/hart<br><small>harter Folgetag / &gt;4 h</small></button>
-        <button data-z="intervalle">Intervalle<br><small>über Schwelle</small></button>
         <button data-z="ballern">Ballern<br><small>Gruppe, 8bar</small></button>
       </div>
+      <h2>Intervallblöcke <small style="font-weight:500;opacity:.7">On-Zeit gesamt, Pausen rechnet er dazu</small></h2>
+      <div class="fp-bloecke">
+        <div><div class="wz-lab"><span>Sweet Spot</span></div><div id="fp-b-ss"></div></div>
+        <div><div class="wz-lab"><span>Schwelle</span></div><div id="fp-b-schwelle"></div></div>
+        <div><div class="wz-lab"><span>VO2 lang (4×4)</span></div><div id="fp-b-vo2lang"></div></div>
+        <div><div class="wz-lab"><span>VO2 kurz</span></div><div id="fp-b-vo2kurz"></div></div>
+      </div>
+      <div class="seg" id="fp-format" style="margin-top:8px">
+        <button data-f="30/30" aria-pressed="true">30/30</button>
+        <button data-f="30/15">30/15</button>
+        <button data-f="40/20">40/20</button>
+      </div>
+      <p class="hint" id="fp-bloecke-info">—</p>
       <h2>Wetter</h2>
       <div class="seg" id="fp-wetter">
         <button data-w="auto" aria-pressed="true">Vorhersage</button>
@@ -407,7 +418,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="tr-karte">
     <h2>Was</h2>
     <div class="seg" id="t-was">
       <button data-w="wasser" aria-pressed="true">Wasser</button>
@@ -680,7 +691,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 37 · 30.09.2026</p>
+      Garmin Connect. Version 38 · 30.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -710,7 +721,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 37;
+const VERSION = 38;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1260,6 +1271,7 @@ function zeigeTab(name){
   $("#titelIcon").innerHTML = nb ? nb.querySelector("svg").outerHTML : $("#zahnrad svg").outerHTML;
   $("#heute").hidden = name === "mehr";
   if (name === "gewicht") holeEinordnung();
+  if (name === "trinken") trAnsicht("eintragen");
   try { sessionStorage.setItem("ernaehrung.tab", name); } catch(e){}
 }
 $$("nav#tabs button").forEach(b => b.addEventListener("click", () => zeigeTab(b.dataset.tab)));
@@ -1413,25 +1425,63 @@ const FP = {
   trikot_ml: 750,               // dritte Flasche im Trikot, nur Wasser, nur statt eines Stopps
   pulver_je_l: 125 / 0.95,      // ~132 g/l: Leones Grenze, 125 g in der 950er
   kh_je_g: 0.90,        // Iso-Pulver dm
-  stopp_trinken_l: 0.4  // am Stopp direkt trinken
+  stopp_trinken_l: 0.4, // am Stopp direkt trinken
+  // seit v38: Grundfahrt + Intervallbloecke (Leone, 2026-09-30)
+  ftp: 305,             // Arbeitswert 2026-09-30, geschaetzt (Spanne 300-315), kein Test
+  alpha: 0.45,          // Anteil der in den Bloecken oxidierten KH, der zugefuehrt wird -- geeicht auf den 30.09. (95 g Pulver)
+  kh_max: 90,           // g/h, Aufnahmegrenze Glukose:Fruktose ~2:1 (Pulver 2,27:1)
+  konz: 80,             // g KH je l GESAMTfluessigkeit, wenn warm oder mit Bloecken (Magenentleerung ueber ~75 % VO2max)
+  kurz_kmh: 28.5, kurz_bis_h: 1.75,  // kurze Fahrten: Stadtanteil drueckt das Grundtempo (30.09.: 30,2 km/h inkl. Bloecken)
+  block_stand: 1.03     // Standzeit mit Bloecken (24.04. 1,04 / 08.05. 1,02 / 30.09. 1,03)
 };
 // Tempo und Standzeit aus Strava Apr.-Sept. 2026, Leistung aus den ride-Eintraegen;
 // Ballern aus den 8bar-Fahrten (21.04., 28.04., 05.05., 19.05.): 2,3-2,5 h bewegt,
-// Sammelpunkte -> Standzeit 1,3, haerteste Stunde ~FTP. hart = ueber Schwelle.
+// Sammelpunkte -> Standzeit 1,3, haerteste Stunde ~FTP (KH-Rate wie frueher "Intervalle").
 const ZWECK = {
-  defizit:    { n: "Base im Defizit", g: 50, kmh: 31,   stand: 1.05, w: 208 },
-  base:       { n: "Base",            g: 60, kmh: 31,   stand: 1.05, w: 208 },
-  lang:       { n: "lang / harter Folgetag", g: 80, kmh: 29.5, stand: 1.08, w: 205 },
-  intervalle: { n: "Intervalle",      g: 90, kmh: 32.5, stand: 1.03, w: 236, hart: true },   // 24.04. Sweet Spot 32,8 km/h 235 W x1,04; 08.05. Schwelle 32,6 km/h 237 W x1,02
-  ballern:    { n: "Ballern (Gruppe)", g: 90, kmh: 32,  stand: 1.30, w: 200, hart: true }
+  defizit: { n: "Base im Defizit", g: 50, kmh: 31,   stand: 1.05, w: 208 },
+  base:    { n: "Base",            g: 60, kmh: 31,   stand: 1.05, w: 208 },
+  lang:    { n: "lang / harter Folgetag", g: 80, kmh: 29.5, stand: 1.08, w: 205 },
+  ballern: { n: "Ballern (Gruppe)", g: 90, kmh: 32,  stand: 1.30, w: 200 }
 };
-// KH-Deckel nach bewegter Dauer (Thomas/Erdman/Burke 2016, Jeukendrup 2014):
-// < 45 min nichts, 45-75 min kaum (ueber Schwelle 30), bis 2,5 h hoechstens 60, darueber die Zweck-Rate
-function khDeckel(h, hart){
+// Intervallbloecke: On-Leistung als Anteil FTP, Minuten Pause je Minute On mit Pausenleistung,
+// Tempo im Mittel ueber On + Pause. Eingabe ist die On-Zeit gesamt.
+const BLOCK = {
+  ss:       { n: "Sweet Spot", f: 0.91, pause: 0.3,  pw: 200, kmh: 33 },   // 24.04.: 3 x ~20 min, 273-292 W, 32,8 km/h
+  schwelle: { n: "Schwelle",   f: 1.00, pause: 0.35, pw: 200, kmh: 34 },   // 08.05.: 3 x 17 min / 6 min Pause, 309-311 W
+  vo2lang:  { n: "VO2 lang",   f: 1.08, pause: 0.75, pw: 170, kmh: 35 },   // 4x4 mit 3 min Pause (Block Herbst 2026)
+  vo2kurz:  { n: "VO2 kurz",   f: 1.25, pause: null, pw: 175, kmh: 38 }    // 30.09. 2x8x30/30: 372/384 W, Off ~175 W, 34-42 km/h je nach Wind
+};
+const FORMAT = { "30/30": 1, "30/15": 0.5, "40/20": 0.5 };   // Minuten Pause je Minute On
+// KH-Anteil am Umsatz nach Intensitaet. Stuetzpunkte: van Loon et al. 2001 (J Physiol 536:295),
+// Fettoxidation 32 kJ/min bei 55 % und 19 kJ/min bei 75 % Wmax -> KH ~48 bzw. ~77 %; FTP ~ 75 % Wmax.
+// Darueber gegen ~95 % (Romijn et al. 1993).
+const KH_ANTEIL = [[0.55, 0.40], [0.73, 0.48], [1.0, 0.77], [1.25, 0.95]];
+function khAnteil(p){
+  const x = p / FP.ftp, t = KH_ANTEIL;
+  if (x <= t[0][0]) return t[0][1];
+  for (let i = 1; i < t.length; i++) if (x <= t[i][0])
+    return t[i-1][1] + (t[i][1] - t[i-1][1]) * (x - t[i-1][0]) / (t[i][0] - t[i-1][0]);
+  return t[t.length - 1][1];
+}
+const kcalH = p => p * 3.6 / 0.22 / 4.184;          // Umsatz bei P Watt am Pedal
+const khOxH = p => kcalH(p) * khAnteil(p) / 4;      // KH-Oxidation in g/h
+// KH-Deckel fuer die GRUNDfahrt nach bewegter Dauer (Thomas/Erdman/Burke 2016, Jeukendrup 2014):
+// < 75 min nichts, bis 2,5 h hoechstens 60, darueber die Zweck-Rate. Bloecke kommen obendrauf.
+function khDeckel(h){
   if (h < 0.75) return [0, "Fahrt unter 45 min"];
-  if (h < 1.25) return [hart ? 30 : 0, "Fahrt unter 75 min"];
+  if (h < 1.25) return [0, "Fahrt unter 75 min"];
   if (h < 2.5)  return [60, "Fahrt unter 2,5 h"];
   return [Infinity, null];
+}
+// Bloecke -> Segmente (On und Pause) mit Dauer, Leistung, Tempo
+function blockSegmente(bloecke, format){
+  const out = [];
+  for (const b of bloecke){
+    const d = BLOCK[b.art], on = b.min / 60, pause = d.pause ?? FORMAT[format];
+    out.push({ art: b.art, teil: "on", h: on, w: Math.round(FP.ftp * d.f), kmh: d.kmh });
+    out.push({ art: b.art, teil: "pause", h: on * pause, w: d.pw, kmh: d.kmh });
+  }
+  return out;
 }
 const KLASSE = { kuehl: "kühl", warm: "warm", heiss: "heiß" };
 let fpBereit = false, fpWetter = null, fpCache = null, fpPlan = null;
@@ -1446,6 +1496,12 @@ const wFpDauer = walze($("#fp-dauer"), { min: 0.5, max: 7, step: 0.25, einheit: 
 const wFpUhr = walze($("#fp-uhr"), { min: 5, max: 22, step: 1, einheit: "Uhr",
                                      start: Math.min(22, Math.max(5, new Date().getHours() + 1)),
                                      onChange: () => fpWetterHolen() });
+const wFpB = {
+  ss:       walze($("#fp-b-ss"),       { min: 0, max: 120, step: 5, einheit: "min", key: "fahrt.b.ss", start: 0, onChange: () => fpWetterHolen() }),
+  schwelle: walze($("#fp-b-schwelle"), { min: 0, max: 90,  step: 1, einheit: "min", key: "fahrt.b.schwelle", start: 0, onChange: () => fpWetterHolen() }),
+  vo2lang:  walze($("#fp-b-vo2lang"),  { min: 0, max: 40,  step: 1, einheit: "min", key: "fahrt.b.vo2lang", start: 0, onChange: () => fpWetterHolen() }),
+  vo2kurz:  walze($("#fp-b-vo2kurz"),  { min: 0, max: 40,  step: 1, einheit: "min", key: "fahrt.b.vo2kurz", start: 0, onChange: () => fpWetterHolen() })
+};
 const fpModus = () => wahl("#fp-modus").m || "km";
 function fpModusRender(){
   const dauer = fpModus() === "dauer";
@@ -1455,24 +1511,28 @@ function fpModusRender(){
 gruppe("#fp-modus", d => { merken("fahrt.modus", d.m); fpModusRender(); fpWetterHolen(); });
 setzeWahl("#fp-modus", "m", last["fahrt.modus"] || "km");
 fpModusRender();
-// Der Zweck aendert Tempo und Standzeit, also die Dauer und damit das Wetterfenster
+// Zweck und Bloecke aendern Tempo und Standzeit, also die Dauer und damit das Wetterfenster
 gruppe("#fp-tag", () => fpWetterHolen()); gruppe("#fp-zweck", () => fpWetterHolen());
 gruppe("#fp-wetter", () => fpWetterHolen());
-$("#fp-toggle").onclick = () => {
-  const auf = $("#fp-body").hidden; $("#fp-body").hidden = !auf;
-  $("#fp-toggle").setAttribute("aria-expanded", String(auf)); merken("fahrt.offen", auf);
-  if (auf) fpWetterHolen();
-};
-if (last["fahrt.offen"]){ $("#fp-body").hidden = false; $("#fp-toggle").setAttribute("aria-expanded", "true"); }
+gruppe("#fp-format", d => { merken("fahrt.format", d.f); fpWetterHolen(); });
+setzeWahl("#fp-format", "f", last["fahrt.format"] || "30/30");
+// Trinken-Reiter: Eintragen | Fahrt planen -- startet immer auf Eintragen (Leone, 2026-09-30)
+function trAnsicht(a){
+  setzeWahl("#tr-ansicht", "a", a);
+  $("#tr-karte").hidden = a === "plan"; $("#fp-karte").hidden = a !== "plan";
+  if (a === "plan") fpWetterHolen();
+}
+gruppe("#tr-ansicht", d => trAnsicht(d.a));
 
 function fpStart(){
   const d = new Date(); if ((wahl("#fp-tag").t || "heute") === "morgen") d.setDate(d.getDate() + 1);
   d.setHours(wFpUhr.get(), 0, 0, 0); return d;
 }
-const fpZweck = () => ZWECK[wahl("#fp-zweck").z || "defizit"];
+const fpBloecke = () => Object.keys(BLOCK).map(art => ({ art, min: wFpB[art].get() })).filter(b => b.min > 0);
+const fpEingabe = () => ({ zk: wahl("#fp-zweck").z || "defizit", modus: fpModus(), km: wFpKm.get(),
+                           dauer: wFpDauer.get(), bloecke: fpBloecke(), format: wahl("#fp-format").f || "30/30" });
 // Dauer-Eingabe ist die Gesamtzeit mit Pausen -- so, wie man eine Session plant
-const fpBewegt = () => fpModus() === "dauer" ? wFpDauer.get() / fpZweck().stand : wFpKm.get() / fpZweck().kmh;
-const fpGesamt = () => fpBewegt() * fpZweck().stand;
+const fpGesamt = () => fpModell({ ...fpEingabe(), klasse: "kuehl" }).ges;
 function fpWetterHolen(){
   if (!fpBereit) return;
   clearTimeout(fpWetterHolen._t);
@@ -1550,16 +1610,40 @@ function fpPacken(P, T, klasse){
   return best;
 }
 
-// Kern ohne DOM, damit er sich nachrechnen laesst
-function fpModell({ zk, klasse, bew }){
-  const z = ZWECK[zk], ges = bew * z.stand, km = Math.round(bew * z.kmh);
-  const [cap, grund] = khDeckel(bew, z.hart);
-  const rate = Math.min(z.g, cap), deckel = rate < z.g ? grund : null;
-  const kh = rate * bew, pulver = rund5(kh / FP.kh_je_g);
-  const zuschlag = (z.w - FP.p_ref) * FP.schweiss_je_w;
+// Kern ohne DOM, damit er sich nachrechnen laesst.
+// Fahrt = Grundfahrt (Zweck) + Intervallbloecke. KH: Grundrate x Grundstunden (nach Dauer gedeckelt)
+// + alpha x in den Bloecken oxidierte KH, alles unter der Aufnahmegrenze.
+// Wasser: Schweiss minus Budget, mindestens aber KH / 80 g/l, sobald es warm ist oder Bloecke drin sind.
+function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = "30/30" }){
+  const z = ZWECK[zk], seg = blockSegmente(bloecke, format), hart = seg.length > 0;
+  const stand = hart ? Math.min(z.stand, FP.block_stand) : z.stand;
+  const bh = seg.reduce((s, x) => s + x.h, 0), bkm = seg.reduce((s, x) => s + x.h * x.kmh, 0);
+  // Grundtempo: kurze Fahrten sind langsamer, weil die Stadt-Anfahrt einen grossen Anteil hat
+  let bew = 0, grundH = 0, vGrund = z.kmh;
+  for (const v of [z.kmh, FP.kurz_kmh]){
+    vGrund = v;
+    if (modus === "dauer"){ bew = dauer / stand; grundH = Math.max(0, bew - bh); }
+    else { grundH = Math.max(0, (kmEin - bkm) / v); bew = grundH + bh; }
+    if (bew >= FP.kurz_bis_h || v === FP.kurz_kmh) break;
+  }
+  const ges = bew * stand, km = modus === "dauer" ? Math.round(grundH * vGrund + bkm) : kmEin;
+  const wMittel = bew ? (grundH * z.w + seg.reduce((s, x) => s + x.h * x.w, 0)) / bew : z.w;
+  // Kohlenhydrate
+  const [cap, grund] = khDeckel(bew);
+  const grundRate = Math.min(z.g, cap);
+  const khGrund = grundRate * grundH;
+  const khOxBlock = seg.reduce((s, x) => s + khOxH(x.w) * x.h, 0);
+  const khBlock = FP.alpha * khOxBlock;
+  let kh = khGrund + khBlock, aufnahme = false;
+  if (kh > FP.kh_max * bew){ kh = FP.kh_max * bew; aufnahme = true; }
+  const deckel = grundH > 0 && grundRate < z.g ? grund : null;
+  const rate = bew ? kh / bew : 0, pulver = rund5(kh / FP.kh_je_g);
+  // Schweiss und Wasser
+  const zuschlag = (wMittel - FP.p_ref) * FP.schweiss_je_w;
   const rateS = FP.schweiss[klasse] + zuschlag;
   const schweiss = rateS * ges;
-  const trinken = Math.max(0, schweiss - FP.budget_l);
+  const verduennen = (hart || klasse !== "kuehl") && kh > 0;
+  const trinken = Math.max(0, schweiss - FP.budget_l, verduennen ? kh / FP.konz : 0);
   // Stopps erst, wenn auch die Trikotflasche nicht reicht; am Stopp 0,4 l direkt trinken
   let stopps = 0, pack = null;
   for (; stopps <= 4; stopps++){
@@ -1586,46 +1670,62 @@ function fpModell({ zk, klasse, bew }){
     if (stopps && khFl.length) zeilen.push([stopps > 1 ? `${stopps} Beutel` : "Beutel",
       `je ${khFl.join(" g + ")} g Pulver${khFl.length > 1 ? " (für Halter 1 und 2)" : ""} trocken mitnehmen`]);
   }
-  return { z, bew, ges, km, rate, deckel, kh, pulver, zuschlag, rateS, schweiss, trinken, stopps, zeilen,
+  return { z, seg, hart, stand, bh, bkm, bew, grundH, vGrund, ges, km, wMittel, grundRate, khGrund, khOxBlock, khBlock,
+           kh, aufnahme, rate, deckel, pulver, zuschlag, rateS, schweiss, verduennen, trinken, stopps, zeilen,
            flaschen: pack ? pack.flaschen : [] };
 }
 
 function fpRechnen(){
   if (!fpBereit) return;
   if (!fpWetter){ fpWetterHolen(); return; }
-  const zk = wahl("#fp-zweck").z || "defizit", dauerModus = fpModus() === "dauer";
-  const m = fpModell({ zk, klasse: fpWetter.klasse, bew: fpBewegt() });
-  const km = dauerModus ? m.km : wFpKm.get();
+  const e = fpEingabe(), dauerModus = e.modus === "dauer";
+  const m = fpModell({ ...e, klasse: fpWetter.klasse });
   $("#fp-wetter-info").textContent = `${fpWetter.auto ? "Vorhersage: " + fpWetter.text : "Wetter von Hand"} → ${KLASSE[fpWetter.klasse]}`;
+  // Bloecke in einer Zeile: was, wie lange mit Pausen, welche Leistung
+  $("#fp-bloecke-info").textContent = m.hart
+    ? e.bloecke.map(b => { const on = m.seg.find(x => x.art === b.art && x.teil === "on"),
+                               p = m.seg.find(x => x.art === b.art && x.teil === "pause");
+        return `${BLOCK[b.art].n}${b.art === "vo2kurz" ? " " + e.format : ""}: ${b.min} min On bei ~${on.w} W + ${Math.round(p.h * 60)} min Pause`; }).join(" · ") +
+      ` → ${Math.round(m.bh * 60)} min, ~${komma1(m.bkm)} km (Wind verschiebt das stark). FTP ${FP.ftp} W.`
+    : "Keine Blöcke – reine Grundfahrt.";
   // "Halter 1 · 750 ml" -> Ort fett, Groesse klein darunter
   $("#fp-ergebnis").innerHTML = m.zeilen.map(([a, b]) => { const [ort, gr] = a.split(" · ");
     return `<div class="fp-zeile${a.startsWith("Stopp ~") ? " stopp" : ""}"><b>${esc(ort)}${gr ? `<br><small style="font-weight:500;opacity:.7">${esc(gr)}</small>` : ""}</b><span>${esc(b)}</span></div>`; }).join("");
   const vz = v => (v >= 0 ? "+" : "−") + komma(Math.abs(v), 2);
-  const hinweis = zk === "intervalle"
-    ? " Intervalle: auf der Anfahrt und in den Satzpausen trinken, nicht in den Wiederholungen – über ~75 % VO2max entleert sich der Magen langsamer."
-    : zk === "ballern"
+  const hinweis = m.hart
+    ? " Blöcke: auf der Anfahrt und in den Satzpausen trinken, nicht in den Wiederholungen – über ~75 % VO2max entleert sich der Magen langsamer."
+    : e.zk === "ballern"
     ? " Ballern: in der harten Stunde geht in der Gruppe kaum Trinken – auf der Anfahrt die KH-Flasche halb leeren, an den Sammelpunkten Wasser."
     : "";
+  const khText = m.kh
+    ? `${Math.round(m.kh)} g KH (${Math.round(m.rate)} g/h): Grundfahrt ${hm(m.grundH)} × ${m.grundRate} g/h = ${Math.round(m.khGrund)} g` +
+      (m.deckel ? ` (gedeckelt: ${m.deckel}, sonst ${m.z.g} g/h)` : "") +
+      (m.hart ? ` + Blöcke ${Math.round(m.khOxBlock)} g verbrannt × ${Math.round(FP.alpha * 100)} % = ${Math.round(m.khBlock)} g` : "") +
+      (m.aufnahme ? `, auf ${FP.kh_max} g/h Aufnahme gedeckelt` : "")
+    : "Keine KH nötig";
   $("#fp-fuss").textContent =
-    `${m.z.kmh} km/h bewegt: ~${hm(m.ges)} gesamt (${hm(m.bew)} bewegt)${dauerModus ? `, ~${km} km` : ""}. ` +
-    (m.rate ? `${Math.round(m.kh)} g KH = ${m.rate} g/h` : "Keine KH nötig") +
-    (m.deckel ? ` (gedeckelt: ${m.deckel}, sonst ${m.z.g} g/h)` : "") + ". " +
-    `Schweiß ~${komma(m.rateS, 2)} l/h` + (Math.abs(m.zuschlag) >= 0.01 ? ` (${vz(m.zuschlag)} für ~${m.z.w} W)` : "") +
-    ` → ~${komma1(m.schweiss)} l, davon ~${komma1(m.trinken)} l trinken – ${komma1(FP.budget_l)} l Verlust sind ok (wie am 20.09.). ` +
-    `Trinkalarm alle 15 min. Hände früher taub als sonst → sofort Wasser.` + hinweis;
-  fpPlan = { km, km_geschaetzt: dauerModus, eingabe: dauerModus ? "dauer" : "km",
-             start: isoAus(fpStart()), zweck: zk, kmh: m.z.kmh, leistung_w: m.z.w,
-             kh_rate_g_h: m.rate, kh_deckel: m.deckel, wetter: fpWetter,
+    `${komma1(m.vGrund)} km/h Grundtempo: ~${hm(m.ges)} gesamt (${hm(m.bew)} bewegt)${dauerModus ? `, ~${m.km} km` : ""}, Ø ~${Math.round(m.wMittel)} W. ` +
+    khText + ". " +
+    `Schweiß ~${komma(m.rateS, 2)} l/h` + (Math.abs(m.zuschlag) >= 0.01 ? ` (${vz(m.zuschlag)} für Ø ${Math.round(m.wMittel)} W)` : "") +
+    ` → ~${komma1(m.schweiss)} l; ${komma1(FP.budget_l)} l Verlust sind ok (wie am 20.09.)` +
+    (m.verduennen ? `, aber für ${Math.round(m.kh)} g KH mindestens ${komma1(m.kh / FP.konz)} l Flüssigkeit gesamt (≤ 8 % im Magen)` : "") +
+    ` → ~${komma1(m.trinken)} l trinken. Trinkalarm alle 15 min. Hände früher taub als sonst → sofort Wasser.` + hinweis;
+  fpPlan = { km: m.km, km_geschaetzt: dauerModus, eingabe: e.modus,
+             start: isoAus(fpStart()), zweck: e.zk, kmh: m.vGrund, leistung_w: Math.round(m.wMittel),
+             bloecke: e.bloecke.map(b => ({ art: b.art, min: b.min, w: Math.round(FP.ftp * BLOCK[b.art].f),
+                                          ...(b.art === "vo2kurz" ? { format: e.format } : {}) })),
+             grund_h: +m.grundH.toFixed(2), kh_grund_g: Math.round(m.khGrund), kh_bloecke_g: Math.round(m.khBlock),
+             kh_rate_g_h: Math.round(m.rate), kh_deckel: m.deckel, wetter: fpWetter,
              dauer_h: +m.ges.toFixed(2), bewegt_h: +m.bew.toFixed(2), kh_g: Math.round(m.kh), pulver_g: m.pulver,
              schweiss_l_h: +m.rateS.toFixed(2), schweiss_l: +m.schweiss.toFixed(2), trinken_l: +m.trinken.toFixed(2),
              stopps: m.stopps, flaschen: m.flaschen, zeilen: m.zeilen.map(([a, b]) => `${a}: ${b}`) };
 }
 $("#fp-send").addEventListener("click", () => {
   if (!fpPlan) return toast("erst Wetter wählen");
-  (fpModus() === "dauer" ? wFpDauer : wFpKm).merken(); eintragen({ type: "fahrtplan", ...fpPlan });
+  (fpModus() === "dauer" ? wFpDauer : wFpKm).merken(); Object.values(wFpB).forEach(w => w.merken());
+  eintragen({ type: "fahrtplan", ...fpPlan });
 });
 fpBereit = true;
-if (!$("#fp-body").hidden) fpWetterHolen();
 
 // ---------- Gewicht ----------
 const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 2, einheit: "kg", key: "gewicht.kg", start: 78.0 });
@@ -1971,19 +2071,28 @@ setInterval(flush, 60000);
 
 // ---------- Tagesrueckblick ----------
 // Vor 5 Uhr ist der Rueckblick fast immer der vom Vortag.
+// "heute/gestern" gilt ab dem Moment, in dem Leone anfaengt (Aufnahme, Text, Foto), nicht ab dem
+// Senden: am 29.09. um 23:57 angefangen, 00:03 gesendet -> landete bis v37 auf dem 30.09.
 const rbFotos = fotoSammler($("#rb-fotos")), rbRec = recorder($("#rb-rec"));
-gruppe("#rb-tag");
-const rbTagSetzen = () => setzeWahl("#rb-tag", "tag", new Date().getHours() < 5 ? "gestern" : "heute");
+let rbBasis = null, rbHand = false;
+gruppe("#rb-tag", () => { rbHand = true; });
+const rbTagSetzen = () => setzeWahl("#rb-tag", "tag", (rbBasis || new Date()).getHours() < 5 ? "gestern" : "heute");
+const rbAnfang = () => { if (!rbBasis){ rbBasis = new Date(); if (!rbHand) rbTagSetzen(); } };
+$("#rb-rec").addEventListener("click", rbAnfang, true);
+$("#rb-text").addEventListener("input", rbAnfang);
+$("#rb-fotos").addEventListener("change", rbAnfang, true);
+// App bleibt auf dem iPhone oft tagelang offen: ohne angefangenen Rueckblick die Vorwahl auffrischen
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !rbBasis && !rbHand) rbTagSetzen(); });
 rbTagSetzen();
 $("#rb-send").addEventListener("click", async () => {
   const text = $("#rb-text").value.trim(), fotos = rbFotos.get(), audio = rbRec.get();
   if (audio === "laeuft") return toast("Aufnahme erst stoppen");
   if (!text && !fotos.length && !audio) return toast("Sprachnachricht, Text oder Screenshot nötig");
-  const d = new Date(); if ((wahl("#rb-tag").tag || "heute") === "gestern") d.setDate(d.getDate() - 1);
+  const d = new Date(rbBasis || Date.now()); if ((wahl("#rb-tag").tag || "heute") === "gestern") d.setDate(d.getDate() - 1);
   const datum = isoAus(d).slice(0, 10);
   await eintragen({ type: "tagesrueckblick", datum, beschreibung: text || null },
                   { medien: [...fotos, ...(audio ? [audio] : [])], ordner: "tag" });
-  $("#rb-text").value = ""; rbFotos.reset(); rbRec.reset(); rbTagSetzen();
+  $("#rb-text").value = ""; rbFotos.reset(); rbRec.reset(); rbBasis = null; rbHand = false; rbTagSetzen();
 });
 
 // ---------- Start ----------
