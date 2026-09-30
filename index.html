@@ -262,7 +262,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v36</small></span>
+  <span class="brand">Logger<small>v37</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -680,7 +680,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 36 · 30.09.2026</p>
+      Garmin Connect. Version 37 · 30.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -710,7 +710,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 36;
+const VERSION = 37;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1422,7 +1422,7 @@ const ZWECK = {
   defizit:    { n: "Base im Defizit", g: 50, kmh: 31,   stand: 1.05, w: 208 },
   base:       { n: "Base",            g: 60, kmh: 31,   stand: 1.05, w: 208 },
   lang:       { n: "lang / harter Folgetag", g: 80, kmh: 29.5, stand: 1.08, w: 205 },
-  intervalle: { n: "Intervalle",      g: 90, kmh: 31,   stand: 1.05, w: 235, hart: true },
+  intervalle: { n: "Intervalle",      g: 90, kmh: 32.5, stand: 1.03, w: 236, hart: true },   // 24.04. Sweet Spot 32,8 km/h 235 W x1,04; 08.05. Schwelle 32,6 km/h 237 W x1,02
   ballern:    { n: "Ballern (Gruppe)", g: 90, kmh: 32,  stand: 1.30, w: 200, hart: true }
 };
 // KH-Deckel nach bewegter Dauer (Thomas/Erdman/Burke 2016, Jeukendrup 2014):
