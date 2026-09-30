@@ -259,7 +259,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v32</small></span>
+  <span class="brand">Logger<small>v33</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -436,6 +436,19 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <section class="tab" id="s-gewicht" style="--tc:var(--c-gewicht)">
   <div class="card" id="eo-card" hidden></div>
   <div class="card">
+    <h3>Renpho-Screenshots</h3>
+    <p class="sub">Renpho-App › Verlauf: Screenshots der Liste reichen, Claude liest Gewicht, Uhrzeit
+      und Bemerkung beim Sync aus. Überlappende Screenshots sind egal.</p>
+    <p class="hint" style="margin-top:0">In die Bemerkung jeder Messung: <strong>wann</strong>
+      (aufgewacht, morgens, zwischendurch, vorm Schlafen, vor/nach Fahrt oder Kraft),
+      <strong>Kleidung</strong> (nackt, Unterwäsche, angezogen) und
+      <strong>nüchtern / nach Pipi / nach Stuhl</strong>. Freitext geht auch.</p>
+    <div id="rs-fotos"></div>
+    <textarea id="rs-text" aria-label="Ergänzung zu den Renpho-Screenshots" style="margin-top:12px;min-height:60px"
+      placeholder="optional: Ergänzung, z. B. was in einer Bemerkung fehlt"></textarea>
+    <button class="go" id="rs-send">Screenshots senden</button>
+  </div>
+  <div class="card">
     <h2>Messpunkt</h2>
     <div class="seg" id="g-slot1">
       <button data-slot="aufwachen">aufgewacht</button>
@@ -449,11 +462,13 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       <button data-slot="kraft-vorher">vor Kraft</button>
       <button data-slot="kraft-nachher">nach Kraft</button>
     </div>
+    <div class="wz-lab"><span>Waage</span></div>
+    <div class="seg" id="g-waage">
+      <button data-waage="renpho">Renpho</button>
+      <button data-waage="bad">Badwaage</button>
+    </div>
     <div class="wz-lab"><span>Gewicht</span></div>
     <div id="g-kg"></div>
-    <div class="wz-lab"><span>Körperfett (nur Trend)</span>
-      <button class="chip" id="g-ohne-kfa" style="padding:3px 10px;font-size:12px">ohne KFA</button></div>
-    <div id="g-kfa"></div>
     <div class="wz-lab"><span>Kleidung</span></div>
     <div class="seg" id="g-kleidung">
       <button data-kleidung="nackt">nackt</button>
@@ -469,7 +484,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <button class="go" id="g-send">Gewicht eintragen</button>
     <p class="hint">Alle Messungen außer „morgens“ erklären den Tagesverlauf (Schweiß, Urin, Atemwasser),
       gehen aber nicht in den Trend. „aufgewacht“ = direkt nach dem Schlafen, vor dem Pipi.
-      Immer dieselbe Waage.</p>
+      Nie innerhalb eines Vergleichs die Waage wechseln (Badwaage ~0,55 kg tiefer).</p>
   </div>
 </section>
 
@@ -652,7 +667,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 32 · 29.09.2026</p>
+      Garmin Connect. Version 33 · 30.09.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -682,7 +697,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 32;
+const VERSION = 33;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1073,7 +1088,7 @@ async function aufraeumen(){
 
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
-  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
   nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
@@ -1119,8 +1134,13 @@ function beschreibe(p){
     const kl = { nackt: "nackt", unterwaesche: "Unterwäsche", angezogen: "angezogen" }[p.kleidung];
     z.push([slot, kl, p.fasted ? "nüchtern" : null, p.nach_pipi ? "nach Pipi" : null,
             p.nach_stuhl ? "nach Stuhlgang" : null].filter(Boolean).join(" · "));
-    z.push([p.bf_pct != null ? `KFA ${komma(p.bf_pct)} %` : "ohne KFA",
-            p.referenz ? "✓ Referenzmessung" : "kein Trendwert"].join(" · "));
+    z.push([{ renpho: "Renpho", bad: "Badwaage" }[p.waage] || null,
+            p.bf_pct != null ? `KFA ${komma(p.bf_pct)} %` : null,
+            p.referenz ? "✓ Referenzmessung" : "kein Trendwert"].filter(Boolean).join(" · "));
+  } else if (t === "renpho-screenshot"){
+    const nf = (p.fotos || []).length;
+    titel = `Renpho-Screenshots · ${nf} Bild${nf === 1 ? "" : "er"}`;
+    text = p.beschreibung;
   } else if (t === "klo"){
     const art = { pipi: "Pipi", stuhl: "Stuhl", beides: "Pipi + Stuhl" }[p.art] || p.art;
     titel = art;
@@ -1508,11 +1528,10 @@ if (!$("#fp-body").hidden) fpWetterHolen();
 
 // ---------- Gewicht ----------
 const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 2, einheit: "kg", key: "gewicht.kg", start: 78.0 });
-const wKfa = walze($("#g-kfa"), { min: 6, max: 30, step: 0.1, einheit: "%", key: "gewicht.kfa", start: 14.0 });
-let ohneKfa = !!last["gewicht.ohne_kfa"];
-function kfaRender(){ $("#g-ohne-kfa").setAttribute("aria-pressed", String(ohneKfa)); $("#g-kfa").style.opacity = ohneKfa ? ".35" : "1"; }
-$("#g-ohne-kfa").onclick = () => { ohneKfa = !ohneKfa; kfaRender(); };
-kfaRender();
+// seit v33 kein KFA mehr (folgt ohnehin nur dem Gewicht); Renpho-Werte kommen als Screenshot
+gruppe("#g-waage", () => markRef());
+setzeWahl("#g-waage", "waage", last["gewicht.waage"] || "renpho");
+const waage = () => wahl("#g-waage").waage || "renpho";
 const slot = () => wahl("#g-slot1").slot || wahl("#g-slot2").slot || null;
 const slotSetzen = s => $$("#g-slot1 > button, #g-slot2 > button")
   .forEach(x => x.setAttribute("aria-pressed", String(x.dataset.slot === s)));
@@ -1529,25 +1548,35 @@ slotSetzen("zwischendurch");   // seit v32 keine Uhrzeit-Slots mehr, der Zeitpun
 gruppe("#g-kleidung");
 setzeWahl("#g-kleidung", "kleidung", last["gewicht.kleidung"] || "unterwaesche");
 ["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(s => $(s).addEventListener("click", () => { umschalten(s); markRef(); }));
-const istRef = () => slot() === "morgen" && an("#g-nuechtern") && an("#g-pipi");
+const istRef = () => waage() === "renpho" && slot() === "morgen" && an("#g-nuechtern") && an("#g-pipi");
 function markRef(){
   const h = $("#ref-hint"), ref = istRef();
   h.style.color = ref ? "var(--ok)" : "var(--dim)";
   h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
-    : "Referenzmessung = morgens, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
+    : waage() === "bad" ? "Badwaage – nie ein Trendwert, nur für den Tagesverlauf."
+    : "Referenzmessung = Renpho, morgens, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
 }
 markRef();
 $("#g-send").addEventListener("click", () => {
-  const kg = wKg.get(), s = slot(), kl = wahl("#g-kleidung").kleidung || null;
+  const kg = wKg.get(), s = slot(), kl = wahl("#g-kleidung").kleidung || null, wg = waage();
   eintragen({ type: s && s.startsWith("ride") ? "ride-gewicht" : "gewicht",
-              kg, bf_pct: ohneKfa ? null : wKfa.get(), slot: s, kleidung: kl,
+              kg, waage: wg, slot: s, kleidung: kl,
               fasted: an("#g-nuechtern"), nach_pipi: an("#g-pipi"), nach_stuhl: an("#g-stuhl"),
               referenz: istRef() });
-  wKg.merken(); if (!ohneKfa) wKfa.merken(); merken("gewicht.ohne_kfa", ohneKfa);
+  wKg.merken(); merken("gewicht.waage", wg);
   if (kl) merken("gewicht.kleidung", kl);
   ["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(x => $(x).setAttribute("aria-pressed", "false"));
   slotSetzen("zwischendurch");
   markRef();
+});
+
+// Renpho-Verlauf als Screenshots: Claude liest beim Sync aus (scripts/renpho_import.py)
+const rsFotos = fotoSammler($("#rs-fotos"));
+$("#rs-send").addEventListener("click", async () => {
+  const fotos = rsFotos.get(), text = $("#rs-text").value.trim();
+  if (!fotos.length) return toast("erst Screenshots wählen");
+  await eintragen({ type: "renpho-screenshot", beschreibung: text || null }, { medien: fotos, ordner: "gewicht" });
+  rsFotos.reset(); $("#rs-text").value = "";
 });
 
 // Einordnung: schreibt Claude beim Sync nach feedback/gewicht.json
