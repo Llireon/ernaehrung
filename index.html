@@ -1399,7 +1399,7 @@ $("#t-send").addEventListener("click", () => {
 // (Wiegen vor/nach Fahrten) BEIDE Stellen aendern.
 const FP = {
   budget_l: 1.2,        // Nettoverlust, der am 20.09. ohne Symptome blieb (79,0 -> 77,8 kg)
-  schweiss: { kuehl: 0.73, warm: 0.9, heiss: 1.1 },  // l/h bei 208 W -- kuehl gemessen 20.09., Rest Platzhalter
+  schweiss: { kuehl: 0.69, warm: 0.9, heiss: 1.1 },  // l/h bei 208 W -- kuehl gemessen 20.09. ((1,2 kg + 1,335 l echtes Wasser) / 3,7 h; bis v42 mit Nenn-1,5 l 0,73), Rest Platzhalter
   p_ref: 208,           // Leistung, bei der die Raten oben gelten (20.09.)
   // Waermebilanz: Mehrleistung wird zu (1/eta - 1) Waerme, die verdunsten muss.
   // eta 0,22 Bruttowirkungsgrad, 674 W je l/h Verdunstung, 85 % verdunsten statt abzutropfen
