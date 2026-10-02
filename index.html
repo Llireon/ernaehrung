@@ -260,7 +260,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v41</small></span>
+  <span class="brand">Logger<small>v42</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -704,7 +704,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 41;
+const VERSION = 42;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1406,7 +1406,12 @@ const FP = {
   schweiss_je_w: (1 / 0.22 - 1) / (674 * 0.85),     // ~0,006 l/h je W
   halter_ml: [500, 750, 950],   // Leones Flaschen fuer die zwei Halter (2026-09-30)
   trikot_ml: 750,               // dritte Flasche im Trikot, nur Wasser, nur statt eines Stopps
-  pulver_je_l: 125 / 0.95,      // ~132 g/l: Leones Grenze, 125 g in der 950er
+  pulver_je_l: 125 / 0.95,      // Leones Grenze in g je NENN-Liter: 125 g in der 950er, 98 g in der 750er
+  // seit v42: echte Fuellmengen (Leone, 2026-10-02). Randvoll fassen die Flaschen weniger als aufgedruckt,
+  // und das Pulver verdraengt Wasser: 750er leer 44 g, randvoll mit Wasser ~750 g, randvoll mit 90 g Pulver
+  // 797 g -> 663 g Wasser statt ~706, also ~0,52 ml je g Pulver. Die 500er ist noch nicht gewogen (Platzhalter).
+  fuell_ml: { 500: 475, 750: 710, 950: 910 },
+  verdraengung_ml_je_g: 0.52,
   // seit v41: zwei KH-Flaschen trinkt Leone nacheinander, die zweite ist dichter (2026-10-02).
   // Spaete KH bringen die Leistung (PMC4739491), fruehe schonen die Leber -- daher Rampe statt
   // gleich dicht, aber die erste Flasche nicht zu duenn. Faktor = Konzentration 2. / 1. Flasche.
@@ -1567,38 +1572,45 @@ function fpWetterHolen(){
 // die billigste zulaessige nehmen. Kosten: Trikot vermeiden, dann wenige Flaschen, dann (bei zwei
 // KH-Flaschen) eine Rampe, die nicht an der 132-g/l-Grenze verpufft, dann wenig Volumen.
 // Pulver nur in den Haltern, das Trikot ist immer Wasser (Leone, 2026-09-30).
+// Seit v42 zaehlt das Wasser, das wirklich in der Flasche ist: randvoll minus Verdraengung durch das Pulver.
+const fpWasser = (ml, p) => FP.fuell_ml[ml] - FP.verdraengung_ml_je_g * p;
 function fpPacken(P, T, klasse){
   const k = P <= 0 ? 0 : P <= FP.pulver_je_l * 0.95 + 0.5 ? 1 : 2;
   const maxP = ml => ml * FP.pulver_je_l / 1000;
   let best = null;
   for (const h1 of [0, ...FP.halter_ml]) for (const h2 of [0, ...FP.halter_ml]) for (const tr of [0, FP.trikot_ml]){
     if (h2 > h1) continue;                                   // Halter symmetrisch
-    const n = [h1, h2, tr].filter(Boolean).length, sum = h1 + h2 + tr;
-    if (!n || sum < T * 1000 - 1) continue;
+    const n = [h1, h2, tr].filter(Boolean).length;
+    if (!n) continue;
     let fl, rampeFehlt = 0;
     if (k === 0){
       fl = [["Halter 1", h1, 0], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
     } else if (k === 1){
       if (!h1 || P > maxP(h1) + 0.5) continue;
       // eine reine Wasserflasche, sobald es warm ist oder die KH-Flasche nicht reicht
-      if ((klasse !== "kuehl" || T * 1000 > h1 + 50) && !h2 && !tr) continue;
+      if ((klasse !== "kuehl" || T * 1000 > fpWasser(h1, P) + 50) && !h2 && !tr) continue;
       fl = [["Halter 1", h1, P], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
     } else {
       // zwei KH-Flaschen, Wasser kommt dann aus dem Trikot. Halter 1 (die groessere) zuerst,
-      // Halter 2 danach und um FP.rampe dichter, hoechstens bis zur 132-g/l-Grenze.
+      // Halter 2 danach und um FP.rampe dichter, hoechstens bis zur Pulvergrenze.
       if (!h2 || !tr || P > maxP(h1) + maxP(h2) + 0.5) continue;
-      let p1 = Math.floor(P * h1 / (h1 + FP.rampe * h2) / 5) * 5;
+      const v1 = FP.fuell_ml[h1], v2 = FP.fuell_ml[h2];
+      let p1 = Math.floor(P * v1 / (v1 + FP.rampe * v2) / 5) * 5;
       if (P - p1 > maxP(h2)) p1 = Math.ceil((P - maxP(h2)) / 5) * 5;
       p1 = Math.min(p1, Math.floor(maxP(h1) / 5) * 5);
       if (P - p1 > maxP(h2) + 0.5) continue;
       fl = [["Halter 1", h1, p1], ["Halter 2", h2, P - p1], ["Trikot", tr, 0]];
       // groessere Flaschen nehmen, wenn die kleinen beide an der Grenze laegen (Rampe < 1,25)
-      rampeFehlt = (P - p1) / h2 < p1 / h1 * 1.25 ? 1 : 0;
+      rampeFehlt = (P - p1) / v2 < p1 / v1 * 1.25 ? 1 : 0;
     }
-    const kosten = [tr && k < 2 ? 1 : 0, n, rampeFehlt, sum];
+    fl = fl.filter(f => f[1]);
+    const wasser = fl.reduce((s, [, ml, p]) => s + fpWasser(ml, p), 0);
+    if (wasser < T * 1000 - 1) continue;
+    const kosten = [tr && k < 2 ? 1 : 0, n, rampeFehlt, wasser];
     const i = best ? kosten.findIndex((x, j) => x !== best.kosten[j]) : -1;
     if (!best || (i >= 0 && kosten[i] < best.kosten[i]))
-      best = { kosten, k, flaschen: fl.filter(f => f[1]).map(([ort, ml, pulver_g]) => ({ ort, ml, pulver_g })) };
+      best = { kosten, k, flaschen: fl.map(([ort, ml, pulver_g]) =>
+        ({ ort, ml, pulver_g, wasser_ml: Math.round(fpWasser(ml, pulver_g)) })) };
   }
   return best;
 }
@@ -1651,12 +1663,12 @@ function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = 
   } else {
     const nachDurst = !pulver && trinken < 0.3;
     // zwei KH-Flaschen: Reihenfolge angeben; "dichter" nur, wenn die Rampe nicht an der 132-g/l-Grenze verpufft
-    const khf = pack.flaschen.filter(f => f.pulver_g), dichte = f => f.pulver_g / f.ml;
+    const khf = pack.flaschen.filter(f => f.pulver_g), dichte = f => f.pulver_g / FP.fuell_ml[f.ml];
     const dichter = khf.length === 2 && dichte(khf[1]) > dichte(khf[0]) * 1.05;
     pack.flaschen.forEach(f => zeilen.push([`${f.ort} · ${f.ml} ml`,
-      f.pulver_g ? `${f.pulver_g} g Pulver, mit Wasser auffüllen`
+      f.pulver_g ? `${f.pulver_g} g Pulver, randvoll mit Wasser (~${f.wasser_ml} ml)`
         + (khf.length === 2 ? (f === khf[0] ? " – zuerst trinken" : dichter ? " – danach, dichter" : " – danach") : "")
-      : f.ort === "Trikot" ? "Wasser" : "Wasser + eine Prise Salz" + (nachDurst ? ", nach Durst" : "")]));
+      : (f.ort === "Trikot" ? "Wasser" : "Wasser + eine Prise Salz") + ` (~${f.wasser_ml} ml)` + (nachDurst ? ", nach Durst" : "")]));
     if (!stopps) zeilen.push(["Stopp", "keiner nötig"]);
     const abschnitte = stopps + 1;
     for (let k = 1; k <= stopps; k++){
@@ -1706,7 +1718,7 @@ function fpRechnen(){
     `Schweiß ~${komma(m.rateS, 2)} l/h` + (Math.abs(m.zuschlag) >= 0.01 ? ` (${vz(m.zuschlag)} für Ø ${Math.round(m.wMittel)} W)` : "") +
     ` → ~${komma1(m.schweiss)} l; ${komma1(FP.budget_l)} l Verlust sind ok (wie am 20.09.)` +
     (m.verduennen ? `, aber für ${Math.round(m.kh)} g KH mindestens ${komma1(m.kh / FP.konz)} l Flüssigkeit gesamt (≤ 8 % im Magen)` : "") +
-    ` → ~${komma1(m.trinken)} l trinken. Trinkalarm alle 15 min. Hände früher taub als sonst → sofort Wasser.` + hinweis;
+    ` → ~${komma1(m.trinken)} l trinken. Trinkalarm alle 30 min. Hände früher taub als sonst → sofort Wasser.` + hinweis;
   fpPlan = { km: m.km, km_geschaetzt: dauerModus, eingabe: e.modus,
              start: isoAus(fpStart()), zweck: e.zk, kmh: m.vGrund, leistung_w: Math.round(m.wMittel),
              bloecke: e.bloecke.map(b => ({ art: b.art, min: b.min, w: Math.round(FP.ftp * BLOCK[b.art].f),
