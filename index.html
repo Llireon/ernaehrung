@@ -260,7 +260,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v38</small></span>
+  <span class="brand">Logger<small>v39</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -454,29 +454,24 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
 <!-- ======================= GEWICHT ======================= -->
 <section class="tab" id="s-gewicht" style="--tc:var(--c-gewicht)">
-  <div class="card" id="eo-card" hidden></div>
   <div class="card">
-    <h3>Renpho-Screenshots</h3>
-    <p class="sub">Renpho-App › Verlauf: Screenshots der Liste reichen, Claude liest Gewicht, Uhrzeit
-      und Bemerkung beim Sync aus. Überlappende Screenshots sind egal.</p>
+    <h3>Renpho-CSV</h3>
+    <p class="sub">Renpho-App › Export › in Dateien sichern, dann hier auswählen. Einfach jedes Mal
+      die neue CSV hochladen, den Zeitraum und was schon da ist sortiert Claude beim Sync selbst.</p>
     <p class="hint" style="margin-top:0">In die Bemerkung jeder Messung: <strong>wann</strong>
       (aufgewacht, morgens, zwischendurch, vorm Schlafen, vor/nach Fahrt oder Kraft),
       <strong>Kleidung</strong> (nackt, Unterwäsche, angezogen) und
       <strong>nüchtern / nach Pipi / nach Stuhl</strong>. Freitext geht auch.</p>
-    <div id="rs-fotos"></div>
-    <textarea id="rs-text" aria-label="Ergänzung zu den Renpho-Screenshots" style="margin-top:12px;min-height:60px"
+    <button class="k" type="button" id="rc-wahl" style="width:100%;margin-top:12px;flex-direction:row;gap:8px">📄 CSV auswählen</button>
+    <input type="file" accept=".csv,text/csv,text/comma-separated-values" hidden id="rc-datei">
+    <p class="sub" id="rc-info" hidden></p>
+    <textarea id="rc-text" aria-label="Ergänzung zur Renpho-CSV" style="margin-top:12px;min-height:60px"
       placeholder="optional: Ergänzung, z. B. was in einer Bemerkung fehlt"></textarea>
-    <button class="go" id="rs-send">Screenshots senden</button>
+    <button class="go" id="rc-send">CSV senden</button>
   </div>
   <div class="card">
-    <h2>Messpunkt</h2>
-    <div class="seg" id="g-slot1">
-      <button data-slot="aufwachen">aufgewacht</button>
-      <button data-slot="morgen">morgens</button>
-      <button data-slot="zwischendurch">zwischen­durch</button>
-      <button data-slot="schlafen">vorm Schlafen</button>
-    </div>
-    <div class="seg" id="g-slot2" style="margin-top:6px">
+    <h2>Vor / nach Training</h2>
+    <div class="seg" id="g-slot2">
       <button data-slot="ride-vorher">vor Fahrt</button>
       <button data-slot="ride-nachher">nach Fahrt</button>
       <button data-slot="kraft-vorher">vor Kraft</button>
@@ -495,21 +490,15 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       <button data-kleidung="unterwaesche">Unterwäsche</button>
       <button data-kleidung="angezogen">angezogen</button>
     </div>
-    <div class="row" style="margin-top:14px">
-      <button class="chip" id="g-nuechtern">nüchtern</button>
-      <button class="chip" id="g-pipi">nach Pipi</button>
-      <button class="chip" id="g-stuhl">nach Stuhlgang</button>
-    </div>
-    <p class="hint" id="ref-hint"></p>
     <button class="go" id="g-send">Gewicht eintragen</button>
-    <p class="hint">Alle Messungen außer „morgens“ erklären den Tagesverlauf (Schweiß, Urin, Atemwasser),
-      gehen aber nicht in den Trend. „aufgewacht“ = direkt nach dem Schlafen, vor dem Pipi.
-      Nie innerhalb eines Vergleichs die Waage wechseln (Badwaage ~0,55 kg tiefer).</p>
+    <p class="hint">Für die Schweißrate: vorher und nachher auf derselben Waage (Badwaage ~0,55 kg tiefer).
+      Alle anderen Messungen kommen über die Renpho-CSV.</p>
   </div>
 </section>
 
 <!-- ======================= KLO ======================= -->
 <section class="tab" id="s-klo" style="--tc:var(--c-klo)">
+  <div class="card" id="eo-card" hidden></div>
   <div class="card">
     <h2>Was</h2>
     <div class="seg" id="k-art">
@@ -721,7 +710,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 38;
+const VERSION = 39;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1035,23 +1024,25 @@ async function eintragen(payload, { medien = [], ts: tsFix = null, ordner = "ess
   const ts = tsFix || (zeitOverride ? isoMit(zeitOverride.hhmm, zeitOverride.tag) : jetzt);
   const zeitFelder = zeitOverride && !tsFix ? { geloggt_um: jetzt, zeit_nachgetragen: true } : {};
   const day = ts.slice(0, 10);
-  const neu = [], fotos = [];
+  const neu = [], fotos = [], dateien = [];
   let audio = null;
   for (const [n, m] of medien.entries()){
     const mid = newId() + n;
-    const istAudio = m.mime.startsWith("audio/");
+    const istAudio = m.mime.startsWith("audio/"), istCsv = m.mime === "text/csv";
     const path = istAudio ? `audio/${day}-${id}.${audioEndung(m.mime)}`
+               : istCsv   ? `renpho/${day}-${id}-${n}.csv`
                           : `fotos/${ordner}/${day}-${id}-${n}.jpg`;
     await idb.put(mid, { b64: m.b64, mime: m.mime });
     neu.push({ id: mid, ts, logged: jetzt, kind: "bin", parent: id, path, mime: m.mime,
                thumb: m.thumb || null, sek: m.sek || null, sent: false, error: null });
-    if (istAudio){ audio = path; } else fotos.push(path);
+    if (istAudio){ audio = path; } else if (istCsv) dateien.push(path); else fotos.push(path);
     if (m.feld) m.feld(path);
   }
   const p = { id, ts, ...zeitFelder, ...payload };
   // sammeln=false: die Pfade stehen schon an Ort und Stelle (Zutatenfotos beim Kochen)
   if (sammeln && fotos.length) p.fotos = fotos;
   if (audio) p.audio = audio;
+  if (dateien.length) p.dateien = dateien;
   neu.push({ id, ts, logged: jetzt, kind: "json", path: `eintraege/${day}/${ts.slice(11,19).replace(/:/g,"")}-${id}.json`,
              payload: p, sent: false, error: null });
   queue.push(...neu);
@@ -1112,7 +1103,7 @@ async function aufraeumen(){
 
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
-  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", "renpho-csv": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
   nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
@@ -1161,6 +1152,9 @@ function beschreibe(p){
     z.push([{ renpho: "Renpho", bad: "Badwaage" }[p.waage] || null,
             p.bf_pct != null ? `KFA ${komma(p.bf_pct)} %` : null,
             p.referenz ? "✓ Referenzmessung" : "kein Trendwert"].filter(Boolean).join(" · "));
+  } else if (t === "renpho-csv"){
+    titel = `Renpho-CSV · ${p.dateiname || "Export"}`;
+    text = p.beschreibung;
   } else if (t === "renpho-screenshot"){
     const nf = (p.fotos || []).length;
     titel = `Renpho-Screenshots · ${nf} Bild${nf === 1 ? "" : "er"}`;
@@ -1221,6 +1215,7 @@ function render(){
     const nach = e.payload.zeit_nachgetragen ? `<div class="e-zeile">nachgetragen, datiert auf ${e.ts.slice(0,10) === heute ? "heute" : "gestern"} ${e.ts.slice(11,16)}</div>` : "";
     const medien = kinder.map(m => m.mime.startsWith("audio/")
       ? `<button class="e-audio" data-play="${m.id}">▶ Sprachnachricht ${m.sek ? mmss(m.sek) : ""}</button>`
+      : m.mime === "text/csv" ? `<span class="e-audio">📄 CSV</span>`
       : m.thumb ? `<img src="${m.thumb}" data-voll="${m.id}" alt="">` : "").join("");
     const roh = offen.has(e.id) ? `<pre class="e-roh">${esc(JSON.stringify(e.payload, null, 2))}</pre>` : "";
     return `<li data-id="${e.id}"><div class="e-kopf">${zeit}<div class="e-body">
@@ -1270,7 +1265,7 @@ function zeigeTab(name){
   const t = $(".title"); t.style.setProperty("--tc", nb ? nb.style.getPropertyValue("--tc") : "var(--accent)");
   $("#titelIcon").innerHTML = nb ? nb.querySelector("svg").outerHTML : $("#zahnrad svg").outerHTML;
   $("#heute").hidden = name === "mehr";
-  if (name === "gewicht") holeEinordnung();
+  if (name === "klo") holeEinordnung();
   if (name === "trinken") trAnsicht("eintragen");
   try { sessionStorage.setItem("ernaehrung.tab", name); } catch(e){}
 }
@@ -1728,56 +1723,44 @@ $("#fp-send").addEventListener("click", () => {
 fpBereit = true;
 
 // ---------- Gewicht ----------
+// Seit v39 kommen alle Renpho-Messungen als CSV-Export (mit Bemerkung). Von Hand
+// bleibt nur vor/nach Fahrt bzw. Kraft fuer die Schweissrate -- und die Badwaage.
 const wKg = walze($("#g-kg"), { min: 55, max: 100, nk: 2, einheit: "kg", key: "gewicht.kg", start: 78.0 });
-// seit v33 kein KFA mehr (folgt ohnehin nur dem Gewicht); Renpho-Werte kommen als Screenshot
-gruppe("#g-waage", () => markRef());
+gruppe("#g-waage");
 setzeWahl("#g-waage", "waage", last["gewicht.waage"] || "renpho");
 const waage = () => wahl("#g-waage").waage || "renpho";
-const slot = () => wahl("#g-slot1").slot || wahl("#g-slot2").slot || null;
-const slotSetzen = s => $$("#g-slot1 > button, #g-slot2 > button")
-  .forEach(x => x.setAttribute("aria-pressed", String(x.dataset.slot === s)));
-$$("#g-slot1 > button, #g-slot2 > button").forEach(b => b.addEventListener("click", () => {
-  slotSetzen(b.dataset.slot);
-  // direkt nach dem Schlafen: noch nichts gegessen, noch nicht auf Klo
-  if (b.dataset.slot === "aufwachen"){
-    $("#g-nuechtern").setAttribute("aria-pressed", "true"); $("#g-pipi").setAttribute("aria-pressed", "false");
-  }
-  if (b.dataset.slot === "morgen") $("#g-nuechtern").setAttribute("aria-pressed", "true");
-  markRef();
-}));
-slotSetzen("zwischendurch");   // seit v32 keine Uhrzeit-Slots mehr, der Zeitpunkt steht im ts
+gruppe("#g-slot2");
+const slot = () => wahl("#g-slot2").slot || null;
 gruppe("#g-kleidung");
-setzeWahl("#g-kleidung", "kleidung", last["gewicht.kleidung"] || "unterwaesche");
-["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(s => $(s).addEventListener("click", () => { umschalten(s); markRef(); }));
-const istRef = () => waage() === "renpho" && slot() === "morgen" && an("#g-nuechtern") && an("#g-pipi");
-function markRef(){
-  const h = $("#ref-hint"), ref = istRef();
-  h.style.color = ref ? "var(--ok)" : "var(--dim)";
-  h.textContent = ref ? "✓ Referenzmessung – dieser Wert bestimmt den Trend."
-    : waage() === "bad" ? "Badwaage – nie ein Trendwert, nur für den Tagesverlauf."
-    : "Referenzmessung = Renpho, morgens, nüchtern, nach dem Pipi. Nur diese Werte bestimmen den Trend.";
-}
-markRef();
+setzeWahl("#g-kleidung", "kleidung", last["gewicht.kleidung"] || "angezogen");
 $("#g-send").addEventListener("click", () => {
   const kg = wKg.get(), s = slot(), kl = wahl("#g-kleidung").kleidung || null, wg = waage();
-  eintragen({ type: s && s.startsWith("ride") ? "ride-gewicht" : "gewicht",
-              kg, waage: wg, slot: s, kleidung: kl,
-              fasted: an("#g-nuechtern"), nach_pipi: an("#g-pipi"), nach_stuhl: an("#g-stuhl"),
-              referenz: istRef() });
+  if (!s) return toast("Messpunkt wählen");
+  eintragen({ type: s.startsWith("ride") ? "ride-gewicht" : "gewicht",
+              kg, waage: wg, slot: s, kleidung: kl, referenz: false });
   wKg.merken(); merken("gewicht.waage", wg);
   if (kl) merken("gewicht.kleidung", kl);
-  ["#g-nuechtern", "#g-pipi", "#g-stuhl"].forEach(x => $(x).setAttribute("aria-pressed", "false"));
-  slotSetzen("zwischendurch");
-  markRef();
+  setzeWahl("#g-slot2", "slot", null);
 });
 
-// Renpho-Verlauf als Screenshots: Claude liest beim Sync aus (scripts/renpho_import.py)
-const rsFotos = fotoSammler($("#rs-fotos"));
-$("#rs-send").addEventListener("click", async () => {
-  const fotos = rsFotos.get(), text = $("#rs-text").value.trim();
-  if (!fotos.length) return toast("erst Screenshots wählen");
-  await eintragen({ type: "renpho-screenshot", beschreibung: text || null }, { medien: fotos, ordner: "gewicht" });
-  rsFotos.reset(); $("#rs-text").value = "";
+// Renpho-CSV: geht als Datei ins Repo (renpho/), Claude liest sie beim Sync
+// mit scripts/renpho_import.py --csv. Zeitraum steckt in der Datei selbst.
+let rcDatei = null;
+const rcInfo = () => { const el = $("#rc-info"); el.hidden = !rcDatei;
+  if (rcDatei) el.textContent = `${rcDatei.name} · ${Math.max(1, Math.round(rcDatei.b64.length * 0.75 / 1024))} kB`; };
+$("#rc-wahl").onclick = () => $("#rc-datei").click();
+$("#rc-datei").onchange = async () => {
+  const f = $("#rc-datei").files[0]; $("#rc-datei").value = "";
+  if (!f) return;
+  if (!/\.csv$/i.test(f.name) && !/csv/.test(f.type)) return toast("keine CSV-Datei");
+  rcDatei = { name: f.name, mime: "text/csv", b64: await blobB64(f) }; rcInfo();
+};
+$("#rc-send").addEventListener("click", async () => {
+  if (!rcDatei) return toast("erst CSV auswählen");
+  const text = $("#rc-text").value.trim();
+  await eintragen({ type: "renpho-csv", dateiname: rcDatei.name, beschreibung: text || null },
+                  { medien: [rcDatei] });
+  rcDatei = null; rcInfo(); $("#rc-text").value = "";
 });
 
 // Einordnung: schreibt Claude beim Sync nach feedback/gewicht.json
@@ -1866,7 +1849,7 @@ function trStart(modus){
   tr = { modus, start: Date.now(), uebungen: {}, aktiv: null, pause: null, ende: null };
   saveTr(); wachHalten(); trRender(true);
 }
-$("#tr-start").onclick = () => { tonFreischalten(); trStart("live"); };
+$("#tr-start").onclick = () => trStart("live");
 $("#tr-nachtrag").onclick = () => trStart("nachtrag");
 
 function wertKonfig(key){
@@ -1926,11 +1909,10 @@ function satzStarten(seit){
   tr.pause = null;
   saveTr(); trRender(false);
 }
-$("#tr-pause-ende").onclick = () => { tonFreischalten(); satzStarten(Date.now()); tonPlanen(); };
+$("#tr-pause-ende").onclick = () => satzStarten(Date.now());
 $("#tr-satz").onclick = () => {
-  tonFreischalten();
   const key = tr.aktiv, u = UEBUNGEN[key]; if (!key) return;
-  if (tr.modus === "live" && !tr.satz){ satzStarten(Date.now()); tonPlanen(); return; }
+  if (tr.modus === "live" && !tr.satz){ satzStarten(Date.now()); return; }
   const s = { wert: u.e === "gemacht" ? null : wWert.get(), einheit: u.e,
               ausfuehrung: wahl("#tr-au").au || "frei", ts: nowIso() };
   if (u.e === "gemacht"){ s.detail = $("#tr-detail").value.trim() || null; $("#tr-detail").value = ""; }
@@ -1944,7 +1926,6 @@ $("#tr-satz").onclick = () => {
   if (tr.modus === "live"){
     const ziel = (last.pausen || {})[key] || (PREHAB[key] ? 60 : 120);
     tr.pause = { seit: Date.now(), ziel, gemeldet: false };
-    tonPlanen();
   }
   saveTr(); trRender(false); toast(`Satz ${tr.uebungen[key].length} ✓`);
 };
@@ -1952,7 +1933,7 @@ $$("#tr-pause-q .chip").forEach(b => b.onclick = () => {
   if (!tr?.pause) return;
   tr.pause.ziel = b.dataset.plus ? tr.pause.ziel + +b.dataset.plus : +b.dataset.s; tr.pause.gemeldet = false;
   if (tr.aktiv){ last.pausen = { ...(last.pausen || {}), [tr.aktiv]: tr.pause.ziel }; ls.set(LAST_K, last); }
-  saveTr(); tonFreischalten(); tonPlanen(); trTick();
+  saveTr(); trTick();
 });
 function trTick(){
   if (!tr || tr.ende || tr.modus !== "live") { $("#tr-pause").hidden = true; return; }
@@ -1974,9 +1955,9 @@ function trTick(){
   $("#tr-pause-balken").style.width = Math.min(100, vergangen / p.ziel * 100) + "%";
   $$("#tr-pause-q .chip").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.s === p.ziel)));
   if (vergangen >= p.ziel){
-    // Ziel erreicht: von selbst in den Satz. Der Ton laeuft schon (tonPlanen),
-    // deshalb hier nicht neu planen -- das wuerde ihn abschneiden. War das Handy
-    // gesperrt, beginnt der Satz rueckwirkend am Pausenziel.
+    // Ziel erreicht: von selbst in den Satz. Kein Signalton mehr (seit v39): der
+    // AudioContext belegte auf iOS die Audio-Session und stoppte Leones Musik.
+    // War das Handy gesperrt, beginnt der Satz rueckwirkend am Pausenziel.
     karte.classList.remove("fertig"); void karte.offsetWidth; karte.classList.add("fertig");
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     satzStarten(p.seit + p.ziel * 1000);
@@ -1984,27 +1965,6 @@ function trTick(){
 }
 setInterval(trTick, 500);
 
-// Signalton: WebAudio braucht auf iOS eine Beruehrung zum Freischalten, danach
-// laesst sich der Ton im Voraus auf das Pausenende legen.
-let actx = null, geplant = [];
-function tonFreischalten(){
-  try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    if (actx.state === "suspended") actx.resume();
-  } catch(e){}
-}
-function tonPlanen(){
-  geplant.forEach(o => { try { o.stop(); } catch(e){} }); geplant = [];
-  if (!actx || !tr?.pause) return;
-  const rest = tr.pause.ziel - (Date.now() - tr.pause.seit) / 1000;
-  if (rest <= 0) return;
-  const g = actx.createGain(); g.gain.value = 0.28; g.connect(actx.destination);
-  [0, 0.28, 0.56].forEach((d, i) => {
-    const o = actx.createOscillator(); o.type = "sine"; o.frequency.value = i === 2 ? 1175 : 880;
-    o.connect(g); o.start(actx.currentTime + rest + d); o.stop(actx.currentTime + rest + d + 0.18);
-    geplant.push(o);
-  });
-}
 // Bildschirm anlassen, solange die Uhr laeuft
 let sperre = null;
 async function wachHalten(){
@@ -2018,7 +1978,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 $("#tr-beenden").onclick = () => {
   const n = Object.values(tr.uebungen).reduce((a, s) => a + s.length, 0);
   if (!n){ if (confirm("Noch kein Satz erfasst – Training verwerfen?")){ tr = null; saveTr(); trRender(); } return; }
-  tr.ende = Date.now(); tr.pause = null; tr.satz = null; tonPlanen(); saveTr(); trRender();
+  tr.ende = Date.now(); tr.pause = null; tr.satz = null; saveTr(); trRender();
 };
 function endeRender(){
   const live = tr.modus === "live";
