@@ -260,7 +260,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v39</small></span>
+  <span class="brand">Logger<small>v40</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -456,18 +456,12 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <section class="tab" id="s-gewicht" style="--tc:var(--c-gewicht)">
   <div class="card">
     <h3>Renpho-CSV</h3>
-    <p class="sub">Renpho-App › Export › in Dateien sichern, dann hier auswählen. Einfach jedes Mal
-      die neue CSV hochladen, den Zeitraum und was schon da ist sortiert Claude beim Sync selbst.</p>
+    <p class="sub">Renpho-App › Export › per <strong>LocalSend</strong> an den Fedora-PC. Einfach jedes Mal
+      die neue CSV schicken, Zeitraum und was schon da ist sortiert Claude beim Sync selbst.</p>
     <p class="hint" style="margin-top:0">In die Bemerkung jeder Messung: <strong>wann</strong>
       (aufgewacht, morgens, zwischendurch, vorm Schlafen, vor/nach Fahrt oder Kraft),
       <strong>Kleidung</strong> (nackt, Unterwäsche, angezogen) und
       <strong>nüchtern / nach Pipi / nach Stuhl</strong>. Freitext geht auch.</p>
-    <button class="k" type="button" id="rc-wahl" style="width:100%;margin-top:12px;flex-direction:row;gap:8px">📄 CSV auswählen</button>
-    <input type="file" accept=".csv,text/csv,text/comma-separated-values" hidden id="rc-datei">
-    <p class="sub" id="rc-info" hidden></p>
-    <textarea id="rc-text" aria-label="Ergänzung zur Renpho-CSV" style="margin-top:12px;min-height:60px"
-      placeholder="optional: Ergänzung, z. B. was in einer Bemerkung fehlt"></textarea>
-    <button class="go" id="rc-send">CSV senden</button>
   </div>
   <div class="card">
     <h2>Vor / nach Training</h2>
@@ -710,7 +704,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 39;
+const VERSION = 40;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1024,25 +1018,23 @@ async function eintragen(payload, { medien = [], ts: tsFix = null, ordner = "ess
   const ts = tsFix || (zeitOverride ? isoMit(zeitOverride.hhmm, zeitOverride.tag) : jetzt);
   const zeitFelder = zeitOverride && !tsFix ? { geloggt_um: jetzt, zeit_nachgetragen: true } : {};
   const day = ts.slice(0, 10);
-  const neu = [], fotos = [], dateien = [];
+  const neu = [], fotos = [];
   let audio = null;
   for (const [n, m] of medien.entries()){
     const mid = newId() + n;
-    const istAudio = m.mime.startsWith("audio/"), istCsv = m.mime === "text/csv";
+    const istAudio = m.mime.startsWith("audio/");
     const path = istAudio ? `audio/${day}-${id}.${audioEndung(m.mime)}`
-               : istCsv   ? `renpho/${day}-${id}-${n}.csv`
                           : `fotos/${ordner}/${day}-${id}-${n}.jpg`;
     await idb.put(mid, { b64: m.b64, mime: m.mime });
     neu.push({ id: mid, ts, logged: jetzt, kind: "bin", parent: id, path, mime: m.mime,
                thumb: m.thumb || null, sek: m.sek || null, sent: false, error: null });
-    if (istAudio){ audio = path; } else if (istCsv) dateien.push(path); else fotos.push(path);
+    if (istAudio){ audio = path; } else fotos.push(path);
     if (m.feld) m.feld(path);
   }
   const p = { id, ts, ...zeitFelder, ...payload };
   // sammeln=false: die Pfade stehen schon an Ort und Stelle (Zutatenfotos beim Kochen)
   if (sammeln && fotos.length) p.fotos = fotos;
   if (audio) p.audio = audio;
-  if (dateien.length) p.dateien = dateien;
   neu.push({ id, ts, logged: jetzt, kind: "json", path: `eintraege/${day}/${ts.slice(11,19).replace(/:/g,"")}-${id}.json`,
              payload: p, sent: false, error: null });
   queue.push(...neu);
@@ -1103,7 +1095,7 @@ async function aufraeumen(){
 
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
-  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", "renpho-csv": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
   nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
@@ -1152,9 +1144,6 @@ function beschreibe(p){
     z.push([{ renpho: "Renpho", bad: "Badwaage" }[p.waage] || null,
             p.bf_pct != null ? `KFA ${komma(p.bf_pct)} %` : null,
             p.referenz ? "✓ Referenzmessung" : "kein Trendwert"].filter(Boolean).join(" · "));
-  } else if (t === "renpho-csv"){
-    titel = `Renpho-CSV · ${p.dateiname || "Export"}`;
-    text = p.beschreibung;
   } else if (t === "renpho-screenshot"){
     const nf = (p.fotos || []).length;
     titel = `Renpho-Screenshots · ${nf} Bild${nf === 1 ? "" : "er"}`;
@@ -1215,7 +1204,6 @@ function render(){
     const nach = e.payload.zeit_nachgetragen ? `<div class="e-zeile">nachgetragen, datiert auf ${e.ts.slice(0,10) === heute ? "heute" : "gestern"} ${e.ts.slice(11,16)}</div>` : "";
     const medien = kinder.map(m => m.mime.startsWith("audio/")
       ? `<button class="e-audio" data-play="${m.id}">▶ Sprachnachricht ${m.sek ? mmss(m.sek) : ""}</button>`
-      : m.mime === "text/csv" ? `<span class="e-audio">📄 CSV</span>`
       : m.thumb ? `<img src="${m.thumb}" data-voll="${m.id}" alt="">` : "").join("");
     const roh = offen.has(e.id) ? `<pre class="e-roh">${esc(JSON.stringify(e.payload, null, 2))}</pre>` : "";
     return `<li data-id="${e.id}"><div class="e-kopf">${zeit}<div class="e-body">
@@ -1743,25 +1731,7 @@ $("#g-send").addEventListener("click", () => {
   setzeWahl("#g-slot2", "slot", null);
 });
 
-// Renpho-CSV: geht als Datei ins Repo (renpho/), Claude liest sie beim Sync
-// mit scripts/renpho_import.py --csv. Zeitraum steckt in der Datei selbst.
-let rcDatei = null;
-const rcInfo = () => { const el = $("#rc-info"); el.hidden = !rcDatei;
-  if (rcDatei) el.textContent = `${rcDatei.name} · ${Math.max(1, Math.round(rcDatei.b64.length * 0.75 / 1024))} kB`; };
-$("#rc-wahl").onclick = () => $("#rc-datei").click();
-$("#rc-datei").onchange = async () => {
-  const f = $("#rc-datei").files[0]; $("#rc-datei").value = "";
-  if (!f) return;
-  if (!/\.csv$/i.test(f.name) && !/csv/.test(f.type)) return toast("keine CSV-Datei");
-  rcDatei = { name: f.name, mime: "text/csv", b64: await blobB64(f) }; rcInfo();
-};
-$("#rc-send").addEventListener("click", async () => {
-  if (!rcDatei) return toast("erst CSV auswählen");
-  const text = $("#rc-text").value.trim();
-  await eintragen({ type: "renpho-csv", dateiname: rcDatei.name, beschreibung: text || null },
-                  { medien: [rcDatei] });
-  rcDatei = null; rcInfo(); $("#rc-text").value = "";
-});
+// Renpho-CSV kommt seit v40 per LocalSend nach ~/Sync/iphone-inbox, nicht ueber die App.
 
 // Einordnung: schreibt Claude beim Sync nach feedback/gewicht.json
 async function holeEinordnung(){
