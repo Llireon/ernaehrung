@@ -260,7 +260,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v42</small></span>
+  <span class="brand">Logger<small>v43</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -303,10 +303,20 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 
   <div class="card">
     <h2>Schnell</h2>
-    <div class="grid g3">
+    <div class="grid g4">
       <button class="k" id="r-porridge" aria-pressed="false">Porridge<small>Haferflocken</small></button>
-      <button class="k" id="r-crepes" aria-pressed="false">Crepes<small>nach Belag</small></button>
+      <button class="k" id="r-crepes" aria-pressed="false">Crepes<small>Belag</small></button>
       <button class="k" id="r-kochen" aria-pressed="false">Kochen<small>Zutaten</small></button>
+      <button class="k" id="r-supp" aria-pressed="false">Supps<small>+ Wasser</small></button>
+    </div>
+
+    <div id="supp-box" hidden>
+      <div class="grid g2">
+        <button class="k sp" data-supp="kreatin" aria-pressed="true">Kreatin<small>1 Messlöffel</small></button>
+        <button class="k sp" data-supp="vitamin_d3_2000ie" aria-pressed="true">Vitamin D<small>1 Tablette</small></button>
+      </div>
+      <p class="hint" id="s-wasser">+ 500 ml Wasser (250 ml je Häkchen)</p>
+      <button class="go" id="s-send">Eintragen</button>
     </div>
 
     <div id="porridge-box" hidden>
@@ -704,7 +714,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 42;
+const VERSION = 43;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1075,11 +1085,18 @@ let flushing = false;
 async function flush(){
   if (flushing || !navigator.onLine || !ls.raw(TK)){ renderSync(); return; }
   flushing = true;
+  // Was waehrend des Sendens dazukommt (mehrere Eintraege auf einen Tipp), geht im selben
+  // Durchlauf mit -- vorher blieb es bis zum naechsten Eintrag liegen (v43).
+  const versucht = new Set();
   try {
-    for (const e of queue.filter(x => !x.sent)){
-      try { await pushOne(e); e.sent = true; e.error = null; if (e.body) e.body = null; }
-      catch(err){ e.error = err.reason || "Fehler"; if (err.reason === "kein Token") break; }
-      saveQ(); render();
+    let offen, stopp = false;
+    while (!stopp && (offen = queue.filter(x => !x.sent && !versucht.has(x.id))).length){
+      for (const e of offen){
+        versucht.add(e.id);
+        try { await pushOne(e); e.sent = true; e.error = null; if (e.body) e.body = null; }
+        catch(err){ e.error = err.reason || "Fehler"; if (err.reason === "kein Token"){ stopp = true; break; } }
+        saveQ(); render();
+      }
     }
   } finally { flushing = false; renderSync(); }
 }
@@ -1122,6 +1139,9 @@ function beschreibe(p){
     const nm = { kaese: "Käse", nutella: "Nutella", marmelade: "Marmelade", kombi: "Kombi" };
     z.push(Object.entries(b).filter(([, v]) => v).map(([k, v]) => `${v}× ${nm[k]}`).join(", "));
     z.push(p.ausbeute ? `Ausbeute ${p.ausbeute} gebacken` : "Ausbeute geschätzt");
+  } else if (t === "essen" && p.supplement){
+    titel = p.supplement === "kreatin" ? "Kreatin" : p.supplement === "vitamin_d3_2000ie" ? "Vitamin D3" : p.supplement;
+    z.push(p.supplement === "kreatin" ? "1 Messlöffel (~5 g)" : p.supplement === "vitamin_d3_2000ie" ? "1 Tablette, 2000 IE" : (p.beschreibung || ""));
   } else if (t === "essen" || t === "label"){
     titel = t === "label" ? "Essen (Etikett)" : "Essen";
     text = p.beschreibung;
@@ -1275,7 +1295,7 @@ $("#f-send").addEventListener("click", async () => {
 });
 
 // Schnellrezepte
-const boxen = { porridge: "#porridge-box", crepes: "#crepes-box", kochen: "#kochen-box" };
+const boxen = { porridge: "#porridge-box", crepes: "#crepes-box", kochen: "#kochen-box", supp: "#supp-box" };
 Object.entries(boxen).forEach(([k, sel]) => $("#r-" + k).addEventListener("click", () => {
   const war = !$(sel).hidden;
   Object.entries(boxen).forEach(([k2, s2]) => { $(s2).hidden = true; $("#r-" + k2).setAttribute("aria-pressed", "false"); });
@@ -1289,6 +1309,36 @@ $("#p-send").addEventListener("click", () => {
   if (sirup !== null) e.ahornsirup_g = sirup;
   wPorr.merken(); eintragen(e);
   wSirup.set(null); $("#r-porridge").click();
+});
+// Supplemente (seit v43): fertig aufgeloest wie die Chat-Eintraege, je Haekchen 250 ml Wasser
+const SUPP = {
+  kreatin:           { titel: "Kreatin",    beschreibung: "Kreatin, 1 Messloeffel",          menge_g: 5, vertrauen: "gut" },
+  vitamin_d3_2000ie: { titel: "Vitamin D3", beschreibung: "Vitamin D3 2000 IE (1 Tablette)", menge_g: 1, vertrauen: "exakt" }
+};
+const SUPP_WASSER_ML = 250;
+const suppGewaehlt = () => $$(".sp").filter(b => b.getAttribute("aria-pressed") === "true").map(b => b.dataset.supp);
+const suppWasser = () => {
+  const ml = suppGewaehlt().length * SUPP_WASSER_ML;
+  $("#s-wasser").textContent = ml ? `+ ${ml} ml Wasser (${SUPP_WASSER_ML} ml je Häkchen)` : "nichts gewählt";
+};
+$$(".sp").forEach(b => b.addEventListener("click", () => {
+  b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); suppWasser();
+}));
+$("#s-send").addEventListener("click", async () => {
+  const wahl = suppGewaehlt();
+  if (!wahl.length) return toast("nichts gewählt");
+  const null4 = { kcal: 0, kh: 0, protein: 0, fett: 0 };
+  for (const k of wahl){
+    const s = SUPP[k];
+    await eintragen({ type: "essen", supplement: k, beschreibung: s.beschreibung, vertrauen: s.vertrauen,
+                      posten: [{ produkt: k, menge_g: s.menge_g, naehrwerte: { ...null4 } }],
+                      summe: { ...null4 }, fehler_pct: 0, gegessen: true }, { quiet: true });
+  }
+  const ml = wahl.length * SUPP_WASSER_ML;
+  await eintragen({ type: "trinken", ml, was: "wasser", zu: wahl }, { quiet: true });
+  toast(`${wahl.map(k => SUPP[k].titel).join(" + ")} + ${ml} ml Wasser eingetragen`);
+  $$(".sp").forEach(b => b.setAttribute("aria-pressed", "true")); suppWasser();
+  $("#r-supp").click();
 });
 const belag = { kaese: 0, nutella: 0, marmelade: 0, kombi: 0 };
 $$(".ct").forEach(b => {
