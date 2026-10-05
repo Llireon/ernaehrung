@@ -114,6 +114,7 @@ button.k .n{font-size:20px;font-weight:750;color:var(--fg)}
 .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;border:0;background:none;padding:9px 4px;border-radius:9px;font-size:14px;
   font-weight:650;color:var(--dim)}
+.seg-klein button{font-size:12.5px;line-height:1.2;padding:7px 2px}
 .seg button[aria-pressed=true]{background:var(--panel);color:var(--fg);
   box-shadow:0 1px 3px #0000002e, 0 0 0 1px var(--line2)}
 
@@ -260,7 +261,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v43</small></span>
+  <span class="brand">Logger<small>v44</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -543,10 +544,12 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     </div>
     <div id="kons-box" hidden>
       <h2>Konsistenz</h2>
-      <div class="seg" id="k-ko">
+      <div class="seg seg-klein" id="k-ko">
+        <button data-ko="verstopft">verstopft<br>tut weh</button>
+        <button data-ko="druecken">Drücken<br>nötig</button>
         <button data-ko="normal" aria-pressed="true">normal</button>
         <button data-ko="weich">weich</button>
-        <button data-ko="durchfall">Durchfall</button>
+        <button data-ko="durchfall">Durch&shy;fall</button>
       </div>
     </div>
     <button class="go" id="k-send">Eintragen</button>
@@ -684,7 +687,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 38 · 30.09.2026</p>
+      Garmin Connect. Version 44 · 05.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -714,7 +717,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 43;
+const VERSION = 44;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1173,7 +1176,8 @@ function beschreibe(p){
     titel = art;
     z.push([p.erfassung === "gewogen" ? `gewogen ${p.masse_g} g` +
               ({ renpho: " (Renpho)", bad: " (Badwaage)" }[p.waage] || "") : p.groesse,
-            p.farbe ? `Farbe ${p.farbe}` : null, p.konsistenz].filter(Boolean).join(" · "));
+            p.farbe ? `Farbe ${p.farbe}` : null,
+            ({ verstopft: "verstopft / tut weh", druecken: "Drücken nötig", durchfall: "Durchfall" }[p.konsistenz] || p.konsistenz)].filter(Boolean).join(" · "));
   } else if (t === "kochen"){
     titel = `Kochen: ${p.gericht || "ohne Namen"}`;
     (p.zutaten || []).forEach(x => z.push(`${x.name || "(Foto)"} – ${zahl(x.menge)} ${x.einheit}`));
