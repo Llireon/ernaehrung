@@ -1238,10 +1238,12 @@ const UEBUNGEN = {
 // Sissy ist seit v46 Rebuild (30 in 3 min) statt fester Dosis 10 + 10.
 const PREHAB = { nordic:1, nordic_echt:1, wallsit:1, band:1, seitstuetz:1 };
 const STUFE_N = { einstufung: "Einstufung", unlock: "Unlock", rebuild: "Rebuild", targets: "Targets" };
-// Vorlagen wie die Reiter der Gymseite (Stand 11.10., alles zu Hause). "@ham" = Hamstring je nach Stand.
+// Vorlagen wie die Reiter der Gymseite (Stand 11.10., alles zu Hause). Platzhalter folgen dem Stand:
+// "@knie" Petersen + Hack und "@sissy" nur, wenn das Knie in Rebuild ist (seit der Einstufung am 12.10.
+// Unlock); "@ham" Beinbeuger (Rebuild) oder Elephant Walk (Unlock), "@ham_u" Elephant Walk nur bei Unlock.
 const VORLAGEN = {
-  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "@ham", "tib", "fhl", "bent", "lsit", "kick"],
-  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "tib", "fhl", "bent", "lsit", "kick"],
+  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "@knie", "@ham", "tib", "fhl", "bent", "lsit", "kick"],
+  do: ["hspu", "oahang", "planche", "frontlever", "@sissy", "tib", "fhl", "bent", "lsit", "kick", "@ham_u"],
   difr: ["abd", "add"],
   taeglich: ["seitstuetz", "pulse"]
 };
@@ -2048,7 +2050,10 @@ function renderRaStand(){
 }
 
 const ham = () => raKette("hamstring")?.stufe === "rebuild" ? "curl" : "elephant";
-const vorlageListe = v => (VORLAGEN[v] || []).map(k => k === "@ham" ? ham() : k);
+const knieRebuild = () => (raKette("knie")?.stufe || "rebuild") !== "unlock";
+const vorlageListe = v => (VORLAGEN[v] || []).flatMap(k =>
+  k === "@knie" ? (knieRebuild() ? ["petersen", "hack"] : []) : k === "@sissy" ? (knieRebuild() ? ["sissy"] : [])
+  : k === "@ham" ? [ham()] : k === "@ham_u" ? (ham() === "elephant" ? ["elephant"] : []) : [k]);
 const uebKnopf = ([k, u]) => `<button class="k" data-u="${k}">${u.n}<small>${u.s ? u.s + (u.stufe ? " · " + STUFE_N[u.stufe] : "")
   : u.stufe ? STUFE_N[u.stufe] : PREHAB[k] ? "Prehab" : u.k ? "Kraft" : ""}</small>
   <span class="cnt" hidden></span></button>`;
