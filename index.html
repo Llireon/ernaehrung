@@ -286,7 +286,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v49</small></span>
+  <span class="brand">Logger<small>v50</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -616,6 +616,10 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
         <div class="sub" id="tr-pause-zielbox" style="text-align:right">Ziel<br><b id="tr-pause-ziel" style="color:var(--fg);font-size:17px">2:00</b></div>
       </div>
       <div class="balken" id="tr-3min-box" hidden><i id="tr-3min-balken" style="width:0"></i></div>
+      <div id="tr-teil-box" hidden>
+        <ul class="tr-saetze" id="tr-teile"></ul>
+        <button class="go sek" id="tr-teil">Teil 1 fertig</button>
+      </div>
       <div id="tr-pause-mehr">
         <div class="balken"><i id="tr-pause-balken" style="width:0"></i></div>
         <div class="quick" id="tr-pause-q">
@@ -784,7 +788,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 49;
+const VERSION = 50;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1201,7 +1205,7 @@ const HEBEL = {
 const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1,seitig:true},
   sissy:{n:"Sissy Squats",e:"reps",k:0,kette:"knie",stufe:"rebuild",format:"3min",seitig:false,ziel:30,gewicht:false,
-    dosis:"30 saubere in 3 min",clip:"sissy",info:"Mit Festhalten und so viel Erhöhung wie nötig. Volle Tiefe ist das Ziel von Rebuild, nicht die Voraussetzung: jede Woche etwas mehr Umfang, am Ende Knie am Boden und schmerzfrei wieder hoch."},
+    dosis:"30 saubere in 3 min",clip:"sissy",info:"Frei, ohne Festhalten (so im Clip), die Tiefe begrenzt eine Erhöhung unter den Knien – so viel wie nötig. Volle Tiefe ist das Ziel von Rebuild, nicht die Voraussetzung: jede Woche etwas mehr Umfang, am Ende Knie am Boden und schmerzfrei wieder hoch."},
   nordic:{n:"Reverse Nordic",e:"reps",k:0,dosis:"2 × 10"}, nordic_echt:{n:"Nordic (echt)",s:"Hamstring Kraft",e:"reps",k:0},
   wallsit:{n:"Wall Sit",e:"sek",k:0}, band:{n:"Band-Hüfte",e:"min",k:0},
   hspu:{n:"Handstand",s:"Liegestütze",e:"reps",k:1}, oahang:{n:"Einarm-Hang",e:"sek",k:1,seitig:true},
@@ -2229,6 +2233,11 @@ $("#tr-satz").onclick = () => {
     if (tr.satz.pause_davor_s) s.pause_davor_s = tr.satz.pause_davor_s;
     s.satz_dauer_s = Math.round((Date.now() - tr.satz.seit) / 1000);
     if (u.format === "3min") s.dauer_s = Math.min(180, s.satz_dauer_s);
+    if (tr.satz.teile?.length){
+      const t = tr.satz.teile.map(x => ({ ...x }));
+      const letzt = t[t.length - 1]; if (letzt.ende_s == null) letzt.ende_s = s.satz_dauer_s;
+      s.teile = t;
+    }
     tr.satz = null;
   } else if (u.format === "3min") s.dauer_s = 180;
   (tr.uebungen[key] = tr.uebungen[key] || []).push(s);
@@ -2247,6 +2256,29 @@ $$("#tr-pause-q .chip").forEach(b => b.onclick = () => {
   if (tr.aktiv){ last.pausen = { ...(last.pausen || {}), [tr.aktiv]: tr.pause.ziel }; ls.set(LAST_K, last); }
   saveTr(); trTick();
 });
+// 3-min-Satz in Teilen (seit v50, Leone 12.10.): "Teil n fertig" stoppt einen Teil, "Teil n+1 starten"
+// beginnt den naechsten; die Liste zeigt Dauer je Teil und die Pause davor. Die Wiederholungen
+// kommen wie bisher einmal am Ende mit "Satz fertig".
+function teileRender(s, verg){
+  const t = s.teile || [], offen = t.length && t[t.length - 1].ende_s == null;
+  $("#tr-teil-box").hidden = false;
+  $("#tr-teil").textContent = !t.length ? "Teil 1 fertig" : offen ? `Teil ${t.length} fertig` : `Teil ${t.length + 1} starten`;
+  $("#tr-teile").innerHTML = t.map((x, i) => {
+    const dauer = (x.ende_s ?? verg) - x.start_s, pause = i ? x.start_s - t[i - 1].ende_s : 0;
+    return `<li><span class="nr">${i + 1}</span><span>${mmss(dauer)}${x.ende_s == null ? " läuft" : ""}` +
+      `${i ? `<span class="sub" style="display:inline"> · Pause davor ${mmss(pause)}</span>` : ""}</span></li>`;
+  }).join("");
+}
+$("#tr-teil").onclick = () => {
+  const s = tr?.satz; if (!s?.countdown) return;
+  const jetzt = Math.round((Date.now() - s.seit) / 1000);
+  s.teile = s.teile || [];
+  const t = s.teile, offen = t.length && t[t.length - 1].ende_s == null;
+  if (!t.length) t.push({ start_s: 0, ende_s: jetzt });
+  else if (offen) t[t.length - 1].ende_s = jetzt;
+  else t.push({ start_s: jetzt, ende_s: null });
+  saveTr(); trTick();
+};
 function trTick(){
   if (!tr || tr.ende || tr.modus !== "live") { $("#tr-pause").hidden = true; return; }
   $("#tr-uhr").textContent = mmss((Date.now() - tr.start) / 1000);
@@ -2255,11 +2287,20 @@ function trTick(){
   karte.classList.toggle("laeuft", !!s);
   $("#tr-pause-mehr").hidden = $("#tr-pause-zielbox").hidden = !p;
   $("#tr-3min-box").hidden = !s?.countdown;
+  if (!s?.countdown) $("#tr-teil-box").hidden = true;
   if (s && s.countdown){
     const verg = (Date.now() - s.seit) / 1000, rest = s.countdown - verg;
     $("#tr-pause-lab").textContent = rest > 0 ? "3-min-Satz läuft" : "3 min um – Wiederholungen eintragen";
     $("#tr-pause-uhr").textContent = mmss(Math.max(0, Math.ceil(rest)));
     $("#tr-3min-balken").style.width = Math.min(100, verg / s.countdown * 100) + "%";
+    teileRender(s, verg);
+    // Minutenmarke 1:00 / 2:00: nur Aufleuchten (+ Vibration, wo es sie gibt), kein Ton (Musik, v39)
+    const minute = Math.floor(verg / 60);
+    if (rest > 0 && minute > (s.minute_gemeldet || 0)){
+      s.minute_gemeldet = minute; saveTr();
+      karte.classList.remove("fertig"); void karte.offsetWidth; karte.classList.add("fertig");
+      if (navigator.vibrate) navigator.vibrate(150);
+    }
     if (rest <= 0 && !s.gemeldet){
       // nur visuell + Vibration, kein Ton (seit v39: Audio stoppt Leones Musik auf dem iPhone)
       s.gemeldet = true; saveTr();
