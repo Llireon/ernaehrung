@@ -248,6 +248,29 @@ textarea{min-height:92px;resize:vertical}
 .balken{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin-top:12px}
 .balken i{display:block;height:100%;background:var(--tc);border-radius:3px;transition:width .4s linear}
 body.training nav#tabs, body.training #zeitbar, body.training #heute{display:none}
+#tr-vorlage small{font-weight:500;font-size:10.5px;opacity:.75}
+.tr-mehr{margin-top:12px}
+.tr-mehr summary{font-size:14px;color:var(--dim);font-weight:650;padding:6px 0;cursor:pointer}
+.tr-mehr .tr-ueb{margin-top:8px}
+.tr-info{margin:10px 0 4px;padding:10px 12px;border-radius:13px;background:var(--panel2);border:1px solid var(--line);
+  font-size:14px;line-height:1.5}
+.tr-info p{margin:0}
+.tr-info video{display:block;width:100%;max-width:260px;border-radius:10px;margin-top:10px}
+.ra-hebel-text{margin-top:6px;min-height:18px;color:var(--fg)}
+/* Stand Running Ability: Balken Unlock | Rebuild | Targets wie auf der Gymseite */
+.ra-k{border-top:1px solid var(--line)}
+.ra-k:first-of-type{border-top:0}
+.ra-k summary{display:grid;grid-template-columns:1fr 84px 86px;gap:10px;align-items:center;padding:9px 0;
+  font-size:14.5px;cursor:pointer;list-style:none}
+.ra-k summary::-webkit-details-marker{display:none}
+.ra-st{font-size:12.5px;font-weight:700;color:var(--dim);text-align:right}
+.ra-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.ra-bar i{height:8px;border-radius:3px;background:var(--panel2);border:1px solid var(--line)}
+.ra-bar[data-st=unlock] i:nth-child(-n+1),.ra-bar[data-st=rebuild] i:nth-child(-n+2),
+.ra-bar[data-st=targets] i{background:var(--tc);border-color:var(--tc)}
+.ra-bar[data-st=einstufung] i:first-child{border:1px dashed var(--tc)}
+.ra-d{padding:0 0 12px;font-size:14px;line-height:1.5;display:grid;gap:6px}
+.ra-d p{margin:0}
 
 /* ---------- Toast & Blatt ---------- */
 .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));z-index:30;
@@ -261,7 +284,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v45</small></span>
+  <span class="brand">Logger<small>v46</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -563,9 +586,18 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       <h3>Krafttraining</h3>
       <p class="sub">Die Uhr läuft ab dem Start mit. Übung wählen, Satz starten, Satz fertig – dann zählt die
         Pausenuhr und geht beim Ziel von selbst in den nächsten Satz über. Früher weiter geht per Knopf.</p>
+      <h2>Vorlage</h2>
+      <div class="seg seg-klein" id="tr-vorlage">
+        <button data-v="mo">Mo<br><small>Unlock + Knie</small></button>
+        <button data-v="do">Do<br><small>Unlock + Sissy</small></button>
+        <button data-v="difr">Di + Fr<br><small>Hüfte seitl.</small></button>
+        <button data-v="taeglich">Täglich<br><small>~7 min</small></button>
+        <button data-v="frei">frei<br><small>alle</small></button>
+      </div>
       <button class="go" id="tr-start">Training starten</button>
       <button class="go sek" id="tr-nachtrag">Nachtragen ohne Uhr</button>
     </div>
+    <div class="card" id="ra-card" hidden></div>
     <p class="hint">Tuck Planche und Tuck Front Lever werden nur als „gemacht“ erfasst – die
       Limit-Methode lässt sich nicht in Wiederholungen fassen. Fortschrittssignal sind Pistol Squats
       und Handstand-Liegestütze.</p>
@@ -582,6 +614,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
         <div><div class="sub" id="tr-pause-lab">Pause</div><div class="tr-uhr" id="tr-pause-uhr">0:00</div></div>
         <div class="sub" id="tr-pause-zielbox" style="text-align:right">Ziel<br><b id="tr-pause-ziel" style="color:var(--fg);font-size:17px">2:00</b></div>
       </div>
+      <div class="balken" id="tr-3min-box" hidden><i id="tr-3min-balken" style="width:0"></i></div>
       <div id="tr-pause-mehr">
         <div class="balken"><i id="tr-pause-balken" style="width:0"></i></div>
         <div class="quick" id="tr-pause-q">
@@ -594,16 +627,45 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     </div>
 
     <div class="card" id="tr-akt" hidden>
-      <h3 id="tr-akt-name"></h3>
+      <div class="spread" style="align-items:flex-start">
+        <h3 id="tr-akt-name"></h3>
+        <button class="chip" id="tr-info-btn" aria-expanded="false" hidden>Info</button>
+      </div>
+      <div class="tr-info" id="tr-info" hidden>
+        <p id="tr-info-text"></p>
+        <div id="tr-clip"></div>
+      </div>
       <p class="sub" id="tr-akt-hint"></p>
       <ul class="tr-saetze" id="tr-akt-saetze"></ul>
       <div id="tr-wert-box">
         <div class="wz-lab"><span id="tr-wert-lab">Wiederholungen</span></div>
         <div id="tr-wert"></div>
       </div>
+      <div id="ra-box" hidden>
+        <div id="ra-seite-box">
+          <h2>Seite</h2>
+          <div class="seg" id="tr-seite">
+            <button data-seite="R" aria-pressed="true">rechts</button>
+            <button data-seite="L">links</button>
+          </div>
+        </div>
+        <div id="ra-hebel-box">
+          <div class="wz-lab"><span>Hebel</span><span class="d" id="ra-hebel-hin"></span></div>
+          <div id="tr-hebel"></div>
+          <p class="sub ra-hebel-text" id="ra-hebel-text"></p>
+        </div>
+        <div id="ra-kg-box">
+          <div class="wz-lab"><span>Zusatzgewicht gesamt</span></div>
+          <div id="tr-kg"></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="chip" id="tr-schmerz" aria-pressed="false" style="--tc:var(--bad)">Schmerz</button>
+          <span class="sub">tat weh → eine Stufe zurück</span>
+        </div>
+      </div>
       <input type="text" id="tr-detail" aria-label="Detail zur Übung" hidden style="margin-top:12px"
              placeholder="optional: wie weit gestreckt, wie es sich anfühlte">
-      <h2>Ausführung</h2>
+      <h2 id="tr-au-h">Ausführung</h2>
       <div class="seg" id="tr-au">
         <button data-au="frei" aria-pressed="true">frei</button>
         <button data-au="unterstuetzt">unterstützt</button>
@@ -613,6 +675,10 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <div class="card">
       <h2 style="margin-top:0" id="tr-ueb-h">Übung</h2>
       <div class="tr-ueb" id="tr-ueb"></div>
+      <details class="tr-mehr" id="tr-mehr" hidden>
+        <summary>weitere Übungen</summary>
+        <div class="tr-ueb" id="tr-ueb2"></div>
+      </details>
     </div>
 
   </div>
@@ -687,7 +753,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 45 · 05.10.2026</p>
+      Garmin Connect. Version 46 · 12.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -717,7 +783,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 45;
+const VERSION = 46;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1116,20 +1182,76 @@ async function aufraeumen(){
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
   gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
+// Hebelleitern der Running-Ability-Uebungen, 1:1 von der Gymseite (~/Sync/running-ability/gym-tag.html)
+const HEBEL = {
+  tib: ["Füße 1 Fußlänge vor der Wand", "1½ Fußlängen", "2 Fußlängen", "2½ Fußlängen",
+        "3 Fußlängen", "3½ Fußlängen", "4 Fußlängen", "so weit es sauber geht"],
+  fhl: ["nah an der Wand, kaum Dehnung", "eine halbe Fußlänge weiter", "eine Fußlänge weiter", "1½",
+        "2", "2½", "3", "volle Dehnung; Endstufe: einbeinig durch die volle Dehnung, kontrolliert, schmerzfrei"],
+  bent: ["Knie leicht gebeugt", "etwas tiefer", "Viertel-Kniebeuge", "etwas tiefer",
+         "Drittel-Kniebeuge", "etwas tiefer", "halbe Kniebeuge", "halbe Kniebeuge, oben 1 s halten"],
+  lsit: ["weit zurückgelehnt", "etwas aufrechter", "halb aufrecht", "etwas aufrechter",
+         "fast aufrecht", "aufrecht, Bein knapp hoch", "aufrecht, Bein höher", "aufrecht, volle Höhe"],
+  abd: ["Knie leicht gebeugt", "gestreckt", "gestreckt, etwas höher", "gestreckt, leicht hinter dem Körper",
+        "dito, Becken ganz ruhig", "dito, langsam absenken (3 s)", "dito", "sauber, schmerzfrei, ohne Ausweichen"]
+};
+// Seit v46: kette/stufe/format/seitig/hebel/info wie in data/uebungen.json; dosis als Anzeigetext,
+// ziel = Wdh. in 3 min (Rebuild), clip = Videoschleife aus dem Daten-Repo (clips/<clip>.mp4)
 const UEBUNGEN = {
-  pistol:{n:"Pistol Squats",e:"reps",k:1}, sissy:{n:"Sissy Squats",e:"reps",k:0},
+  pistol:{n:"Pistol Squats",e:"reps",k:1},
+  sissy:{n:"Sissy Squats",e:"reps",k:0,kette:"knie",stufe:"rebuild",format:"3min",seitig:false,ziel:30,gewicht:false,
+    dosis:"30 saubere in 3 min",clip:"sissy",info:"Mit Festhalten und so viel Erhöhung wie nötig. Volle Tiefe ist das Ziel von Rebuild, nicht die Voraussetzung: jede Woche etwas mehr Umfang, am Ende Knie am Boden und schmerzfrei wieder hoch."},
   nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
   wallsit:{n:"Wall Sit",e:"sek",k:0}, band:{n:"Band-Hüfte",e:"min",k:0},
   hspu:{n:"Handstand",s:"Liegestütze",e:"reps",k:1}, oahang:{n:"Einarm-Hang",e:"sek",k:1},
   planche:{n:"Tuck Planche",s:"Liegestütze",e:"gemacht",k:1},
   frontlever:{n:"Tuck Front Lever",s:"Klimmzüge",e:"gemacht",k:1},
-  huefthold:{n:"Hüft-Hold",s:"Fensterbrett",e:"sek",k:0}
+  huefthold:{n:"Hüft-Hold",s:"Fensterbrett",e:"sek",k:0},
+  petersen:{n:"Petersen Step-Up",e:"reps",k:0,kette:"knie",stufe:"rebuild",format:"3min",seitig:true,ziel:30,
+    dosis:"30 in 3 min je Bein",clip:"pet",info:"Arbeitsbein auf der Stufe, die Ferse hebt sich, das Knie geht weit nach vorn, über den zweiten Zeh, nicht nach innen. Start ohne Gewicht auf der Treppenstufe, später Kurzhanteln."},
+  hack:{n:"Hack Squat",e:"reps",k:0,kette:"knie",stufe:"rebuild",format:"3min",seitig:false,ziel:30,
+    dosis:"30 in 3 min (jede Minute 10)",clip:"hack",info:"Fersen heben sich beim Absenken, voller Bewegungsumfang, Oberkörper aufrecht, Gewicht hinter den Beinen. Erst ohne Gewicht, dann Kurzhanteln hinter dem Körper."},
+  curl:{n:"Beinbeuger einbeinig",e:"reps",k:0,kette:"hamstring",stufe:"rebuild",format:"3min",seitig:true,ziel:45,
+    dosis:"45 in 3 min je Bein, dann 5 Wdh. mit 5 s Absenken",clip:"curl",info:"Nur, wenn die Hamstring-Einstufung bestanden ist: Maschine im Gym oder Fußmanschette zu Hause."},
+  tib:{n:"Wand-Tibialis",e:"reps",k:0,kette:"schienbein",stufe:"unlock",format:"saetze",seitig:false,hebel:HEBEL.tib,
+    dosis:"2 × 25",clip:"tib",info:"Rücken an der Wand, Füße vor dir. Oberschenkel anspannen, damit nur das Schienbein arbeitet. Vorfuß so hoch wie möglich ziehen, kontrolliert absenken, nicht fallen lassen. Je weiter die Füße von der Wand weg sind, desto schwerer."},
+  fhl:{n:"FHL Calf Raise",e:"reps",k:0,kette:"wade_gestreckt",stufe:"unlock",format:"saetze",seitig:false,hebel:HEBEL.fhl,
+    dosis:"2 × 25",clip:"fhl",info:"Hände an die Wand, schräg angelehnt, Füße hinter dir. Wadenheben aus der Dehnung, Beine bleiben gestreckt. Je weiter die Füße hinten stehen, desto tiefer die Dehnung."},
+  bent:{n:"Bent-Leg Calf Raise",e:"reps",k:0,kette:"wade_gebeugt",stufe:"unlock",format:"saetze",seitig:false,hebel:HEBEL.bent,
+    dosis:"2 × 25, beidbeinig",clip:"bent",info:"Wadenheben mit gebeugten Knien: Knie und Schulter bilden eine Linie, die Knie strecken sich beim Hochgehen nicht. Soleus und Achillessehne. Mehr Kniebeuge = schwerer."},
+  lsit:{n:"L-Sit Reps",s:"Hüftbeuger",e:"reps",k:0,kette:"huefte_vorn",stufe:"unlock",format:"saetze",seitig:true,hebel:HEBEL.lsit,
+    dosis:"2 × 10 je Bein, oben 5 s halten",clip:"lsit",info:"Sitzen, Hände hinter dem Körper, ein Bein gestreckt anheben. Zurückgelehnt leicht, aufrecht schwer. Gehört mit dem Abductor Raise zur IT-Band-Kette (TFL)."},
+  kick:{n:"Kickback",s:"Hüfte hinten",e:"reps",k:0,kette:"huefte_hinten",stufe:"unlock",format:"saetze",seitig:true,
+    dosis:"2 × 10 je Bein, oben 5 s halten",clip:"kick",info:"Vierfüßlerstand, ein Bein gestreckt nach hinten oben, ohne ins Hohlkreuz zu fallen."},
+  abd:{n:"Abductor Raise",e:"reps",k:0,kette:"huefte_aussen",stufe:"unlock",format:"saetze",seitig:true,hebel:HEBEL.abd,
+    dosis:"2 × 10 je Seite, oben 5 s halten",clip:"abd",info:"Seitlage, oberes Bein heben und oben halten. Becken nicht nach hinten kippen, Fuß parallel zum Boden, Zehen nicht nach oben drehen. Kern gegen das Iliotibialband."},
+  add:{n:"Adductor Raise",e:"reps",k:0,kette:"huefte_innen",stufe:"unlock",format:"saetze",seitig:true,
+    dosis:"2 × 10 je Seite, oben 5 s halten",clip:"add",info:"Seitlage, oberes Bein vorn aufgestellt. Das untere Bein gestreckt anheben und halten."},
+  pulse:{n:"Knee Bend Pulse",e:"reps",k:0,kette:"knie",stufe:"unlock",format:"saetze",seitig:true,
+    dosis:"2 × 50 je Bein, rechts zuerst",clip:"pulse",info:"Einbeinig stehen, an Türrahmen oder Stuhllehne festhalten, freies Bein locker vorn. Knie im Laufwinkel federnd beugen und strecken, ohne Pause. Knie bleibt über dem zweiten Zeh (Spiegel). Schwerer mit weniger Festhalten und mehr Tiefe."},
+  elephant:{n:"Elephant Walk",s:"Hamstring",e:"reps",k:0,kette:"hamstring",stufe:"unlock",format:"saetze",seitig:true,
+    dosis:"2 × 10 × 5 s je Seite (Einstufung: 10 × 5 s)",clip:"ele",info:"Hände auf einer Stufe, Beine gestreckt, Bauch fest. Bestanden = volle Dosis, sauber, schmerzfrei."},
+  seitstuetz:{n:"Seitstütz",s:"mit Beinheben",e:"reps",k:0,format:"saetze",seitig:true,
+    dosis:"2 × 8 je Seite, oben 2 s halten",info:"Seitstütz auf dem Unterarm, oberes Bein gestreckt heben. Erst auf dem unteren Knie stützen, geht das sauber, auf den Fuß wechseln. Nicht aus Running Ability."}
 };
-// prehab = bewusst submaximal, feste Dosis -- zaehlt nicht als Fortschrittssignal
-const PREHAB = { sissy:1, nordic:1, nordic_echt:1, wallsit:1, band:1 };
+// prehab = bewusst submaximal, feste Dosis -- zaehlt nicht als Fortschrittssignal.
+// Sissy ist seit v46 Rebuild (30 in 3 min) statt fester Dosis 10 + 10.
+const PREHAB = { nordic:1, nordic_echt:1, wallsit:1, band:1, seitstuetz:1 };
+const STUFE_N = { einstufung: "Einstufung", unlock: "Unlock", rebuild: "Rebuild", targets: "Targets" };
+// Vorlagen wie die Reiter der Gymseite (Stand 11.10., alles zu Hause). "@ham" = Hamstring je nach Stand.
+const VORLAGEN = {
+  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "@ham", "tib", "fhl", "bent", "lsit", "kick"],
+  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "tib", "fhl", "bent", "lsit", "kick"],
+  difr: ["abd", "add"],
+  taeglich: ["seitstuetz", "pulse"]
+};
 const EINH = { reps: "Wdh.", sek: "s", min: "min" };
-const satzText = s => s.einheit === "gemacht" ? (s.detail || "gemacht")
-  : `${zahl(s.wert)} ${EINH[s.einheit] || ""}`.trim();
+const satzZusatz = s => [s.seite === "L" ? "links" : s.seite === "R" ? "rechts" : null,
+  s.hebel ? "Hebel " + s.hebel : null, s.kg ? zahl(s.kg) + " kg" : null,
+  s.dauer_s ? "in " + mmss(s.dauer_s) : null, s.schmerz ? "Schmerz" : null].filter(Boolean).join(" · ");
+const satzText = s => { const z = satzZusatz(s);
+  return (s.einheit === "gemacht" ? (s.detail || "gemacht") : `${zahl(s.wert)} ${EINH[s.einheit] || ""}`.trim())
+         + (z ? " · " + z : ""); };
 
 function beschreibe(p){
   const z = [], t = p.type;
@@ -1279,6 +1401,7 @@ function zeigeTab(name){
   $("#titelIcon").innerHTML = nb ? nb.querySelector("svg").outerHTML : $("#zahnrad svg").outerHTML;
   $("#heute").hidden = name === "mehr";
   if (name === "klo") holeEinordnung();
+  if (name === "training") holeRaStand();
   if (name === "trinken") trAnsicht("eintragen");
   try { sessionStorage.setItem("ernaehrung.tab", name); } catch(e){}
 }
@@ -1885,20 +2008,73 @@ $("#k-send").addEventListener("click", () => {
 let tr = ls.get(TRK, null);
 const saveTr = () => { if (tr) ls.set(TRK, tr); else ls.del(TRK); };
 const trRec = recorder($("#tr-rec"));
-let wWert = null, wDauer = null;
+let wWert = null, wDauer = null, wHebel = null, wZusatz = null;
 
-$("#tr-ueb").innerHTML = Object.entries(UEBUNGEN).map(([k, u]) =>
-  `<button class="k" data-u="${k}">${u.n}<small>${u.s || (PREHAB[k] ? "Prehab" : u.k ? "Kraft" : "")}</small>
-   <span class="cnt" hidden></span></button>`).join("");
-$$("#tr-ueb button").forEach(b => b.addEventListener("click", () => {
-  tr.aktiv = b.dataset.u; saveTr(); trRender(true);
-  $("#tr-akt").scrollIntoView({ behavior: "smooth", block: "start" });
-}));
-gruppe("#tr-au");
+// Stand der Running-Ability-Ketten: schreibt Claude beim Sync (ra_stand.py --push) nach feedback/ra-stand.json
+const RAK = "ernaehrung.rastand.v1";
+let raStand = ls.get(RAK, null);
+const raKette = k => (raStand?.ketten || []).find(x => x.kette === k);
+async function holeRaStand(){
+  renderRaStand();
+  const token = ls.raw(TK); if (!token || !navigator.onLine) return;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/feedback/ra-stand.json?t=${Date.now()}`,
+      { headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github.raw+json" }, cache: "no-store" });
+    if (!r.ok) return;
+    raStand = await r.json(); ls.set(RAK, raStand); renderRaStand();
+  } catch(e){}
+}
+function renderRaStand(){
+  const c = $("#ra-card"), j = raStand;
+  if (!j || !j.ketten){ c.hidden = true; return; }
+  const dat = new Date(j.erstellt).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
+  const det = x => x.hebel ? `Hebel ${x.hebel}/${x.hebel_max}` : x.ziel_3min ? (x.gewicht === false ? "mit Erhöhung/Hilfe"
+    : x.kg ? zahl(x.kg) + " kg" : "ohne Gewicht") : "feste Dosis";
+  c.innerHTML = `<h2 style="margin-top:0">Stand Running Ability · Woche ${j.woche}</h2>
+    ${j.ketten.map(k => `<details class="ra-k" data-k="${esc(k.kette)}"><summary>
+        <span>${esc(k.name)}</span><span class="ra-bar" data-st="${esc(k.stufe)}"><i></i><i></i><i></i></span>
+        <span class="ra-st">${esc(k.stufe_name)}</span></summary>
+      <div class="ra-d">
+        ${k.uebungen.map(x => `<div><b>${esc(x.name)}</b> · ${esc(det(x))}${x.hebel_text ? ` – ${esc(x.hebel_text)}` : ""}
+          <br><span class="sub">${esc(x.woche)}</span></div>`).join("")}
+        <p><b>Warum:</b> ${esc(k.warum)}</p>
+        <p><b>Nächster Schritt:</b> ${esc(k.naechster)}</p>
+        ${k.ziele.length ? `<p class="sub">Ziel laut RA (Richtwert): ${k.ziele.map(esc).join(" · ")}</p>` : ""}
+      </div></details>`).join("")}
+    <p class="hint">Ziel laut RA = Richtwert des Anbieters, keine Norm, kein Bestanden/Durchgefallen.
+      ${(j.ziele_extra || []).length ? "Weitere Richtwerte: " + j.ziele_extra.map(esc).join(" · ") + "." : ""}
+      Stand ${esc(dat)}, ${j.woche > 1 ? `gerechnet bis Woche ${j.woche - 1}` : "noch keine volle Woche gerechnet"}.</p>`;
+  c.hidden = false;
+}
+
+const ham = () => raKette("hamstring")?.stufe === "rebuild" ? "curl" : "elephant";
+const vorlageListe = v => (VORLAGEN[v] || []).map(k => k === "@ham" ? ham() : k);
+const uebKnopf = ([k, u]) => `<button class="k" data-u="${k}">${u.n}<small>${u.s ? u.s + (u.stufe ? " · " + STUFE_N[u.stufe] : "")
+  : u.stufe ? STUFE_N[u.stufe] : PREHAB[k] ? "Prehab" : u.k ? "Kraft" : ""}</small>
+  <span class="cnt" hidden></span></button>`;
+// Mit Vorlage: deren Uebungen in Reihenfolge oben, der Rest unter "weitere Uebungen"
+function uebGrid(){
+  const liste = tr ? vorlageListe(tr.vorlage) : [];
+  const oben = liste.length ? liste.map(k => [k, UEBUNGEN[k]]) : Object.entries(UEBUNGEN);
+  const rest = liste.length ? Object.entries(UEBUNGEN).filter(([k]) => !liste.includes(k)) : [];
+  $("#tr-ueb").innerHTML = oben.map(uebKnopf).join("");
+  $("#tr-ueb2").innerHTML = rest.map(uebKnopf).join("");
+  $("#tr-mehr").hidden = !rest.length;
+  $$("button[data-u]").forEach(b => b.addEventListener("click", () => {
+    tr.aktiv = b.dataset.u; saveTr(); trRender(true);
+    $("#tr-akt").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+}
+gruppe("#tr-au"); gruppe("#tr-seite");
+gruppe("#tr-vorlage");
+{ const d = new Date().getDay();
+  setzeWahl("#tr-vorlage", "v", d === 1 ? "mo" : d === 4 ? "do" : (d === 2 || d === 5) ? "difr" : "taeglich"); }
+$("#tr-schmerz").onclick = () => umschalten("#tr-schmerz");
 
 function trStart(modus){
-  tr = { modus, start: Date.now(), uebungen: {}, aktiv: null, pause: null, ende: null };
-  saveTr(); wachHalten(); trRender(true);
+  tr = { modus, start: Date.now(), uebungen: {}, aktiv: null, pause: null, ende: null,
+         vorlage: wahl("#tr-vorlage").v || "frei" };
+  saveTr(); wachHalten(); uebGrid(); trRender(true);
 }
 $("#tr-start").onclick = () => trStart("live");
 $("#tr-nachtrag").onclick = () => trStart("nachtrag");
@@ -1907,8 +2083,10 @@ function wertKonfig(key){
   const u = UEBUNGEN[key], saetze = tr.uebungen[key] || [];
   const vorher = saetze.length ? saetze[saetze.length - 1].wert : undefined;
   const k = `tr.${key}`;
-  const start = vorher ?? (last[k] !== undefined ? last[k] : { reps: 5, sek: 30, min: 6 }[u.e]);
-  return u.e === "reps" ? { min: 0, max: 40, step: 1, einheit: "Wdh.", start }
+  // RA: beim ersten Mal das Ziel in 3 min bzw. die Dosis je Satz ("2 × 25" -> 25)
+  const soll = u.ziel || +((u.dosis || "").match(/× (\d+)/) || [])[1] || null;
+  const start = vorher ?? (last[k] !== undefined ? last[k] : soll || { reps: 5, sek: 30, min: 6 }[u.e]);
+  return u.e === "reps" ? { min: 0, max: u.kette || u.dosis ? 80 : 40, step: 1, einheit: "Wdh.", start }
        : u.e === "sek"  ? { min: 5, max: 180, step: 5, einheit: "s", start }
        : { min: 1, max: 30, step: 1, einheit: "min", start };
 }
@@ -1921,11 +2099,6 @@ function trRender(neueWalze){
   if (tr.ende) return endeRender();
   $("#tr-modus").textContent = tr.modus === "live" ? "Training läuft" : "Nachtragen – ohne Uhr";
   $("#tr-uhr").hidden = tr.modus !== "live";
-  $$("#tr-ueb button").forEach(b => {
-    const n = (tr.uebungen[b.dataset.u] || []).length, c = b.querySelector(".cnt");
-    c.hidden = !n; c.textContent = n;
-    b.setAttribute("aria-pressed", String(b.dataset.u === tr.aktiv));
-  });
   $("#tr-akt").hidden = !tr.aktiv;
   $("#tr-ueb-h").textContent = tr.aktiv ? "Übung wechseln" : "Übung wählen";
   if (tr.aktiv){
@@ -1933,8 +2106,13 @@ function trRender(neueWalze){
     $("#tr-akt-name").textContent = u.n + (u.s ? " – " + u.s : "");
     $("#tr-akt-hint").textContent = u.e === "gemacht"
       ? "Nur als gemacht erfasst – die Intensität steckt im Streckungsgrad, nicht in Zahlen."
-      : PREHAB[key] ? "Feste Dosis, nicht bis zum Versagen – gleichbleibende Zahlen sind hier das Ziel."
+      : u.format === "3min" ? `${STUFE_N[u.stufe]} · ${u.dosis}. Die Uhr zählt 3:00 herunter, dann Wiederholungen eintragen. ` +
+          (u.gewicht === false ? "Ziel geschafft → nächste Woche weniger Erhöhung." : "Ziel geschafft → nächste Woche mehr Gewicht.")
+      : u.stufe === "unlock" ? `Unlock · ${u.dosis}. Schaffst du die Dosis nicht am Stück, kurz pausieren und weiter. ` +
+          (u.hebel ? "Schwerer nur über den Hebel, wenn die Vorwoche sauber war." : "Die Dosis bleibt fest.")
+      : PREHAB[key] ? "Feste Dosis, nicht bis zum Versagen – gleichbleibende Zahlen sind hier das Ziel." + (u.dosis ? ` ${u.dosis}.` : "")
       : u.k ? "Bis RIR 0. Gleiche Wiederholungen mit weniger Hilfe = Fortschritt." : "";
+    raRender(key, u, saetze, neueWalze);
     $("#tr-akt-saetze").innerHTML = saetze.map((s, i) =>
       `<li><span class="nr">${i + 1}</span><span>${esc(satzText(s))}${s.ausfuehrung === "unterstuetzt" ? " · unterstützt" : ""}
        ${s.pause_davor_s ? `<span class="sub" style="display:inline"> · Pause davor ${mmss(s.pause_davor_s)}</span>` : ""}</span>
@@ -1946,10 +2124,75 @@ function trRender(neueWalze){
     $("#tr-wert-box").hidden = gemacht; $("#tr-detail").hidden = !gemacht;
     $("#tr-wert-lab").textContent = { reps: "Wiederholungen", sek: "Haltezeit", min: "Dauer" }[u.e] || "";
     if (neueWalze && !gemacht) wWert = walze($("#tr-wert"), wertKonfig(key));
-    $("#tr-satz").textContent = `Satz ${saetze.length + 1} ` +
+    $("#tr-satz").textContent = `${u.format === "3min" ? "3-min-" : ""}Satz ${saetze.length + 1} ` +
       (tr.modus !== "live" ? "fertig" : tr.satz ? "fertig" : "starten");
   }
+  $$("button[data-u]").forEach(b => {
+    const n = (tr.uebungen[b.dataset.u] || []).length, c = b.querySelector(".cnt");
+    c.hidden = !n; c.textContent = n;
+    b.setAttribute("aria-pressed", String(b.dataset.u === tr.aktiv));
+  });
   trTick();
+}
+// Running-Ability-Felder: Seite, Hebel, Zusatzgewicht, Schmerz, Info mit Clip
+function raRender(key, u, saetze, neueWalze){
+  const ra = !!(u.kette || u.seitig), gew = u.format === "3min" && u.gewicht !== false;
+  $("#ra-box").hidden = !ra;
+  $("#tr-au").hidden = $("#tr-au-h").hidden = ra;
+  $("#ra-seite-box").hidden = !u.seitig;
+  $("#ra-hebel-box").hidden = !u.hebel;
+  $("#ra-kg-box").hidden = !gew;
+  $("#tr-info-btn").hidden = !u.info;
+  if (!neueWalze) return;
+  $("#tr-info").hidden = true; $("#tr-info-btn").setAttribute("aria-expanded", "false"); $("#tr-clip").innerHTML = "";
+  $("#tr-schmerz").setAttribute("aria-pressed", "false");
+  const vorher = saetze[saetze.length - 1] || {};
+  if (u.seitig) setzeWahl("#tr-seite", "seite", vorher.seite ? (vorher.seite === "R" ? "L" : "R") : "R");
+  if (u.hebel){
+    const stand = raStand?.hebel?.[key];
+    $("#ra-hebel-hin").textContent = stand ? `laut Stand: ${stand} von ${u.hebel.length}` : `1–${u.hebel.length}`;
+    wHebel = walze($("#tr-hebel"), { min: 1, max: u.hebel.length, step: 1,
+      start: vorher.hebel ?? stand ?? last[`tr.${key}.hebel`] ?? 1,
+      onChange: v => $("#ra-hebel-text").textContent = u.hebel[v - 1] || "" });
+  } else wHebel = null;
+  if (gew){
+    const stand = raStand?.kg && key in raStand.kg ? raStand.kg[key] : last[`tr.${key}.kg`];
+    wZusatz = walze($("#tr-kg"), { min: 0.5, max: 60, step: 0.5, leer: "ohne", einheit: "kg",
+      start: "kg" in vorher ? vorher.kg : (stand ?? null) });
+  } else wZusatz = null;
+}
+$("#tr-info-btn").onclick = async () => {
+  const u = UEBUNGEN[tr?.aktiv]; if (!u) return;
+  const auf = $("#tr-info").hidden;
+  $("#tr-info").hidden = !auf; $("#tr-info-btn").setAttribute("aria-expanded", String(auf));
+  if (!auf) return;
+  $("#tr-info-text").textContent = (u.dosis ? u.dosis + ". " : "") + u.info;
+  if (u.clip && !$("#tr-clip video")){
+    $("#tr-clip").innerHTML = `<p class="sub" style="margin-top:8px">Video lädt …</p>`;
+    const url = await holeClip(u.clip);
+    if (!url){ $("#tr-clip").innerHTML = `<p class="sub" style="margin-top:8px">Video nur online mit Token.</p>`; return; }
+    // stumme Schleife: muted + playsinline, damit iOS die Musik nicht anhaelt (kein Ton, siehe v39)
+    const v = document.createElement("video");
+    v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.src = url;
+    v.setAttribute("aria-label", "Videoausschnitt der Übung");
+    $("#tr-clip").replaceChildren(v);
+  }
+};
+// Clips liegen im privaten Daten-Repo (clips/), nicht in der oeffentlichen App; einmal laden, dann IndexedDB
+async function holeClip(k){
+  const id = "clip:" + k;
+  let b = await idb.get(id);
+  if (!b){
+    const token = ls.raw(TK); if (!token || !navigator.onLine) return null;
+    try {
+      const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/clips/${k}.mp4`,
+        { headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github.raw+json" } });
+      if (!r.ok) return null;
+      b = { buf: await r.arrayBuffer(), mime: "video/mp4" }; await idb.put(id, b);
+    } catch(e){ return null; }
+  }
+  return URL.createObjectURL(new Blob([b.buf], { type: b.mime }));
 }
 // Live-Modus hat drei Zustaende: bereit (weder satz noch pause), satz laeuft
 // (tr.satz), pause (tr.pause). Die Pause endet per Knopf oder von selbst am Ziel;
@@ -1957,6 +2200,8 @@ function trRender(neueWalze){
 function satzStarten(seit){
   const p = tr.pause;
   tr.satz = { seit, ...(p ? { pause_davor_s: Math.round((seit - p.seit) / 1000) } : {}) };
+  // 3-min-Format (Rebuild): die Satzuhr laeuft als Countdown 3:00, Ende nur visuell + Vibration
+  if (UEBUNGEN[tr.aktiv]?.format === "3min") tr.satz.countdown = 180;
   tr.pause = null;
   saveTr(); trRender(false);
 }
@@ -1964,18 +2209,26 @@ $("#tr-pause-ende").onclick = () => satzStarten(Date.now());
 $("#tr-satz").onclick = () => {
   const key = tr.aktiv, u = UEBUNGEN[key]; if (!key) return;
   if (tr.modus === "live" && !tr.satz){ satzStarten(Date.now()); return; }
+  const ra = !!(u.kette || u.seitig);
   const s = { wert: u.e === "gemacht" ? null : wWert.get(), einheit: u.e,
-              ausfuehrung: wahl("#tr-au").au || "frei", ts: nowIso() };
+              ausfuehrung: ra ? "frei" : wahl("#tr-au").au || "frei", ts: nowIso() };
   if (u.e === "gemacht"){ s.detail = $("#tr-detail").value.trim() || null; $("#tr-detail").value = ""; }
+  if (u.seitig) s.seite = wahl("#tr-seite").seite || "R";
+  if (wHebel && u.hebel){ s.hebel = wHebel.get(); merken(`tr.${key}.hebel`, s.hebel); }
+  if (wZusatz && !$("#ra-kg-box").hidden){ const kg = wZusatz.get(); if (kg !== null) s.kg = kg; merken(`tr.${key}.kg`, kg); }
+  if (ra && an("#tr-schmerz")){ s.schmerz = true; $("#tr-schmerz").setAttribute("aria-pressed", "false"); }
   if (tr.modus === "live"){
     if (tr.satz.pause_davor_s) s.pause_davor_s = tr.satz.pause_davor_s;
     s.satz_dauer_s = Math.round((Date.now() - tr.satz.seit) / 1000);
+    if (u.format === "3min") s.dauer_s = Math.min(180, s.satz_dauer_s);
     tr.satz = null;
-  }
+  } else if (u.format === "3min") s.dauer_s = 180;
   (tr.uebungen[key] = tr.uebungen[key] || []).push(s);
   if (s.wert !== null) merken(`tr.${key}`, s.wert);
+  // je Bein: nach dem Satz automatisch auf die andere Seite
+  if (u.seitig) setzeWahl("#tr-seite", "seite", s.seite === "R" ? "L" : "R");
   if (tr.modus === "live"){
-    const ziel = (last.pausen || {})[key] || (PREHAB[key] ? 60 : 120);
+    const ziel = (last.pausen || {})[key] || (PREHAB[key] || u.stufe === "unlock" ? 60 : 120);
     tr.pause = { seit: Date.now(), ziel, gemeldet: false };
   }
   saveTr(); trRender(false); toast(`Satz ${tr.uebungen[key].length} ✓`);
@@ -1993,6 +2246,20 @@ function trTick(){
   karte.hidden = !p && !s;
   karte.classList.toggle("laeuft", !!s);
   $("#tr-pause-mehr").hidden = $("#tr-pause-zielbox").hidden = !p;
+  $("#tr-3min-box").hidden = !s?.countdown;
+  if (s && s.countdown){
+    const verg = (Date.now() - s.seit) / 1000, rest = s.countdown - verg;
+    $("#tr-pause-lab").textContent = rest > 0 ? "3-min-Satz läuft" : "3 min um – Wiederholungen eintragen";
+    $("#tr-pause-uhr").textContent = mmss(Math.max(0, Math.ceil(rest)));
+    $("#tr-3min-balken").style.width = Math.min(100, verg / s.countdown * 100) + "%";
+    if (rest <= 0 && !s.gemeldet){
+      // nur visuell + Vibration, kein Ton (seit v39: Audio stoppt Leones Musik auf dem iPhone)
+      s.gemeldet = true; saveTr();
+      karte.classList.remove("fertig"); void karte.offsetWidth; karte.classList.add("fertig");
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+    return;
+  }
   if (s){
     $("#tr-pause-lab").textContent = "Satz läuft";
     $("#tr-pause-uhr").textContent = mmss((Date.now() - s.seit) / 1000);
@@ -2054,6 +2321,7 @@ $("#tr-send").onclick = async () => {
   if (!live && wDauer && dauer !== null) wDauer.merken();
   const p = {
     type: "kraft", modus: tr.modus, ...(live ? { uhr: 2 } : {}),
+    ...(tr.vorlage && tr.vorlage !== "frei" ? { vorlage: tr.vorlage } : {}),
     start: live ? isoAus(new Date(tr.start)) : null, ende: live ? isoAus(new Date(tr.ende)) : null,
     dauer_min: dauer,
     uebungen: Object.entries(tr.uebungen).map(([k, saetze]) => ({
@@ -2061,7 +2329,13 @@ $("#tr-send").onclick = async () => {
       saetze: saetze.map(s => ({ wert: s.wert, ausfuehrung: s.ausfuehrung, ts: s.ts,
                                  ...(s.detail ? { detail: s.detail } : {}),
                                  ...(s.pause_davor_s ? { pause_davor_s: s.pause_davor_s } : {}),
-                                 ...(s.satz_dauer_s ? { satz_dauer_s: s.satz_dauer_s } : {}) })) })),
+                                 ...(s.satz_dauer_s ? { satz_dauer_s: s.satz_dauer_s } : {}),
+                                 // ab v46 (Running Ability)
+                                 ...(s.seite ? { seite: s.seite } : {}),
+                                 ...(s.hebel ? { hebel: s.hebel } : {}),
+                                 ...(s.kg != null ? { kg: s.kg } : {}),
+                                 ...(s.dauer_s ? { dauer_s: s.dauer_s } : {}),
+                                 ...(s.schmerz ? { schmerz: true } : {}) })) })),
     notiz: $("#tr-note").value.trim() || null
   };
   await eintragen(p, { medien: audio ? [audio] : [], ts: live ? isoAus(new Date(tr.start)) : null, ordner: "training" });
@@ -2110,6 +2384,7 @@ $("#rb-send").addEventListener("click", async () => {
 let startTab = "essen";
 try { startTab = sessionStorage.getItem("ernaehrung.tab") || "essen"; } catch(e){}
 if (tr) startTab = "training";
+if (tr) uebGrid();
 zeigeTab(TITEL[startTab] ? startTab : "essen");
 trRender(true); if (tr) wachHalten();
 aufraeumen().then(() => { render(); flush(); });
