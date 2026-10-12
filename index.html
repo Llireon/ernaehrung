@@ -286,7 +286,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v48</small></span>
+  <span class="brand">Logger<small>v49</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -659,7 +659,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
           <div class="wz-lab"><span>Zusatzgewicht gesamt</span></div>
           <div id="tr-kg"></div>
         </div>
-        <div class="row" style="margin-top:14px">
+        <div class="row" id="ra-schmerz-box" style="margin-top:14px">
           <button class="chip" id="tr-schmerz" aria-pressed="false" style="--tc:var(--bad)">Schmerz</button>
           <span class="sub">tat weh → eine Stufe zurück</span>
         </div>
@@ -784,7 +784,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 48;
+const VERSION = 49;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1199,12 +1199,12 @@ const HEBEL = {
 // Seit v46: kette/stufe/format/seitig/hebel/info wie in data/uebungen.json; dosis als Anzeigetext,
 // ziel = Wdh. in 3 min (Rebuild), clip = Videoschleife aus dem Daten-Repo (clips/<clip>.mp4)
 const UEBUNGEN = {
-  pistol:{n:"Pistol Squats",e:"reps",k:1},
+  pistol:{n:"Pistol Squats",e:"reps",k:1,seitig:true},
   sissy:{n:"Sissy Squats",e:"reps",k:0,kette:"knie",stufe:"rebuild",format:"3min",seitig:false,ziel:30,gewicht:false,
     dosis:"30 saubere in 3 min",clip:"sissy",info:"Mit Festhalten und so viel Erhöhung wie nötig. Volle Tiefe ist das Ziel von Rebuild, nicht die Voraussetzung: jede Woche etwas mehr Umfang, am Ende Knie am Boden und schmerzfrei wieder hoch."},
   nordic:{n:"Reverse Nordic",e:"reps",k:0,dosis:"2 × 10"}, nordic_echt:{n:"Nordic (echt)",s:"Hamstring Kraft",e:"reps",k:0},
   wallsit:{n:"Wall Sit",e:"sek",k:0}, band:{n:"Band-Hüfte",e:"min",k:0},
-  hspu:{n:"Handstand",s:"Liegestütze",e:"reps",k:1}, oahang:{n:"Einarm-Hang",e:"sek",k:1},
+  hspu:{n:"Handstand",s:"Liegestütze",e:"reps",k:1}, oahang:{n:"Einarm-Hang",e:"sek",k:1,seitig:true},
   planche:{n:"Tuck Planche",s:"Liegestütze",e:"gemacht",k:1},
   frontlever:{n:"Tuck Front Lever",s:"Klimmzüge",e:"gemacht",k:1},
   huefthold:{n:"Hüft-Hold",s:"Fensterbrett",e:"sek",k:0},
@@ -2092,7 +2092,7 @@ function wertKonfig(key){
   const soll = u.ziel || +((u.dosis || "").match(/× (\d+)/) || [])[1] || null;
   const start = vorher ?? (last[k] !== undefined ? last[k] : soll || { reps: 5, sek: 30, min: 6 }[u.e]);
   return u.e === "reps" ? { min: 0, max: u.kette || u.dosis ? 80 : 40, step: 1, einheit: "Wdh.", start }
-       : u.e === "sek"  ? { min: 5, max: 180, step: 5, einheit: "s", start }
+       : u.e === "sek"  ? { min: 1, max: 180, step: 1, einheit: "s", start }
        : { min: 1, max: 30, step: 1, einheit: "min", start };
 }
 function trRender(neueWalze){
@@ -2142,8 +2142,10 @@ function trRender(neueWalze){
 }
 // Running-Ability-Felder: Seite, Hebel, Zusatzgewicht, Schmerz, Info mit Clip
 function raRender(key, u, saetze, neueWalze){
-  const ra = !!(u.kette || u.seitig), gew = u.format === "3min" && u.gewicht !== false;
-  $("#ra-box").hidden = !ra;
+  // seit v49: seitig ohne Kette (Pistol, Einarm-Hang) zeigt nur die Seitenwahl, Ausfuehrung bleibt
+  const ra = !!u.kette, gew = u.format === "3min" && u.gewicht !== false;
+  $("#ra-box").hidden = !(ra || u.seitig);
+  $("#ra-schmerz-box").hidden = !ra;
   $("#tr-au").hidden = $("#tr-au-h").hidden = ra;
   $("#ra-seite-box").hidden = !u.seitig;
   $("#ra-hebel-box").hidden = !u.hebel;
@@ -2215,7 +2217,7 @@ $("#tr-pause-ende").onclick = () => satzStarten(Date.now());
 $("#tr-satz").onclick = () => {
   const key = tr.aktiv, u = UEBUNGEN[key]; if (!key) return;
   if (tr.modus === "live" && !tr.satz){ satzStarten(Date.now()); return; }
-  const ra = !!(u.kette || u.seitig);
+  const ra = !!u.kette;
   const s = { wert: u.e === "gemacht" ? null : wWert.get(), einheit: u.e,
               ausfuehrung: ra ? "frei" : wahl("#tr-au").au || "frei", ts: nowIso() };
   if (u.e === "gemacht"){ s.detail = $("#tr-detail").value.trim() || null; $("#tr-detail").value = ""; }
