@@ -286,7 +286,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v47</small></span>
+  <span class="brand">Logger<small>v48</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -587,7 +587,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <div class="card">
       <h3>Krafttraining</h3>
       <p class="sub">Die Uhr läuft ab dem Start mit. Übung wählen, Satz starten, Satz fertig – dann zählt die
-        Pausenuhr und geht beim Ziel von selbst in den nächsten Satz über. Früher weiter geht per Knopf.</p>
+        Pausenuhr. Am Ziel vibriert sie nur, die Pause läuft weiter, bis du den nächsten Satz startest.</p>
       <h2>Vorlage</h2>
       <div class="seg seg-klein" id="tr-vorlage">
         <button data-v="mo">Mo<br><small>Unlock + Knie</small></button>
@@ -784,7 +784,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 47;
+const VERSION = 48;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -2201,7 +2201,7 @@ async function holeClip(k){
   return URL.createObjectURL(new Blob([b.buf], { type: b.mime }));
 }
 // Live-Modus hat drei Zustaende: bereit (weder satz noch pause), satz laeuft
-// (tr.satz), pause (tr.pause). Die Pause endet per Knopf oder von selbst am Ziel;
+// (tr.satz), pause (tr.pause). Die Pause endet nur per Knopf (seit v48 kein Auto-Start am Ziel);
 // pause_davor_s ist damit wirklich nur die Pause, die Satzdauer steht daneben.
 function satzStarten(seit){
   const p = tr.pause;
@@ -2272,20 +2272,20 @@ function trTick(){
     return;
   }
   if (!p) return;
-  $("#tr-pause-lab").textContent = "Pause";
   const vergangen = (Date.now() - p.seit) / 1000;
   $("#tr-pause-uhr").textContent = mmss(vergangen);
   $("#tr-pause-ziel").textContent = mmss(p.ziel);
   $("#tr-pause-balken").style.width = Math.min(100, vergangen / p.ziel * 100) + "%";
   $$("#tr-pause-q .chip").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.s === p.ziel)));
-  if (vergangen >= p.ziel){
-    // Ziel erreicht: von selbst in den Satz. Kein Signalton mehr (seit v39): der
-    // AudioContext belegte auf iOS die Audio-Session und stoppte Leones Musik.
-    // War das Handy gesperrt, beginnt der Satz rueckwirkend am Pausenziel.
+  if (vergangen >= p.ziel && !p.gemeldet){
+    // Ziel erreicht: nur Hinweis, kein Auto-Start mehr (seit v48, Leone 12.10.: startete ungewollt
+    // Saetze, v. a. beim Wechsel zu Unlock-Uebungen in der Pause). Die Pause laeuft weiter, bis
+    // "Satz starten" sie beendet. Kein Signalton (seit v39): Audio stoppte Leones Musik auf iOS.
+    p.gemeldet = true; saveTr();
     karte.classList.remove("fertig"); void karte.offsetWidth; karte.classList.add("fertig");
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    satzStarten(p.seit + p.ziel * 1000);
   }
+  $("#tr-pause-lab").textContent = vergangen >= p.ziel ? "Pause – Ziel erreicht" : "Pause";
 }
 setInterval(trTick, 500);
 
