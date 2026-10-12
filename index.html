@@ -269,6 +269,8 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 .ra-bar[data-st=unlock] i:nth-child(-n+1),.ra-bar[data-st=rebuild] i:nth-child(-n+2),
 .ra-bar[data-st=targets] i{background:var(--tc);border-color:var(--tc)}
 .ra-bar[data-st=einstufung] i:first-child{border:1px dashed var(--tc)}
+.ra-bar[data-st=erfuellt] i{background:color-mix(in srgb,var(--ok) 70%,transparent);border-color:var(--ok)}
+.ra-bar[data-st=eigen] i{background:none;border-style:dashed}
 .ra-d{padding:0 0 12px;font-size:14px;line-height:1.5;display:grid;gap:6px}
 .ra-d p{margin:0}
 
@@ -590,7 +592,6 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       <div class="seg seg-klein" id="tr-vorlage">
         <button data-v="mo">Mo<br><small>Unlock + Knie</small></button>
         <button data-v="do">Do<br><small>Unlock + Sissy</small></button>
-        <button data-v="difr">Di + Fr<br><small>Hüfte seitl.</small></button>
         <button data-v="taeglich">Täglich<br><small>~7 min</small></button>
         <button data-v="frei">frei<br><small>alle</small></button>
       </div>
@@ -1201,7 +1202,7 @@ const UEBUNGEN = {
   pistol:{n:"Pistol Squats",e:"reps",k:1},
   sissy:{n:"Sissy Squats",e:"reps",k:0,kette:"knie",stufe:"rebuild",format:"3min",seitig:false,ziel:30,gewicht:false,
     dosis:"30 saubere in 3 min",clip:"sissy",info:"Mit Festhalten und so viel Erhöhung wie nötig. Volle Tiefe ist das Ziel von Rebuild, nicht die Voraussetzung: jede Woche etwas mehr Umfang, am Ende Knie am Boden und schmerzfrei wieder hoch."},
-  nordic:{n:"Reverse Nordic",e:"reps",k:0}, nordic_echt:{n:"Nordic (echt)",e:"reps",k:0},
+  nordic:{n:"Reverse Nordic",e:"reps",k:0,dosis:"2 × 10"}, nordic_echt:{n:"Nordic (echt)",s:"Hamstring Kraft",e:"reps",k:0},
   wallsit:{n:"Wall Sit",e:"sek",k:0}, band:{n:"Band-Hüfte",e:"min",k:0},
   hspu:{n:"Handstand",s:"Liegestütze",e:"reps",k:1}, oahang:{n:"Einarm-Hang",e:"sek",k:1},
   planche:{n:"Tuck Planche",s:"Liegestütze",e:"gemacht",k:1},
@@ -1227,29 +1228,32 @@ const UEBUNGEN = {
     dosis:"2 × 10 je Seite, oben 5 s halten",clip:"abd",info:"Seitlage, oberes Bein heben und oben halten. Becken nicht nach hinten kippen, Fuß parallel zum Boden, Zehen nicht nach oben drehen. Kern gegen das Iliotibialband."},
   add:{n:"Adductor Raise",e:"reps",k:0,kette:"huefte_innen",stufe:"unlock",format:"saetze",seitig:true,
     dosis:"2 × 10 je Seite, oben 5 s halten",clip:"add",info:"Seitlage, oberes Bein vorn aufgestellt. Das untere Bein gestreckt anheben und halten."},
-  pulse:{n:"Knee Bend Pulse",e:"reps",k:0,kette:"knie",stufe:"unlock",format:"saetze",seitig:true,
+  pulse:{n:"Knee Bend Pulse",s:"Knie Beweglichkeit",e:"reps",k:0,kette:"knie_mob",art:"mobility",stufe:"unlock",format:"saetze",seitig:true,
     dosis:"2 × 50 je Bein, rechts zuerst",clip:"pulse",info:"Einbeinig stehen, an Türrahmen oder Stuhllehne festhalten, freies Bein locker vorn. Knie im Laufwinkel federnd beugen und strecken, ohne Pause. Knie bleibt über dem zweiten Zeh (Spiegel). Schwerer mit weniger Festhalten und mehr Tiefe."},
-  elephant:{n:"Elephant Walk",s:"Hamstring",e:"reps",k:0,kette:"hamstring",stufe:"unlock",format:"saetze",seitig:true,
-    dosis:"2 × 10 × 5 s je Seite (Einstufung: 10 × 5 s)",clip:"ele",info:"Hände auf einer Stufe, Beine gestreckt, Bauch fest. Bestanden = volle Dosis, sauber, schmerzfrei."},
+  elephant:{n:"Elephant Walk",s:"Hamstring-Dehnung",e:"reps",k:0,kette:"hamstring_mob",art:"mobility",stufe:"unlock",format:"saetze",seitig:true,
+    dosis:"1 × 10 je Seite, 5 s halten",clip:"ele",info:"Dehnübung (RA-Mobility), keine Kraftübung. Hände auf einer Stufe, Beine gestreckt, Bauch fest; abwechselnd ein Knie beugen, auf der gestreckten Seite 5 s halten. Abends vor dem Dehnen."},
   seitstuetz:{n:"Seitstütz",s:"mit Beinheben",e:"reps",k:0,format:"saetze",seitig:true,
     dosis:"2 × 8 je Seite, oben 2 s halten",info:"Seitstütz auf dem Unterarm, oberes Bein gestreckt heben. Erst auf dem unteren Knie stützen, geht das sauber, auf den Fuß wechseln. Nicht aus Running Ability."}
 };
 // prehab = bewusst submaximal, feste Dosis -- zaehlt nicht als Fortschrittssignal.
 // Sissy ist seit v46 Rebuild (30 in 3 min) statt fester Dosis 10 + 10.
 const PREHAB = { nordic:1, nordic_echt:1, wallsit:1, band:1, seitstuetz:1 };
-const STUFE_N = { einstufung: "Einstufung", unlock: "Unlock", rebuild: "Rebuild", targets: "Targets" };
-// Vorlagen wie die Reiter der Gymseite (Stand 11.10., alles zu Hause). Platzhalter folgen dem Stand:
-// "@knie" Petersen + Hack und "@sissy" nur, wenn das Knie in Rebuild ist (seit der Einstufung am 12.10.
-// Unlock); "@ham" Beinbeuger (Rebuild) oder Elephant Walk (Unlock), "@ham_u" Elephant Walk nur bei Unlock.
+const STUFE_N = { einstufung: "Einstufung", unlock: "Unlock", rebuild: "Rebuild", targets: "Targets",
+                  erfuellt: "erfüllt", eigen: "eigene" };
+// Vorlagen wie die Reiter der Gymseite (Stand 12.10. nach Leones Korrektur): Abductor/Adductor in den
+// Mo/Do-Pausen statt Di + Fr abends; Reverse Nordic nur, bis das Brett fuer echte Nordics steht
+// (dann nordic -> nordic_echt); Elephant Walk ist Dehnung und gehoert ins Tagesprogramm.
 const VORLAGEN = {
-  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "@knie", "@ham", "tib", "fhl", "bent", "lsit", "kick"],
-  do: ["hspu", "oahang", "planche", "frontlever", "@sissy", "tib", "fhl", "bent", "lsit", "kick", "@ham_u"],
-  difr: ["abd", "add"],
-  taeglich: ["seitstuetz", "pulse"]
+  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "nordic",
+       "tib", "fhl", "bent", "lsit", "kick", "abd", "add"],
+  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "nordic",
+       "tib", "fhl", "bent", "lsit", "kick", "abd", "add"],
+  taeglich: ["seitstuetz", "pulse", "elephant"]
 };
 const EINH = { reps: "Wdh.", sek: "s", min: "min" };
+const kgZahl = v => String(+(+v).toFixed(2)).replace(".", ",");
 const satzZusatz = s => [s.seite === "L" ? "links" : s.seite === "R" ? "rechts" : null,
-  s.hebel ? "Hebel " + s.hebel : null, s.kg ? zahl(s.kg) + " kg" : null,
+  s.hebel ? "Hebel " + s.hebel : null, s.kg ? kgZahl(s.kg) + " kg" : null,
   s.dauer_s ? "in " + mmss(s.dauer_s) : null, s.schmerz ? "Schmerz" : null].filter(Boolean).join(" · ");
 const satzText = s => { const z = satzZusatz(s);
   return (s.einheit === "gemacht" ? (s.detail || "gemacht") : `${zahl(s.wert)} ${EINH[s.einheit] || ""}`.trim())
@@ -2031,7 +2035,7 @@ function renderRaStand(){
   if (!j || !j.ketten){ c.hidden = true; return; }
   const dat = new Date(j.erstellt).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
   const det = x => x.hebel ? `Hebel ${x.hebel}/${x.hebel_max}` : x.ziel_3min ? (x.gewicht === false ? "mit Erhöhung/Hilfe"
-    : x.kg ? zahl(x.kg) + " kg" : "ohne Gewicht") : "feste Dosis";
+    : x.kg ? kgZahl(x.kg) + " kg" : "ohne Gewicht") : "feste Dosis";
   c.innerHTML = `<h2 style="margin-top:0">Stand Running Ability · Woche ${j.woche}</h2>
     ${j.ketten.map(k => `<details class="ra-k" data-k="${esc(k.kette)}"><summary>
         <span>${esc(k.name)}</span><span class="ra-bar" data-st="${esc(k.stufe)}"><i></i><i></i><i></i></span>
@@ -2049,11 +2053,7 @@ function renderRaStand(){
   c.hidden = false;
 }
 
-const ham = () => raKette("hamstring")?.stufe === "rebuild" ? "curl" : "elephant";
-const knieRebuild = () => (raKette("knie")?.stufe || "rebuild") !== "unlock";
-const vorlageListe = v => (VORLAGEN[v] || []).flatMap(k =>
-  k === "@knie" ? (knieRebuild() ? ["petersen", "hack"] : []) : k === "@sissy" ? (knieRebuild() ? ["sissy"] : [])
-  : k === "@ham" ? [ham()] : k === "@ham_u" ? (ham() === "elephant" ? ["elephant"] : []) : [k]);
+const vorlageListe = v => VORLAGEN[v] || [];
 const uebKnopf = ([k, u]) => `<button class="k" data-u="${k}">${u.n}<small>${u.s ? u.s + (u.stufe ? " · " + STUFE_N[u.stufe] : "")
   : u.stufe ? STUFE_N[u.stufe] : PREHAB[k] ? "Prehab" : u.k ? "Kraft" : ""}</small>
   <span class="cnt" hidden></span></button>`;
@@ -2073,7 +2073,7 @@ function uebGrid(){
 gruppe("#tr-au"); gruppe("#tr-seite");
 gruppe("#tr-vorlage");
 { const d = new Date().getDay();
-  setzeWahl("#tr-vorlage", "v", d === 1 ? "mo" : d === 4 ? "do" : (d === 2 || d === 5) ? "difr" : "taeglich"); }
+  setzeWahl("#tr-vorlage", "v", d === 1 ? "mo" : d === 4 ? "do" : "taeglich"); }
 $("#tr-schmerz").onclick = () => umschalten("#tr-schmerz");
 
 function trStart(modus){
@@ -2113,6 +2113,7 @@ function trRender(neueWalze){
       ? "Nur als gemacht erfasst – die Intensität steckt im Streckungsgrad, nicht in Zahlen."
       : u.format === "3min" ? `${STUFE_N[u.stufe]} · ${u.dosis}. Die Uhr zählt 3:00 herunter, dann Wiederholungen eintragen. ` +
           (u.gewicht === false ? "Ziel geschafft → nächste Woche weniger Erhöhung." : "Ziel geschafft → nächste Woche mehr Gewicht.")
+      : u.art === "mobility" ? `Beweglichkeit · Unlock · ${u.dosis}. Nur im schmerzfreien Bereich; tut es weh, Häkchen „Schmerz“.`
       : u.stufe === "unlock" ? `Unlock · ${u.dosis}. Schaffst du die Dosis nicht am Stück, kurz pausieren und weiter. ` +
           (u.hebel ? "Schwerer nur über den Hebel, wenn die Vorwoche sauber war." : "Die Dosis bleibt fest.")
       : PREHAB[key] ? "Feste Dosis, nicht bis zum Versagen – gleichbleibende Zahlen sind hier das Ziel." + (u.dosis ? ` ${u.dosis}.` : "")
@@ -2162,7 +2163,7 @@ function raRender(key, u, saetze, neueWalze){
   } else wHebel = null;
   if (gew){
     const stand = raStand?.kg && key in raStand.kg ? raStand.kg[key] : last[`tr.${key}.kg`];
-    wZusatz = walze($("#tr-kg"), { min: 0.5, max: 60, step: 0.5, leer: "ohne", einheit: "kg",
+    wZusatz = walze($("#tr-kg"), { min: 0.25, max: 60, step: 0.25, leer: "ohne", einheit: "kg", fmt: kgZahl,
       start: "kg" in vorher ? vorher.kg : (stand ?? null) });
   } else wZusatz = null;
 }
