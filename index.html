@@ -286,7 +286,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v46</small></span>
+  <span class="brand">Logger<small>v47</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -784,7 +784,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 46;
+const VERSION = 47;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1241,12 +1241,12 @@ const PREHAB = { nordic:1, nordic_echt:1, wallsit:1, band:1, seitstuetz:1 };
 const STUFE_N = { einstufung: "Einstufung", unlock: "Unlock", rebuild: "Rebuild", targets: "Targets",
                   erfuellt: "erfüllt", eigen: "eigene" };
 // Vorlagen wie die Reiter der Gymseite (Stand 12.10. nach Leones Korrektur): Abductor/Adductor in den
-// Mo/Do-Pausen statt Di + Fr abends; Reverse Nordic nur, bis das Brett fuer echte Nordics steht
-// (dann nordic -> nordic_echt); Elephant Walk ist Dehnung und gehoert ins Tagesprogramm.
+// Mo/Do-Pausen statt Di + Fr abends; seit v47 echte Nordics (Fuesse unter der Couch, Leone 12.10.)
+// statt Reverse Nordic; Elephant Walk ist Dehnung und gehoert ins Tagesprogramm.
 const VORLAGEN = {
-  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "nordic",
+  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "nordic_echt",
        "tib", "fhl", "bent", "lsit", "kick", "abd", "add"],
-  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "nordic",
+  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "nordic_echt",
        "tib", "fhl", "bent", "lsit", "kick", "abd", "add"],
   taeglich: ["seitstuetz", "pulse", "elephant"]
 };
