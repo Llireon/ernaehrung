@@ -127,6 +127,7 @@ button.go{display:block;width:100%;margin-top:16px;padding:16px;border:0;border-
   background:var(--tc,var(--accent));color:var(--on-accent);font-size:16.5px;font-weight:750;
   letter-spacing:-.01em}
 button.go.sek{background:var(--panel2);color:var(--fg);border:1px solid var(--line)}
+button.go:disabled{opacity:.45}
 button.go.bad{background:none;color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent)}
 button.link{background:none;border:0;padding:6px 0;color:var(--dim);font-size:14px;
   text-decoration:underline;text-underline-offset:3px}
@@ -286,7 +287,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v50</small></span>
+  <span class="brand">Logger<small>v51</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -788,7 +789,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 50;
+const VERSION = 51;
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -2233,11 +2234,7 @@ $("#tr-satz").onclick = () => {
     if (tr.satz.pause_davor_s) s.pause_davor_s = tr.satz.pause_davor_s;
     s.satz_dauer_s = Math.round((Date.now() - tr.satz.seit) / 1000);
     if (u.format === "3min") s.dauer_s = Math.min(180, s.satz_dauer_s);
-    if (tr.satz.teile?.length){
-      const t = tr.satz.teile.map(x => ({ ...x }));
-      const letzt = t[t.length - 1]; if (letzt.ende_s == null) letzt.ende_s = s.satz_dauer_s;
-      s.teile = t;
-    }
+    if (tr.satz.teile?.length) s.teile = tr.satz.teile.map(x => ({ ...x }));
     tr.satz = null;
   } else if (u.format === "3min") s.dauer_s = 180;
   (tr.uebungen[key] = tr.uebungen[key] || []).push(s);
@@ -2256,27 +2253,31 @@ $$("#tr-pause-q .chip").forEach(b => b.onclick = () => {
   if (tr.aktiv){ last.pausen = { ...(last.pausen || {}), [tr.aktiv]: tr.pause.ziel }; ls.set(LAST_K, last); }
   saveTr(); trTick();
 });
-// 3-min-Satz in Teilen (seit v50, Leone 12.10.): "Teil n fertig" stoppt einen Teil, "Teil n+1 starten"
-// beginnt den naechsten; die Liste zeigt Dauer je Teil und die Pause davor. Die Wiederholungen
-// kommen wie bisher einmal am Ende mit "Satz fertig".
+// 3-min-Satz als EMOM (seit v51, Leone 12.10.): Teil n startet von selbst zur vollen Minute
+// ((n-1) x 60 s, bzw. direkt nach Teil n-1, wenn der ueber die Minute lief); es gibt nur
+// "Teil n fertig". Die Liste zeigt Dauer je Teil und die Restpause bis zur naechsten Minute.
+// Die Wiederholungen kommen wie bisher einmal am Ende mit "Satz fertig".
+const teilStart = (t, n) => Math.max((n - 1) * 60, n > 1 ? t[n - 2].ende_s : 0);
 function teileRender(s, verg){
-  const t = s.teile || [], offen = t.length && t[t.length - 1].ende_s == null;
+  const t = s.teile || [], n = t.length + 1, start = teilStart(t, n);
   $("#tr-teil-box").hidden = false;
-  $("#tr-teil").textContent = !t.length ? "Teil 1 fertig" : offen ? `Teil ${t.length} fertig` : `Teil ${t.length + 1} starten`;
+  const wartet = n > 3 || verg < start;
+  $("#tr-teil").disabled = wartet;
+  $("#tr-teil").textContent = n > 3 ? "alle 3 Teile fertig"
+    : wartet ? `Teil ${n} startet bei ${mmss(start)}` : `Teil ${n} fertig`;
   $("#tr-teile").innerHTML = t.map((x, i) => {
-    const dauer = (x.ende_s ?? verg) - x.start_s, pause = i ? x.start_s - t[i - 1].ende_s : 0;
-    return `<li><span class="nr">${i + 1}</span><span>${mmss(dauer)}${x.ende_s == null ? " läuft" : ""}` +
-      `${i ? `<span class="sub" style="display:inline"> · Pause davor ${mmss(pause)}</span>` : ""}</span></li>`;
+    const naechst = i < 2 ? (i + 1) * 60 : 180, pause = Math.max(0, naechst - x.ende_s);
+    return `<li><span class="nr">${i + 1}</span><span>${mmss(x.ende_s - x.start_s)}` +
+      `<span class="sub" style="display:inline"> · Pause danach ${mmss(pause)}</span></span></li>`;
   }).join("");
 }
 $("#tr-teil").onclick = () => {
   const s = tr?.satz; if (!s?.countdown) return;
   const jetzt = Math.round((Date.now() - s.seit) / 1000);
   s.teile = s.teile || [];
-  const t = s.teile, offen = t.length && t[t.length - 1].ende_s == null;
-  if (!t.length) t.push({ start_s: 0, ende_s: jetzt });
-  else if (offen) t[t.length - 1].ende_s = jetzt;
-  else t.push({ start_s: jetzt, ende_s: null });
+  const n = s.teile.length + 1, start = teilStart(s.teile, n);
+  if (n > 3 || jetzt < start) return;
+  s.teile.push({ start_s: start, ende_s: jetzt });
   saveTr(); trTick();
 };
 function trTick(){
