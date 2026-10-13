@@ -287,7 +287,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v51</small></span>
+  <span class="brand">Logger<small>v52</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -351,6 +351,17 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       <div id="p-gramm"></div>
       <div class="wz-lab"><span>Ahornsirup</span><span class="d">ganz oben = aus dem Rezept</span></div>
       <div id="p-sirup"></div>
+      <div class="wz-lab"><span>Milch</span></div>
+      <div class="seg" id="p-milch">
+        <button data-m="hafermilch_edeka_fermentiert">Hafer<br><small style="font-weight:500;opacity:.7">Edeka ferm.</small></button>
+        <button data-m="hafermilch">Hafer Natur<br><small style="font-weight:500;opacity:.7">Edeka</small></button>
+        <button data-m="hafermilch_rewe_natur">Hafer<br><small style="font-weight:500;opacity:.7">REWE</small></button>
+        <button data-m="milch_fettarm">Kuhmilch<br><small style="font-weight:500;opacity:.7">1,5 %</small></button>
+      </div>
+      <div class="wz-lab"><span>Milchmenge</span><span class="d">ganz oben = 3× Flocken</span></div>
+      <div id="p-milchg"></div>
+      <div class="wz-lab"><span>Leinsamen</span></div>
+      <div id="p-lein"></div>
       <button class="go" id="p-send">Porridge eintragen</button>
     </div>
 
@@ -759,7 +770,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 46 · 12.10.2026</p>
+      Garmin Connect. Version 52 · 13.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -789,7 +800,9 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 51;
+const VERSION = 52;
+const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
+                     hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
       TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
@@ -1270,6 +1283,8 @@ function beschreibe(p){
   if (t === "essen" && p.rezept === "porridge"){
     titel = "Porridge";
     z.push(`${p.haferflocken_g} g Haferflocken · ${p.ahornsirup_g != null ? p.ahornsirup_g + " g Ahornsirup" : "Sirup aus dem Rezept"}`);
+    if (p.milch || p.milch_g != null) z.push(`${p.milch_g != null ? p.milch_g + " g" : "3×"} ${MILCH_NAME[p.milch] || "Hafermilch"}`);
+    if (p.leinsamen_g) z.push(`${p.leinsamen_g} g Leinsamen`);
   } else if (t === "essen" && p.rezept === "crepes"){
     const b = p.belag || {}, n = Object.values(b).reduce((a, x) => a + x, 0);
     titel = `Crepes · ${n} Stück`;
@@ -1442,12 +1457,21 @@ Object.entries(boxen).forEach(([k, sel]) => $("#r-" + k).addEventListener("click
 }));
 const wPorr = walze($("#p-gramm"), { min: 20, max: 250, step: 5, einheit: "g", key: "porridge.g", start: 100 });
 const wSirup = walze($("#p-sirup"), { min: 0, max: 60, step: 1, einheit: "g", leer: "Rezept", start: null });
+// Seit v52 (Leone 13.10.): Milchsorte, Milchmenge und Leinsamen direkt am Porridge,
+// damit Leinsamen nicht als eigener Eintrag ohne Porridge landen.
+gruppe("#p-milch");
+setzeWahl("#p-milch", "m", last["porridge.milch"] || "hafermilch_edeka_fermentiert");
+const wMilch = walze($("#p-milchg"), { min: 0, max: 750, step: 5, einheit: "g", leer: "3×", start: null });
+const wLein = walze($("#p-lein"), { min: 0, max: 40, step: 1, einheit: "g", key: "porridge.lein", start: 0 });
 $("#p-send").addEventListener("click", () => {
-  const g = wPorr.get(), sirup = wSirup.get();
-  const e = { type: "essen", rezept: "porridge", haferflocken_g: g, vertrauen: "gut" };
+  const g = wPorr.get(), sirup = wSirup.get(), milch = wahl("#p-milch").m || "hafermilch_edeka_fermentiert",
+        milchG = wMilch.get(), lein = wLein.get();
+  const e = { type: "essen", rezept: "porridge", haferflocken_g: g, milch, vertrauen: "gut" };
   if (sirup !== null) e.ahornsirup_g = sirup;
-  wPorr.merken(); eintragen(e);
-  wSirup.set(null); $("#r-porridge").click();
+  if (milchG !== null) e.milch_g = milchG;
+  if (lein) e.leinsamen_g = lein;
+  wPorr.merken(); wLein.merken(); merken("porridge.milch", milch); eintragen(e);
+  wSirup.set(null); wMilch.set(null); $("#r-porridge").click();
 });
 // Supplemente (seit v43): fertig aufgeloest wie die Chat-Eintraege, je Haekchen 250 ml Wasser
 const SUPP = {
