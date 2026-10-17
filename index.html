@@ -287,7 +287,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v56</small></span>
+  <span class="brand">Logger<small>v57</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -770,7 +770,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 56 · 17.10.2026</p>
+      Garmin Connect. Version 57 · 17.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -800,7 +800,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 56;
+const VERSION = 57;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data";
@@ -1621,8 +1621,9 @@ const FP = {
   // seit v55 keine Pulvergrenze (Leone, 17.10.; bis v52 125 g je 950er), Aufteilung siehe fpPacken
   // seit v42: echte Fuellmengen (Leone, 2026-10-02). Randvoll fassen die Flaschen weniger als aufgedruckt,
   // und das Pulver verdraengt Wasser: 750er leer 44 g, randvoll mit Wasser ~750 g, randvoll mit 90 g Pulver
-  // 797 g -> 663 g Wasser statt ~706, also ~0,52 ml je g Pulver. Die 500er ist noch nicht gewogen (Platzhalter).
-  fuell_ml: { 500: 475, 750: 710, 950: 910 },
+  // 797 g -> 663 g Wasser statt ~706, also ~0,52 ml je g Pulver. Die 500er (10.10. gewogen: leer 76 g,
+  // randvoll 675-678 g) fasst ~600 ml, bis v56 Platzhalter 475.
+  fuell_ml: { 500: 600, 750: 710, 950: 910 },
   verdraengung_ml_je_g: 0.52,
   // seit v41: zwei KH-Flaschen trinkt Leone nacheinander, die zweite ist dichter (2026-10-02).
   // Spaete KH bringen die Leistung (PMC4739491), fruehe schonen die Leber -- daher Rampe statt
@@ -1645,7 +1646,7 @@ const ZWECK = {
   defizit: { n: "Base im Defizit", g: 50, kmh: 31,   stand: 1.05, w: 208 },
   base:    { n: "Base",            g: 60, kmh: 31,   stand: 1.05, w: 208 },
   lang:    { n: "lang / harter Folgetag", g: 80, kmh: 29.5, stand: 1.08, w: 205 },
-  ballern: { n: "Ballern (Gruppe)", g: 90, kmh: 32,  stand: 1.30, w: 200 }
+  ballern: { n: "Ballern (Gruppe)", g: 90, kmh: 32,  stand: 1.30, w: 200, ohne_stopp: true }   // in der Gruppe kein Tankstopp (Leone, 17.10.)
 };
 // Intervallbloecke: On-Leistung als Anteil FTP, Minuten Pause je Minute On mit Pausenleistung,
 // Tempo im Mittel ueber On + Pause. Eingabe ist die On-Zeit gesamt.
@@ -1788,10 +1789,12 @@ function fpWetterHolen(){
 // Bei Waerme reicht das Wasser ueber Stopps, eine reine Wasserflasche ist keine Pflicht mehr.
 // Seit v42 zaehlt das Wasser, das wirklich in der Flasche ist: randvoll minus Verdraengung durch das Pulver.
 const fpWasser = (ml, p) => FP.fuell_ml[ml] - FP.verdraengung_ml_je_g * p;
-function fpPacken(P, T, klasse){
+// voll: kein Stopp moeglich (Ballern) -> beide 950er, so viel Wasser wie geht, auch wenn es nicht reicht.
+function fpPacken(P, T, klasse, voll = false){
   let best = null;
   for (const h1 of [0, ...FP.halter_ml]) for (const h2 of [0, ...FP.halter_ml]){
     if (h2 > h1) continue;                                   // Halter symmetrisch
+    if (voll && (h1 !== 950 || h2 !== 950)) continue;
     const n = [h1, h2].filter(Boolean).length;
     if (!n || (P > 0 && !h1)) continue;
     let fl;
@@ -1806,7 +1809,7 @@ function fpPacken(P, T, klasse){
     fl = fl.filter(f => f[1]);
     if (fl.some(([, ml, p]) => fpWasser(ml, p) < 100)) continue;   // Pulver muss sich noch loesen
     const wasser = fl.reduce((s, [, ml, p]) => s + fpWasser(ml, p), 0);
-    if (wasser < T * 1000 - 1) continue;
+    if (!voll && wasser < T * 1000 - 1) continue;
     const kosten = [n, wasser];
     const i = best ? kosten.findIndex((x, j) => x !== best.kosten[j]) : -1;
     if (!best || (i >= 0 && kosten[i] < best.kosten[i]))
@@ -1852,7 +1855,8 @@ function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = 
   const trinken = Math.max(0, schweiss - FP.budget_l, verduennen ? kh / FP.konz : 0);
   // Stopps, sobald die zwei Halter nicht reichen; am Stopp 0,4 l direkt trinken
   let stopps = 0, pack = null;
-  for (; stopps <= 4; stopps++){
+  if (z.ohne_stopp) pack = fpPacken(pulver, trinken, klasse, true);
+  else for (; stopps <= 4; stopps++){
     const n = stopps + 1;
     pack = fpPacken(rund5(pulver / n), Math.max(0, trinken - stopps * FP.stopp_trinken_l) / n, klasse);
     if (pack) break;
@@ -1870,7 +1874,10 @@ function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = 
       f.pulver_g ? `${f.pulver_g} g Pulver, randvoll mit Wasser (~${f.wasser_ml} ml)`
         + (khf.length === 2 ? (f === khf[0] ? " – zuerst trinken" : dichter ? " – danach, dichter" : " – danach") : "")
       : "Wasser + eine Prise Salz" + ` (~${f.wasser_ml} ml)` + (nachDurst ? ", nach Durst" : "")]));
-    if (!stopps) zeilen.push(["Stopp", "keiner nötig"]);
+    const fehlt = trinken * 1000 - pack.flaschen.reduce((s, f) => s + f.wasser_ml, 0);
+    if (z.ohne_stopp) zeilen.push(["Stopp", "keiner (Gruppe)" + (fehlt > 50
+      ? ` – ~${Math.round(fehlt / 50) * 50} ml Wasser fehlen über das Budget hinaus, auf Hände und Füße achten` : "")]);
+    else if (!stopps) zeilen.push(["Stopp", "keiner nötig"]);
     const abschnitte = stopps + 1;
     for (let k = 1; k <= stopps; k++){
       const skm = Math.max(10, rund5(km * k / abschnitte));
