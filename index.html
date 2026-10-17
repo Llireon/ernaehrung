@@ -287,7 +287,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v54</small></span>
+  <span class="brand">Logger<small>v55</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -770,7 +770,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 54 · 17.10.2026</p>
+      Garmin Connect. Version 55 · 17.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -800,7 +800,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 54;
+const VERSION = 55;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data";
@@ -1619,9 +1619,7 @@ const FP = {
   schweiss_je_w: (1 / 0.22 - 1) / (674 * 0.85),     // ~0,006 l/h je W
   halter_ml: [500, 750, 950],   // Leones Flaschen fuer die zwei Halter (2026-09-30)
   trikot_ml: 750,               // dritte Flasche im Trikot, nur Wasser, nur statt eines Stopps
-  // seit v53 keine Pulvergrenze (Leone, 17.10.): KH und Wasser werden getrennt gerechnet, das ganze Pulver
-  // kommt in eine KH-Flasche, das Wasser richtet sich nur nach dem Bedarf (bis v52 125 g je 950er).
-  pulver_je_l: Infinity,
+  // seit v55 keine Pulvergrenze (Leone, 17.10.; bis v52 125 g je 950er), Aufteilung siehe fpPacken
   // seit v42: echte Fuellmengen (Leone, 2026-10-02). Randvoll fassen die Flaschen weniger als aufgedruckt,
   // und das Pulver verdraengt Wasser: 750er leer 44 g, randvoll mit Wasser ~750 g, randvoll mit 90 g Pulver
   // 797 g -> 663 g Wasser statt ~706, also ~0,52 ml je g Pulver. Die 500er ist noch nicht gewogen (Platzhalter).
@@ -1784,47 +1782,35 @@ function fpWetterHolen(){
 
 // Flaschen packen fuer einen Abschnitt (ganze Fahrt oder Strecke zwischen zwei Stopps):
 // alle Kombinationen Halter 1/2 (leer, 500, 750, 950) x Trikot (leer, 750) durchprobieren,
-// die billigste zulaessige nehmen. Kosten: Trikot vermeiden, dann wenige Flaschen, dann (bei zwei
-// KH-Flaschen) eine Rampe, die nicht an der Pulvergrenze verpufft, dann wenig Volumen.
-// Pulver nur in den Haltern, das Trikot ist immer Wasser (Leone, 2026-09-30).
+// die billigste zulaessige nehmen. Kosten: Trikot vermeiden, dann wenige Flaschen, dann wenig Volumen.
+// Seit v55 ohne Pulvergrenze (Leone, 17.10.): KH und Wasser getrennt gerechnet. Zwei Halter heissen
+// zwei KH-Flaschen als Rampe (die erste duenner, die zweite um FP.rampe dichter), das Trikot ist immer
+// Wasser. Bei Waerme reicht das Wasser ueber Stopps, eine reine Wasserflasche ist keine Pflicht mehr.
 // Seit v42 zaehlt das Wasser, das wirklich in der Flasche ist: randvoll minus Verdraengung durch das Pulver.
 const fpWasser = (ml, p) => FP.fuell_ml[ml] - FP.verdraengung_ml_je_g * p;
 function fpPacken(P, T, klasse){
-  const k = P <= 0 ? 0 : P <= FP.pulver_je_l * 0.95 + 0.5 ? 1 : 2;
-  const maxP = ml => ml * FP.pulver_je_l / 1000;
   let best = null;
   for (const h1 of [0, ...FP.halter_ml]) for (const h2 of [0, ...FP.halter_ml]) for (const tr of [0, FP.trikot_ml]){
     if (h2 > h1) continue;                                   // Halter symmetrisch
     const n = [h1, h2, tr].filter(Boolean).length;
-    if (!n) continue;
-    let fl, rampeFehlt = 0;
-    if (k === 0){
-      fl = [["Halter 1", h1, 0], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
-    } else if (k === 1){
-      if (!h1 || P > maxP(h1) + 0.5) continue;
-      // eine reine Wasserflasche, sobald es warm ist oder die KH-Flasche nicht reicht
-      if ((klasse !== "kuehl" || T * 1000 > fpWasser(h1, P) + 50) && !h2 && !tr) continue;
-      fl = [["Halter 1", h1, P], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
+    if (!n || (P > 0 && !h1)) continue;
+    let fl;
+    if (P <= 0 || !h2){
+      fl = [["Halter 1", h1, Math.max(P, 0)], ["Halter 2", h2, 0], ["Trikot", tr, 0]];
     } else {
-      // zwei KH-Flaschen, Wasser kommt dann aus dem Trikot. Halter 1 (die groessere) zuerst,
-      // Halter 2 danach und um FP.rampe dichter, hoechstens bis zur Pulvergrenze.
-      if (!h2 || !tr || P > maxP(h1) + maxP(h2) + 0.5) continue;
+      // Halter 1 (die groessere) zuerst, Halter 2 danach und um FP.rampe dichter
       const v1 = FP.fuell_ml[h1], v2 = FP.fuell_ml[h2];
-      let p1 = Math.floor(P * v1 / (v1 + FP.rampe * v2) / 5) * 5;
-      if (P - p1 > maxP(h2)) p1 = Math.ceil((P - maxP(h2)) / 5) * 5;
-      p1 = Math.min(p1, Math.floor(maxP(h1) / 5) * 5);
-      if (P - p1 > maxP(h2) + 0.5) continue;
+      const p1 = Math.floor(P * v1 / (v1 + FP.rampe * v2) / 5) * 5;
       fl = [["Halter 1", h1, p1], ["Halter 2", h2, P - p1], ["Trikot", tr, 0]];
-      // groessere Flaschen nehmen, wenn die kleinen beide an der Grenze laegen (Rampe < 1,25)
-      rampeFehlt = (P - p1) / v2 < p1 / v1 * 1.25 ? 1 : 0;
     }
     fl = fl.filter(f => f[1]);
+    if (fl.some(([, ml, p]) => fpWasser(ml, p) < 100)) continue;   // Pulver muss sich noch loesen
     const wasser = fl.reduce((s, [, ml, p]) => s + fpWasser(ml, p), 0);
     if (wasser < T * 1000 - 1) continue;
-    const kosten = [tr && k < 2 ? 1 : 0, n, rampeFehlt, wasser];
+    const kosten = [tr ? 1 : 0, n, wasser];
     const i = best ? kosten.findIndex((x, j) => x !== best.kosten[j]) : -1;
     if (!best || (i >= 0 && kosten[i] < best.kosten[i]))
-      best = { kosten, k, flaschen: fl.map(([ort, ml, pulver_g]) =>
+      best = { kosten, flaschen: fl.map(([ort, ml, pulver_g]) =>
         ({ ort, ml, pulver_g, wasser_ml: Math.round(fpWasser(ml, pulver_g)) })) };
   }
   return best;
