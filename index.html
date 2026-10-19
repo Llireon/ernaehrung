@@ -14,7 +14,7 @@
   --fg:#eef0f4; --dim:#8b93a3; --faint:#5d6472;
   --accent:#8fb4ff; --accent-bg:#1c2740; --on-accent:#0a0d13;
   --ok:#5fd394; --warn:#f2bb5c; --bad:#f27d67; --warn-bg:#33290f;
-  --c-essen:#ffa35c; --c-trinken:#62b8ff; --c-gewicht:#b49bff; --c-klo:#4fd1c0; --c-training:#ff6f7d; --c-tag:#f2cf5b;
+  --c-essen:#ffa35c; --c-trinken:#62b8ff; --c-gewicht:#b49bff; --c-klo:#4fd1c0; --c-training:#ff6f7d; --c-tag:#f2cf5b; --c-uni:#9bd36a;
   --r:18px; --shadow:0 1px 0 #ffffff08 inset, 0 8px 24px #0000004d;
   color-scheme:dark;
 }
@@ -24,7 +24,7 @@
     --fg:#141821; --dim:#5b6374; --faint:#98a0af;
     --accent:#2d6be6; --accent-bg:#e5edfd; --on-accent:#fff;
     --ok:#17985a; --warn:#b3730f; --bad:#c9442c; --warn-bg:#fdf1d8;
-    --c-essen:#e9791f; --c-trinken:#1d8ae0; --c-gewicht:#7a5bec; --c-klo:#119c8a; --c-training:#e23c52; --c-tag:#a87d05;
+    --c-essen:#e9791f; --c-trinken:#1d8ae0; --c-gewicht:#7a5bec; --c-klo:#119c8a; --c-training:#e23c52; --c-tag:#a87d05; --c-uni:#4c8a1c;
     --shadow:0 1px 2px #0000000d, 0 6px 20px #00000010;
     color-scheme:light;
   }
@@ -76,7 +76,7 @@ header{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:6;
 
 /* ---------- Tabs unten ---------- */
 nav#tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;
-  display:grid;grid-template-columns:repeat(6,1fr);
+  display:grid;grid-template-columns:repeat(7,1fr);
   padding:6px max(6px,calc((100vw - 620px)/2)) calc(6px + env(safe-area-inset-bottom));
   background:color-mix(in srgb,var(--bg) 82%,transparent);
   -webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);
@@ -137,6 +137,16 @@ input,textarea{width:100%;padding:13px 14px;border-radius:13px;border:1px solid 
 input:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--tc,var(--accent)) 60%,transparent);outline-offset:0}
 textarea{min-height:92px;resize:vertical}
 .hint{font-size:13px;color:var(--dim);margin:10px 0 0;line-height:1.5}
+.vl-mod{display:flex;flex-wrap:wrap;gap:7px}
+.vl-mod .chip{padding:8px 11px;font-size:13.5px}
+.vl-datei{margin-top:6px;font-size:14px;color:var(--fg);word-break:break-word}
+.vl-liste{list-style:none;margin:0;padding:0}
+.vl-liste li{padding:11px 0;border-top:1px solid var(--line)}
+.vl-liste li:first-child{border-top:0}
+.vl-liste .e-st{float:right;margin-left:8px}
+.vl-liste .w{color:var(--warn);font-size:13px;margin-top:4px}
+.vl-text{white-space:pre-wrap;font-size:12.5px;line-height:1.45;max-height:50vh;overflow:auto;
+  background:var(--panel2);border-radius:10px;padding:10px;margin:8px 0 0}
 .ausgabe{margin-top:10px;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
 .ausgabe b{color:var(--tc,var(--accent))}
 
@@ -287,7 +297,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v57</small></span>
+  <span class="brand">Logger<small>v58</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -755,12 +765,46 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
   </div>
 </section>
 
+<!-- ======================= UNI ======================= -->
+<!-- Vorlesungsaufnahmen gehen ins Repo vorlesung-audio, eine GitHub Action transkribiert sie mit Groq. -->
+<section class="tab" id="s-uni" style="--tc:var(--c-uni)">
+  <div class="card">
+    <h3>Vorlesung transkribieren</h3>
+    <p class="sub">Aufnahme hochladen, das Transkript rechnet GitHub mit Groq – der PC kann aus sein.</p>
+    <h2>Modul</h2>
+    <div class="vl-mod" id="vl-mod"></div>
+    <h2>Was</h2>
+    <div class="seg" id="vl-art">
+      <button data-art="vl" aria-pressed="true">Vorlesung</button>
+      <button data-art="ue" aria-pressed="false">Übung</button>
+    </div>
+    <h2>Wann</h2>
+    <div class="seg" id="vl-tag">
+      <button data-tag="heute" aria-pressed="true">heute</button>
+      <button data-tag="gestern" aria-pressed="false">gestern</button>
+      <button data-tag="vorgestern" aria-pressed="false">vorgestern</button>
+    </div>
+    <h2>Aufnahme</h2>
+    <input type="file" id="vl-file" accept="audio/*,.m4a,.mp3,.wav,.ogg,.opus,.aac" hidden>
+    <button class="go sek" id="vl-wahl" style="margin-top:0">Datei wählen</button>
+    <div class="vl-datei" id="vl-datei"></div>
+    <button class="go" id="vl-send">Hochladen und transkribieren</button>
+    <p class="hint">Sprachmemos › Teilen › „In Dateien sichern“, dann hier wählen. App offen lassen, bis
+      alle Teile oben sind – bricht es ab, geht es beim nächsten Öffnen weiter.</p>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Transkripte</h2>
+    <ul class="vl-liste" id="vl-liste"><li class="sub">—</li></ul>
+    <button class="go sek" id="vl-neu">Aktualisieren</button>
+  </div>
+</section>
+
 <!-- ======================= EINSTELLUNGEN ======================= -->
 <section class="tab" id="s-mehr" style="--tc:var(--accent)">
   <div class="card">
     <h2 style="margin-top:0">Zugang</h2>
     <p class="hint" style="margin-top:0">Einmalig: Fine-grained Token mit <strong>Contents: Read and
-      write</strong> nur für <strong>ernaehrung-data</strong>. Bleibt auf diesem Gerät.</p>
+      write</strong> für <strong>ernaehrung-data</strong> und <strong>vorlesung-audio</strong>. Bleibt auf diesem Gerät.</p>
     <input type="password" id="tok" aria-label="GitHub-Token" placeholder="github_pat_…" autocomplete="off"
            autocapitalize="off" spellcheck="false" style="margin-top:10px">
     <button class="go" id="tok-save">Token speichern</button>
@@ -770,7 +814,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 57 · 17.10.2026</p>
+      Garmin Connect. Version 58 · 19.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -793,6 +837,8 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Training</button>
   <button data-tab="tag" aria-pressed="false" style="--tc:var(--c-tag)">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M8 14h3M8 17h6"/></svg>Tag</button>
+  <button data-tab="uni" aria-pressed="false" style="--tc:var(--c-uni)">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v5c1.6 1.6 3.4 2.4 5.5 2.4s3.9-.8 5.5-2.4v-5"/><path d="M21.5 9v5.5"/></svg>Uni</button>
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -800,12 +846,12 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 57;
+const VERSION = 58;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
-const OWNER = "Llireon", REPO = "ernaehrung-data";
+const OWNER = "Llireon", REPO = "ernaehrung-data", VL_REPO = "vorlesung-audio";
 const QK = "ernaehrung.queue.v1", TK = "ernaehrung.token.v1", LAST_K = "ernaehrung.last.v1",
-      TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1";
+      TRK = "ernaehrung.training.v1", EOK = "ernaehrung.einordnung.v1", VLK = "ernaehrung.vorlesung.v1";
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 
 // Doppeltipp-Schutz: ein zweiter Tipp auf denselben Knopf innerhalb von 800 ms
@@ -1147,6 +1193,7 @@ async function inhalt(e){
   if (e.kind === "bin"){
     const b = await idb.get(e.id);
     if (!b) throw { retryable: false, reason: "Datei nicht mehr auf dem Gerät" };
+    if (b.blob) return blobB64(b.blob);                          // Vorlesungsteile (v58)
     return b.b64;
   }
   return b64(JSON.stringify(e.payload, null, 2));
@@ -1154,7 +1201,7 @@ async function inhalt(e){
 async function pushOne(e){
   const token = ls.raw(TK);
   if (!token) throw { retryable: false, reason: "kein Token" };
-  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${e.path}`,
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${e.repo || REPO}/contents/${e.path}`,
     { method: "PUT",
       headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
                  "Content-Type": "application/json" },
@@ -1181,6 +1228,8 @@ async function flush(){
     while (!stopp && (offen = queue.filter(x => !x.sent && !versucht.has(x.id))).length){
       for (const e of offen){
         versucht.add(e.id);
+        // Der Vorlesungsauftrag loest die Action aus, also erst, wenn alle Teile oben sind
+        if (e.warteAufTeile && queue.some(m => m.parent === e.id && !m.sent)) continue;
         try { await pushOne(e); e.sent = true; e.error = null; if (e.body) e.body = null; }
         catch(err){ e.error = err.reason || "Fehler"; if (err.reason === "kein Token"){ stopp = true; break; } }
         saveQ(); render();
@@ -1200,7 +1249,7 @@ async function aufraeumen(){
 
 // ---------- Anzeige "Heute" ----------
 const TYP_FARBE = { essen: "--c-essen", label: "--c-essen", kochen: "--c-essen", trinken: "--c-trinken",
-  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken" };
+  gewicht: "--c-gewicht", "ride-gewicht": "--c-gewicht", "renpho-screenshot": "--c-gewicht", klo: "--c-klo", kraft: "--c-training", tagesrueckblick: "--c-tag", fahrtplan: "--c-trinken", vorlesung: "--c-uni" };
 // Hebelleitern der Running-Ability-Uebungen, 1:1 von der Gymseite (~/Sync/running-ability/gym-tag.html)
 const HEBEL = {
   tib: ["Füße 1 Fußlänge vor der Wand", "1½ Fußlängen", "2 Fußlängen", "2½ Fußlängen",
@@ -1345,6 +1394,10 @@ function beschreibe(p){
   } else if (t === "fahrtplan"){
     titel = `Fahrtplan ${p.km} km · ${p.stopps ? p.stopps + " Stopp" + (p.stopps > 1 ? "s" : "") : "ohne Stopp"}`;
     (p.zeilen || []).forEach(x => z.push(x));
+  } else if (t === "vorlesung"){
+    titel = `${p.art === "ue" ? "Übung" : "Vorlesung"} · ${p.modul}`;
+    const oben = queue.filter(m => m.parent === p.id && m.sent).length;
+    z.push(`${p.name || "Aufnahme"} · ${komma(p.mb, 0)} MB · Teil ${oben}/${p.teile} oben`);
   } else if (t === "tagesrueckblick"){
     const d = new Date(p.datum + "T12:00:00");
     titel = `Tagesrückblick · ${["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()]} ${p.datum.slice(8,10)}.${p.datum.slice(5,7)}.`;
@@ -1375,7 +1428,7 @@ function render(){
     }
     const d = beschreibe(e.payload);
     const nach = e.payload.zeit_nachgetragen ? `<div class="e-zeile">nachgetragen, datiert auf ${e.ts.slice(0,10) === heute ? "heute" : "gestern"} ${e.ts.slice(11,16)}</div>` : "";
-    const medien = kinder.map(m => m.mime.startsWith("audio/")
+    const medien = kinder.filter(m => m.label !== "Vorlesungsteil").map(m => m.mime.startsWith("audio/")
       ? `<button class="e-audio" data-play="${m.id}">▶ Sprachnachricht ${m.sek ? mmss(m.sek) : ""}</button>`
       : m.thumb ? `<img src="${m.thumb}" data-voll="${m.id}" alt="">` : "").join("");
     const roh = offen.has(e.id) ? `<pre class="e-roh">${esc(JSON.stringify(e.payload, null, 2))}</pre>` : "";
@@ -1417,7 +1470,7 @@ function renderSync(){
 }
 
 // ---------- Reiter ----------
-const TITEL = { essen: "Essen", trinken: "Trinken", gewicht: "Gewicht", klo: "Klo", training: "Training", tag: "Tag", mehr: "Einstellungen" };
+const TITEL = { essen: "Essen", trinken: "Trinken", gewicht: "Gewicht", klo: "Klo", training: "Training", tag: "Tag", uni: "Uni", mehr: "Einstellungen" };
 function zeigeTab(name){
   $$("nav#tabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === name)));
   $$("section.tab").forEach(s => s.classList.toggle("on", s.id === "s-" + name));
@@ -1429,6 +1482,7 @@ function zeigeTab(name){
   if (name === "klo") holeEinordnung();
   if (name === "training") holeRaStand();
   if (name === "trinken") trAnsicht("eintragen");
+  if (name === "uni") holeVorlesungen();
   try { sessionStorage.setItem("ernaehrung.tab", name); } catch(e){}
 }
 $$("nav#tabs button").forEach(b => b.addEventListener("click", () => zeigeTab(b.dataset.tab)));
@@ -2447,6 +2501,103 @@ $("#rb-send").addEventListener("click", async () => {
   await eintragen({ type: "tagesrueckblick", datum, beschreibung: text || null },
                   { medien: [...fotos, ...(audio ? [audio] : [])], ordner: "tag" });
   $("#rb-text").value = ""; rbFotos.reset(); rbRec.reset(); rbBasis = null; rbHand = false; rbTagSetzen();
+});
+
+// ---------- Vorlesung (v58) ----------
+// Aufnahme in 8-MB-Teilen nach vorlesung-audio/audio/<id>/, zuletzt auftraege/<id>.json. Der Auftrag
+// startet die GitHub Action (Groq whisper-large-v3-turbo), die status/<id>.json, uebersicht.json und
+// transkripte/<modul>/<datum>-<art>-whisper.txt schreibt. Teile liegen als Blob in IndexedDB, nicht
+// als Base64: 45 MB Audio als String waeren auf dem iPhone zu viel Speicher.
+const VL_MODULE = [
+  ["Technische Akustik I", "TA I", "de"], ["Strömungsmechanik in der Medizin", "Strömung Medizin", "de"],
+  ["Kontinuumstheorie I", "Kontinuum I", "de"], ["Projektaerodynamik I", "Projektaero I", "de"],
+  ["Fundamentals of Combustion", "Combustion", "en"], ["Gas Turbines and the Hydrogen Challenge", "Gas Turbines", "en"],
+  ["Labor Akustik I+II", "Labor Akustik", "de"], ["Ringvorlesung TUB4Future", "TUB4Future", "de"]];
+const VL_TEIL = 8 * 1024 * 1024;
+$("#vl-mod").innerHTML = VL_MODULE.map(([m, k]) =>
+  `<button class="chip" data-modul="${esc(m)}" aria-pressed="false">${esc(k)}</button>`).join("");
+gruppe("#vl-mod", d => merken("vl_modul", d.modul));
+if (last.vl_modul) setzeWahl("#vl-mod", "modul", last.vl_modul);
+gruppe("#vl-art"); gruppe("#vl-tag");
+let vlDatei = null;
+$("#vl-wahl").onclick = () => $("#vl-file").click();
+$("#vl-file").addEventListener("change", () => {
+  vlDatei = $("#vl-file").files[0] || null;
+  $("#vl-datei").textContent = vlDatei ? `${vlDatei.name} · ${komma(vlDatei.size / 1048576, 1)} MB` : "";
+});
+$("#vl-send").addEventListener("click", async () => {
+  const modul = wahl("#vl-mod").modul;
+  if (!modul) return toast("Modul wählen");
+  if (!vlDatei) return toast("Aufnahme wählen");
+  const sprache = VL_MODULE.find(x => x[0] === modul)[2];
+  const d = new Date(); d.setDate(d.getDate() - ({ heute: 0, gestern: 1, vorgestern: 2 }[wahl("#vl-tag").tag] || 0));
+  const datum = isoAus(d).slice(0, 10), id = datum + "-" + newId(), jetzt = nowIso();
+  const n = Math.ceil(vlDatei.size / VL_TEIL), mime = vlDatei.type || "audio/mp4", neu = [];
+  try {
+    for (let i = 0; i < n; i++){
+      const mid = id + "-t" + i;
+      await idb.put(mid, { blob: vlDatei.slice(i * VL_TEIL, (i + 1) * VL_TEIL, mime), mime });
+      neu.push({ id: mid, ts: jetzt, logged: jetzt, kind: "bin", repo: VL_REPO, parent: id, mime,
+                 path: `audio/${id}/teil-${pad(i)}.bin`, label: "Vorlesungsteil", sent: false, error: null });
+    }
+  } catch(e){ return toast("Datei nicht lesbar"); }
+  const payload = { type: "vorlesung", id, modul, datum, art: wahl("#vl-art").art || "vl", sprache,
+                    teile: n, name: vlDatei.name, mb: Math.round(vlDatei.size / 1048576), ts: jetzt };
+  neu.push({ id, ts: jetzt, logged: jetzt, kind: "json", repo: VL_REPO, warteAufTeile: true,
+             path: `auftraege/${id}.json`, payload, sent: false, error: null });
+  queue.push(...neu);
+  if (!saveQ()) toast("Speicher voll – bitte synchronisieren");
+  vlDatei = null; $("#vl-file").value = ""; $("#vl-datei").textContent = "";
+  render(); renderVorlesungen(); toast(`${n} Teile in der Warteschlange`);
+  await flush(); renderVorlesungen(); holeVorlesungen();
+});
+
+let vlStand = ls.get(VLK, []), vlTimer = null, vlOffen = null;
+const VL_ST = { laeuft: ["pending", "läuft"], fertig: ["sent", "fertig"], fehler: ["err", "Fehler"] };
+function renderVorlesungen(){
+  const lokal = queue.filter(e => e.payload?.type === "vorlesung" && !vlStand.some(s => s.id === e.id)).reverse()
+    .map(e => { const oben = queue.filter(m => m.parent === e.id && m.sent).length;
+      return { ...e.payload, lokal: true, oben, gesendet: e.sent }; });
+  const alle = [...lokal, ...vlStand];
+  const kurz = m => (VL_MODULE.find(x => x[0] === m) || [m, m])[1];
+  const tag = s => s ? new Date(s + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" }) : "";
+  $("#vl-liste").innerHTML = alle.slice(0, 15).map(s => {
+    const [kl, lbl] = s.lokal ? (s.gesendet ? ["pending", "wartet auf GitHub"] : ["pending", `Teil ${s.oben}/${s.teile}`])
+                              : VL_ST[s.status] || ["pending", s.status];
+    const info = s.status === "fertig" ? `${s.zeilen} Zeilen · ${s.dauer_min} min Audio`
+               : s.status === "fehler" ? s.grund : s.name || "";
+    const w = (s.warnung || []).map(x => `<div class="w">⚠ ${esc(x)}</div>`).join("");
+    const text = vlOffen && vlOffen.id === s.id ? `<pre class="vl-text">${esc(vlOffen.text)}</pre>` : "";
+    return `<li ${s.transkript ? `data-vl="${esc(s.id)}"` : ""}><span class="e-st ${kl}">${esc(lbl)}</span>
+      <div class="e-titel" style="--tc:var(--c-uni)"><i></i>${esc(kurz(s.modul))} · ${s.art === "ue" ? "Übung" : "VL"} · ${esc(tag(s.datum))}</div>
+      <div class="e-zeile">${esc(info)}</div>${w}${text}</li>`;
+  }).join("") || `<li class="sub">Noch keine Aufnahme.</li>`;
+  // Solange etwas unterwegs ist, alle 30 s nachsehen (nur bei offenem Reiter)
+  clearTimeout(vlTimer);
+  if (alle.some(s => s.lokal || s.status === "laeuft") && $("#s-uni").classList.contains("on"))
+    vlTimer = setTimeout(() => { flush(); holeVorlesungen(); }, 30000);
+}
+async function vlHolen(pfad){
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${VL_REPO}/contents/${pfad.split("/").map(encodeURIComponent).join("/")}?t=${Date.now()}`,
+    { headers: { "Authorization": "Bearer " + ls.raw(TK), "Accept": "application/vnd.github.raw+json" }, cache: "no-store" });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r;
+}
+async function holeVorlesungen(){
+  renderVorlesungen();
+  if (!ls.raw(TK) || !navigator.onLine) return;
+  try { vlStand = await (await vlHolen("uebersicht.json")).json(); ls.set(VLK, vlStand); }
+  catch(e){}   // vor dem ersten Lauf gibt es die Datei noch nicht
+  renderVorlesungen();
+}
+$("#vl-neu").onclick = () => { flush(); holeVorlesungen(); };
+$("#vl-liste").addEventListener("click", async ev => {
+  const li = ev.target.closest("li[data-vl]"); if (!li || ev.target.closest("pre")) return;
+  const s = vlStand.find(x => x.id === li.dataset.vl);
+  if (vlOffen && vlOffen.id === s.id){ vlOffen = null; return renderVorlesungen(); }
+  try { vlOffen = { id: s.id, text: await (await vlHolen(s.transkript)).text() }; }
+  catch(e){ return toast("Transkript nicht ladbar"); }
+  renderVorlesungen();
 });
 
 // ---------- Start ----------
