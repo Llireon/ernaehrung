@@ -145,6 +145,7 @@ textarea{min-height:92px;resize:vertical}
 .vl-liste li:first-child{border-top:0}
 .vl-liste .e-st{float:right;margin-left:8px}
 .vl-liste .w{color:var(--warn);font-size:13px;margin-top:4px}
+.vl-knoepfe{display:flex;gap:8px;margin-top:8px}
 .vl-text{white-space:pre-wrap;font-size:12.5px;line-height:1.45;max-height:50vh;overflow:auto;
   background:var(--panel2);border-radius:10px;padding:10px;margin:8px 0 0}
 .ausgabe{margin-top:10px;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
@@ -297,7 +298,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v59</small></span>
+  <span class="brand">Logger<small>v60</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -814,7 +815,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 59 · 19.10.2026</p>
+      Garmin Connect. Version 60 · 20.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -846,7 +847,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 59;
+const VERSION = 60;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data", VL_REPO = "vorlesung-audio";
@@ -1068,8 +1069,11 @@ function fotoSammler(host){
 
 // ---------- Sprachnachricht ----------
 function blobB64(blob){
-  return new Promise(res => { const r = new FileReader();
-    r.onload = () => res(String(r.result).split(",")[1]); r.readAsDataURL(blob); });
+  // Ohne onerror hing ein unlesbarer Teil ewig und blockierte die ganze Warteschlange (20.10., v60)
+  return new Promise((res, rej) => { const r = new FileReader();
+    r.onload = () => res(String(r.result).split(",")[1]);
+    r.onerror = () => rej({ retryable: false, reason: "Datei nicht lesbar – neu wählen" });
+    r.readAsDataURL(blob); });
 }
 function recorder(host){
   host.innerHTML = `<button class="k rec-btn" type="button" style="width:100%;flex-direction:row;gap:8px">🎙 Sprachnachricht aufnehmen</button>
@@ -1201,12 +1205,20 @@ async function inhalt(e){
 async function pushOne(e){
   const token = ls.raw(TK);
   if (!token) throw { retryable: false, reason: "kein Token" };
-  const r = await fetch(`https://api.github.com/repos/${OWNER}/${e.repo || REPO}/contents/${e.path}`,
-    { method: "PUT",
-      headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
-                 "Content-Type": "application/json" },
-      body: JSON.stringify({ message: `log ${e.payload?.type || e.label || e.kind} ${e.ts}`,
-                             content: await inhalt(e) }) });
+  // Zeitlimit: iOS friert die Seite beim Sperren ein, ein offener PUT darf flush nicht blockieren (v60)
+  const ab = new AbortController(), uhr = setTimeout(() => ab.abort(), 120000);
+  let r;
+  try {
+    r = await fetch(`https://api.github.com/repos/${OWNER}/${e.repo || REPO}/contents/${e.path}`,
+      { method: "PUT", signal: ab.signal,
+        headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
+                   "Content-Type": "application/json" },
+        body: JSON.stringify({ message: `log ${e.payload?.type || e.label || e.kind} ${e.ts}`,
+                               content: await inhalt(e) }) });
+  } catch(err){
+    if (err.reason) throw err;
+    throw { retryable: true, reason: err.name === "AbortError" ? "Zeitüberschreitung" : "Netzfehler (App offen lassen)" };
+  } finally { clearTimeout(uhr); }
   if (r.status === 201 || r.status === 200) return true;
   let detail = "";
   try { const j = await r.json(); detail = j.message ? ` – ${j.message}` : ""; } catch(_){}
@@ -1231,7 +1243,7 @@ async function flush(){
         // Der Vorlesungsauftrag loest die Action aus, also erst, wenn alle Teile oben sind
         if (e.warteAufTeile && queue.some(m => m.parent === e.id && !m.sent)) continue;
         try { await pushOne(e); e.sent = true; e.error = null; if (e.body) e.body = null; }
-        catch(err){ e.error = err.reason || "Fehler"; if (err.reason === "kein Token"){ stopp = true; break; } }
+        catch(err){ e.error = err.reason || err.message || "Fehler"; if (err.reason === "kein Token"){ stopp = true; break; } }
         saveQ(); render();
       }
     }
@@ -2414,7 +2426,7 @@ async function wachHalten(){
       sperre = await navigator.wakeLock.request("screen");
   } catch(e){}
 }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ wachHalten(); trTick(); } });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ wachHalten(); trTick(); flush().then(renderVorlesungen); } });
 
 $("#tr-beenden").onclick = () => {
   const n = Object.values(tr.uebungen).reduce((a, s) => a + s.length, 0);
@@ -2519,9 +2531,10 @@ $("#vl-mod").innerHTML = VL_MODULE.map(([m, k]) =>
 gruppe("#vl-mod", d => merken("vl_modul", d.modul));
 if (last.vl_modul) setzeWahl("#vl-mod", "modul", last.vl_modul);
 gruppe("#vl-art"); gruppe("#vl-tag");
-let vlDatei = null;
-$("#vl-wahl").onclick = () => $("#vl-file").click();
-$("#vl-file").addEventListener("change", () => {
+let vlDatei = null, vlNeuFuer = null;
+$("#vl-wahl").onclick = () => { vlNeuFuer = null; $("#vl-file").click(); };
+$("#vl-file").addEventListener("change", async () => {
+  if (vlNeuFuer) return vlNachladen($("#vl-file").files[0]);
   vlDatei = $("#vl-file").files[0] || null;
   $("#vl-datei").textContent = vlDatei ? `${vlDatei.name} · ${komma(vlDatei.size / 1048576, 1)} MB` : "";
 });
@@ -2548,7 +2561,7 @@ $("#vl-send").addEventListener("click", async () => {
   queue.push(...neu);
   if (!saveQ()) toast("Speicher voll – bitte synchronisieren");
   vlDatei = null; $("#vl-file").value = ""; $("#vl-datei").textContent = "";
-  render(); renderVorlesungen(); toast(`${n} Teile in der Warteschlange`);
+  render(); renderVorlesungen(); toast(`${n} Teile – App offen lassen, bis alle oben sind`);
   await flush(); renderVorlesungen(); holeVorlesungen();
 });
 
@@ -2557,14 +2570,17 @@ const VL_ST = { laeuft: ["pending", "läuft"], fertig: ["sent", "fertig"], fehle
 function renderVorlesungen(){
   const lokal = queue.filter(e => e.payload?.type === "vorlesung" && !vlStand.some(s => s.id === e.id)).reverse()
     .map(e => { const oben = queue.filter(m => m.parent === e.id && m.sent).length;
-      return { ...e.payload, lokal: true, oben, gesendet: e.sent }; });
+      const fehler = queue.find(m => m.parent === e.id && !m.sent && m.error)?.error || null;
+      return { ...e.payload, lokal: true, oben, gesendet: e.sent, fehler }; });
   const alle = [...lokal, ...vlStand];
   const kurz = m => (VL_MODULE.find(x => x[0] === m) || [m, m])[1];
   const tag = s => s ? new Date(s + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" }) : "";
   $("#vl-liste").innerHTML = alle.slice(0, 15).map(s => {
-    const [kl, lbl] = s.lokal ? (s.gesendet ? ["pending", "wartet auf GitHub"] : ["pending", `Teil ${s.oben}/${s.teile}`])
+    const [kl, lbl] = s.lokal ? (s.gesendet ? ["pending", "wartet auf GitHub"] : [s.fehler ? "err" : "pending", `Teil ${s.oben}/${s.teile}`])
                               : VL_ST[s.status] || ["pending", s.status];
-    const info = s.status === "fertig" ? `${s.zeilen} Zeilen · ${s.dauer_min} min Audio`
+    const knoepfe = s.lokal && !s.gesendet ? `<div class="vl-knoepfe"><button class="chip" data-vl-neu="${esc(s.id)}">Datei neu wählen</button>
+      <button class="chip" data-vl-weg="${esc(s.id)}">verwerfen</button></div>` : "";
+    const info = s.fehler ? s.fehler : s.status === "fertig" ? `${s.zeilen} Zeilen · ${s.dauer_min} min Audio`
                : s.status === "fehler" ? s.grund
                : s.hinweis ? `${s.hinweis}${s.weiter_um ? " bis " + new Date(s.weiter_um).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : ""}`
                : s.name || "";
@@ -2572,7 +2588,7 @@ function renderVorlesungen(){
     const text = vlOffen && vlOffen.id === s.id ? `<pre class="vl-text">${esc(vlOffen.text)}</pre>` : "";
     return `<li ${s.transkript ? `data-vl="${esc(s.id)}"` : ""}><span class="e-st ${kl}">${esc(lbl)}</span>
       <div class="e-titel" style="--tc:var(--c-uni)"><i></i>${esc(kurz(s.modul))} · ${s.art === "ue" ? "Übung" : "VL"} · ${esc(tag(s.datum))}</div>
-      <div class="e-zeile">${esc(info)}</div>${w}${text}</li>`;
+      <div class="e-zeile">${esc(info)}</div>${w}${knoepfe}${text}</li>`;
   }).join("") || `<li class="sub">Noch keine Aufnahme.</li>`;
   // Solange etwas unterwegs ist, alle 30 s nachsehen (nur bei offenem Reiter)
   clearTimeout(vlTimer);
@@ -2593,7 +2609,32 @@ async function holeVorlesungen(){
   renderVorlesungen();
 }
 $("#vl-neu").onclick = () => { flush(); holeVorlesungen(); };
+// Teile, die das iPhone nicht mehr lesen kann, aus derselben Datei neu schneiden; oben liegende
+// Teile meldet GitHub als vorhanden (422) und gelten dann als gesendet (v60)
+async function vlNachladen(datei){
+  const id = vlNeuFuer; vlNeuFuer = null; $("#vl-file").value = "";
+  const auftrag = queue.find(e => e.id === id);
+  if (!datei || !auftrag) return;
+  if (Math.ceil(datei.size / VL_TEIL) !== auftrag.payload.teile) return toast("Andere Datei – Teilezahl passt nicht");
+  try {
+    for (const m of queue.filter(m => m.parent === id && !m.sent)){
+      const i = +m.id.slice(m.id.lastIndexOf("-t") + 2);
+      await idb.put(m.id, { blob: datei.slice(i * VL_TEIL, (i + 1) * VL_TEIL, m.mime), mime: m.mime });
+      m.error = null;
+    }
+  } catch(e){ return toast("Datei nicht lesbar"); }
+  saveQ(); renderVorlesungen(); toast("Teile neu eingelesen – App offen lassen");
+  await flush(); renderVorlesungen(); holeVorlesungen();
+}
 $("#vl-liste").addEventListener("click", async ev => {
+  const neu = ev.target.closest("[data-vl-neu]"), weg = ev.target.closest("[data-vl-weg]");
+  if (neu){ vlNeuFuer = neu.dataset.vlNeu; return $("#vl-file").click(); }
+  if (weg){
+    if (!confirm("Diesen Upload verwerfen? Schon hochgeladene Teile bleiben im Repo liegen.")) return;
+    for (const m of queue.filter(m => m.parent === weg.dataset.vlWeg)) await idb.del(m.id);
+    queue = queue.filter(m => m.id !== weg.dataset.vlWeg && m.parent !== weg.dataset.vlWeg);
+    saveQ(); render(); return renderVorlesungen();
+  }
   const li = ev.target.closest("li[data-vl]"); if (!li || ev.target.closest("pre")) return;
   const s = vlStand.find(x => x.id === li.dataset.vl);
   if (vlOffen && vlOffen.id === s.id){ vlOffen = null; return renderVorlesungen(); }
