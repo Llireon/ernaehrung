@@ -298,7 +298,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v60</small></span>
+  <span class="brand">Logger<small>v61</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -815,7 +815,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 60 · 20.10.2026</p>
+      Garmin Connect. Version 61 · 22.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -847,7 +847,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 60;
+const VERSION = 61;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data", VL_REPO = "vorlesung-audio";
@@ -1320,12 +1320,12 @@ const PREHAB = { nordic:1, nordic_echt:1, wallsit:1, band:1, seitstuetz:1 };
 const STUFE_N = { einstufung: "Einstufung", unlock: "Unlock", rebuild: "Rebuild", targets: "Targets",
                   erfuellt: "erfüllt", eigen: "eigene" };
 // Vorlagen wie die Reiter der Gymseite (Stand 12.10. nach Leones Korrektur): Abductor/Adductor in den
-// Mo/Do-Pausen statt Di + Fr abends; seit v47 echte Nordics (Fuesse unter der Couch, Leone 12.10.)
-// statt Reverse Nordic; Elephant Walk ist Dehnung und gehoert ins Tagesprogramm.
+// Mo/Do-Pausen statt Di + Fr abends; v47-v60 echte Nordics, seit v61 wieder Reverse Nordic (Leone 22.10.:
+// mit durchbluteten Fuessen im Training passen die Fuesse nicht unter die Couch); Elephant Walk ist Dehnung und gehoert ins Tagesprogramm.
 const VORLAGEN = {
-  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "nordic_echt",
+  mo: ["hspu", "oahang", "planche", "frontlever", "pistol", "petersen", "hack", "nordic",
        "tib", "fhl", "bent", "lsit", "kick", "abd", "add"],
-  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "nordic_echt",
+  do: ["hspu", "oahang", "planche", "frontlever", "sissy", "nordic",
        "tib", "fhl", "bent", "lsit", "kick", "abd", "add"],
   taeglich: ["seitstuetz", "pulse", "elephant"]
 };
