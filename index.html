@@ -298,7 +298,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v61</small></span>
+  <span class="brand">Logger<small>v62</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -815,7 +815,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 61 · 22.10.2026</p>
+      Garmin Connect. Version 62 · 23.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -847,7 +847,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 61;
+const VERSION = 62;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data", VL_REPO = "vorlesung-audio";
@@ -1197,7 +1197,8 @@ async function inhalt(e){
   if (e.kind === "bin"){
     const b = await idb.get(e.id);
     if (!b) throw { retryable: false, reason: "Datei nicht mehr auf dem Gerät" };
-    if (b.blob) return blobB64(b.blob);                          // Vorlesungsteile (v58)
+    if (b.buf) return blobB64(new Blob([b.buf]));                // Vorlesungsteile (v62)
+    if (b.blob) return blobB64(b.blob);                          // Vorlesungsteile (v58-v61)
     return b.b64;
   }
   return b64(JSON.stringify(e.payload, null, 2));
@@ -2519,7 +2520,9 @@ $("#rb-send").addEventListener("click", async () => {
 // Aufnahme in 8-MB-Teilen nach vorlesung-audio/audio/<id>/, zuletzt auftraege/<id>.json. Der Auftrag
 // startet die GitHub Action (Groq whisper-large-v3-turbo), die status/<id>.json, uebersicht.json und
 // transkripte/<modul>/<datum>-<art>-whisper.txt schreibt. Teile liegen als Blob in IndexedDB, nicht
-// als Base64: 45 MB Audio als String waeren auf dem iPhone zu viel Speicher.
+// als Base64: 45 MB Audio als String waeren auf dem iPhone zu viel Speicher. Seit v62 als ArrayBuffer:
+// ein File-Slice zeigt auf iOS nur auf die Kopie aus der Dateiauswahl, die nach Sperren/Hintergrund
+// weg ist -- am 23.10. kamen so nur 2 von 6 Teilen an. Kopiert wird Teil fuer Teil (max. 8 MB im Speicher).
 const VL_MODULE = [
   ["Technische Akustik I", "TA I", "de"], ["Strömungsmechanik in der Medizin", "Strömung Medizin", "de"],
   ["Kontinuumstheorie I", "Kontinuum I", "de"], ["Projektaerodynamik I", "Projektaero I", "de"],
@@ -2546,10 +2549,11 @@ $("#vl-send").addEventListener("click", async () => {
   const d = new Date(); d.setDate(d.getDate() - ({ heute: 0, gestern: 1, vorgestern: 2 }[wahl("#vl-tag").tag] || 0));
   const datum = isoAus(d).slice(0, 10), id = datum + "-" + newId(), jetzt = nowIso();
   const n = Math.ceil(vlDatei.size / VL_TEIL), mime = vlDatei.type || "audio/mp4", neu = [];
+  toast("Aufnahme wird kopiert …");
   try {
     for (let i = 0; i < n; i++){
       const mid = id + "-t" + i;
-      await idb.put(mid, { blob: vlDatei.slice(i * VL_TEIL, (i + 1) * VL_TEIL, mime), mime });
+      await idb.put(mid, { buf: await vlDatei.slice(i * VL_TEIL, (i + 1) * VL_TEIL).arrayBuffer(), mime });
       neu.push({ id: mid, ts: jetzt, logged: jetzt, kind: "bin", repo: VL_REPO, parent: id, mime,
                  path: `audio/${id}/teil-${pad(i)}.bin`, label: "Vorlesungsteil", sent: false, error: null });
     }
@@ -2619,7 +2623,7 @@ async function vlNachladen(datei){
   try {
     for (const m of queue.filter(m => m.parent === id && !m.sent)){
       const i = +m.id.slice(m.id.lastIndexOf("-t") + 2);
-      await idb.put(m.id, { blob: datei.slice(i * VL_TEIL, (i + 1) * VL_TEIL, m.mime), mime: m.mime });
+      await idb.put(m.id, { buf: await datei.slice(i * VL_TEIL, (i + 1) * VL_TEIL).arrayBuffer(), mime: m.mime });
       m.error = null;
     }
   } catch(e){ return toast("Datei nicht lesbar"); }
