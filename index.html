@@ -298,7 +298,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v62</small></span>
+  <span class="brand">Logger<small>v63</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -794,6 +794,14 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
       alle Teile oben sind – bricht es ab, geht es beim nächsten Öffnen weiter.</p>
   </div>
   <div class="card">
+    <h2 style="margin-top:0">Notizen (GoodNotes)</h2>
+    <p class="sub">Für Modul, Was und Wann von oben.</p>
+    <input type="url" id="vl-link" aria-label="GoodNotes-Link" placeholder="https://share.goodnotes.com/…"
+           autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url">
+    <button class="go" id="vl-link-send">Link speichern</button>
+    <p class="hint">GoodNotes › Teilen › Link kopieren, hier einfügen. Startet keine Transkription.</p>
+  </div>
+  <div class="card">
     <h2 style="margin-top:0">Transkripte</h2>
     <ul class="vl-liste" id="vl-liste"><li class="sub">—</li></ul>
     <button class="go sek" id="vl-neu">Aktualisieren</button>
@@ -815,7 +823,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
     <p class="hint" style="margin-top:0" id="q-info">—</p>
     <button class="go sek" id="flush">Jetzt synchronisieren</button>
     <p class="hint">Garmin wird nicht abgetippt – Tagesenergie, Schlaf und Fahrten kommen direkt aus
-      Garmin Connect. Version 62 · 23.10.2026</p>
+      Garmin Connect. Version 63 · 28.10.2026</p>
   </div>
   <button class="go sek" id="mehr-zu">Fertig</button>
 </section>
@@ -847,7 +855,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 <script>
 (() => {
 "use strict";
-const VERSION = 62;
+const VERSION = 63;
 const MILCH_NAME = { hafermilch_edeka_fermentiert: "Hafermilch (Edeka ferm.)", hafermilch: "Hafer Natur (Edeka)",
                      hafermilch_rewe_natur: "Hafer Natur (REWE)", milch_fettarm: "Kuhmilch 1,5 %" };
 const OWNER = "Llireon", REPO = "ernaehrung-data", VL_REPO = "vorlesung-audio";
@@ -1411,6 +1419,9 @@ function beschreibe(p){
     titel = `${p.art === "ue" ? "Übung" : "Vorlesung"} · ${p.modul}`;
     const oben = queue.filter(m => m.parent === p.id && m.sent).length;
     z.push(`${p.name || "Aufnahme"} · ${komma(p.mb, 0)} MB · Teil ${oben}/${p.teile} oben`);
+  } else if (t === "notizen"){
+    titel = `Notizen ${p.art === "ue" ? "Übung" : "Vorlesung"} · ${p.modul}`;
+    z.push(p.link);
   } else if (t === "tagesrueckblick"){
     const d = new Date(p.datum + "T12:00:00");
     titel = `Tagesrückblick · ${["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()]} ${p.datum.slice(8,10)}.${p.datum.slice(5,7)}.`;
@@ -2568,6 +2579,27 @@ $("#vl-send").addEventListener("click", async () => {
   render(); renderVorlesungen(); toast(`${n} Teile – App offen lassen, bis alle oben sind`);
   await flush(); renderVorlesungen(); holeVorlesungen();
 });
+// GoodNotes-Link (v63) nach notizen/, nicht auftraege/: die Action laeuft nur bei auftraege/**.
+// Die Liste merkt sich verlinkte Termine lokal, weil gesendete Queue-Eintraege nach 3 Tagen weg sind.
+const VL_NOTIZ_K = "ernaehrung.vlnotizen.v1", vlNotizKey = (m, d, a) => `${m}|${d}|${a}`;
+$("#vl-link-send").addEventListener("click", async () => {
+  const modul = wahl("#vl-mod").modul, link = $("#vl-link").value.trim();
+  if (!modul) return toast("Modul wählen");
+  if (!link) return toast("Link einfügen");
+  let url; try { url = new URL(link); } catch(e){ return toast("Das ist kein Link"); }
+  if (url.protocol !== "https:") return toast("Nur https-Links");
+  const d = new Date(); d.setDate(d.getDate() - ({ heute: 0, gestern: 1, vorgestern: 2 }[wahl("#vl-tag").tag] || 0));
+  const datum = isoAus(d).slice(0, 10), art = wahl("#vl-art").art || "vl", id = datum + "-" + newId(), jetzt = nowIso();
+  queue.push({ id, ts: jetzt, logged: jetzt, kind: "json", repo: VL_REPO, path: `notizen/${id}.json`,
+               payload: { type: "notizen", modul, datum, art, link, ts: jetzt }, sent: false, error: null });
+  if (!saveQ()) toast("Speicher voll – bitte synchronisieren");
+  const verlinkt = ls.get(VL_NOTIZ_K, []);
+  if (!verlinkt.includes(vlNotizKey(modul, datum, art))) ls.set(VL_NOTIZ_K, [...verlinkt, vlNotizKey(modul, datum, art)].slice(-60));
+  $("#vl-link").value = "";
+  render(); renderVorlesungen();
+  toast(/goodnotes/i.test(url.hostname) ? "Link gespeichert" : "gespeichert – kein GoodNotes-Link?");
+  await flush();
+});
 
 let vlStand = ls.get(VLK, []), vlTimer = null, vlOffen = null;
 const VL_ST = { laeuft: ["pending", "läuft"], fertig: ["sent", "fertig"], fehler: ["err", "Fehler"] };
@@ -2576,7 +2608,7 @@ function renderVorlesungen(){
     .map(e => { const oben = queue.filter(m => m.parent === e.id && m.sent).length;
       const fehler = queue.find(m => m.parent === e.id && !m.sent && m.error)?.error || null;
       return { ...e.payload, lokal: true, oben, gesendet: e.sent, fehler }; });
-  const alle = [...lokal, ...vlStand];
+  const alle = [...lokal, ...vlStand], notizen = ls.get(VL_NOTIZ_K, []);
   const kurz = m => (VL_MODULE.find(x => x[0] === m) || [m, m])[1];
   const tag = s => s ? new Date(s + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" }) : "";
   $("#vl-liste").innerHTML = alle.slice(0, 15).map(s => {
@@ -2588,7 +2620,8 @@ function renderVorlesungen(){
                : s.status === "fehler" ? s.grund
                : s.hinweis ? `${s.hinweis}${s.weiter_um ? " bis " + new Date(s.weiter_um).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : ""}`
                : s.name || "";
-    const w = (s.warnung || []).map(x => `<div class="w">⚠ ${esc(x)}</div>`).join("");
+    const w = (s.warnung || []).map(x => `<div class="w">⚠ ${esc(x)}</div>`).join("")
+            + (notizen.includes(vlNotizKey(s.modul, s.datum, s.art || "vl")) ? `<div class="e-zeile">📝 Notizen verlinkt</div>` : "");
     const text = vlOffen && vlOffen.id === s.id ? `<pre class="vl-text">${esc(vlOffen.text)}</pre>` : "";
     return `<li ${s.transkript ? `data-vl="${esc(s.id)}"` : ""}><span class="e-st ${kl}">${esc(lbl)}</span>
       <div class="e-titel" style="--tc:var(--c-uni)"><i></i>${esc(kurz(s.modul))} · ${s.art === "ue" ? "Übung" : "VL"} · ${esc(tag(s.datum))}</div>
