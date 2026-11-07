@@ -298,7 +298,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v65</small></span>
+  <span class="brand">Logger<small>v66</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -1712,7 +1712,11 @@ const FP = {
   stopp_trinken_l: 0.4, // am Stopp direkt trinken
   // seit v38: Grundfahrt + Intervallbloecke (Leone, 2026-09-30)
   ftp: 305,             // Arbeitswert 2026-09-30, geschaetzt (Spanne 300-315), kein Test
-  alpha: 0.45,          // Anteil der in den Bloecken oxidierten KH, der zugefuehrt wird -- geeicht auf den 30.09. (95 g Pulver)
+  // seit v66 (Leone, 18.10./07.11.): mit Bloecken vor/nach 60 g/h, im Intervallteil (On + Pausen) 90-120 g/h,
+  // ohne Dauerdeckel. Ersetzt alpha 0,45 x Oxidation und den 75-min-Deckel (Jeukendrup 2014/ACSM 2016, veraltet;
+  // neuere Lage: Podlogar et al. 2022, Morton et al.: bis ~120 g/h bei Glukose:Fruktose ~1:0,8).
+  grund_hart: 60,       // g/h Grundfahrt an Intervalltagen
+  block_g: 105,         // g/h im Intervallteil (Mitte 90-120)
   kh_max: 90,           // g/h, Aufnahmegrenze Glukose:Fruktose ~2:1 (Pulver 2,27:1)
   konz: 80,             // g KH je l GESAMTfluessigkeit, wenn warm oder mit Bloecken (Magenentleerung ueber ~75 % VO2max)
   kurz_kmh: 28.5, kurz_bis_h: 1.75,  // kurze Fahrten: Stadtanteil drueckt das Grundtempo (30.09.: 30,2 km/h inkl. Bloecken)
@@ -1749,8 +1753,8 @@ function khAnteil(p){
 }
 const kcalH = p => p * 3.6 / 0.22 / 4.184;          // Umsatz bei P Watt am Pedal
 const khOxH = p => kcalH(p) * khAnteil(p) / 4;      // KH-Oxidation in g/h
-// KH-Deckel fuer die GRUNDfahrt nach bewegter Dauer (Thomas/Erdman/Burke 2016, Jeukendrup 2014):
-// < 75 min nichts, bis 2,5 h hoechstens 60, darueber die Zweck-Rate. Bloecke kommen obendrauf.
+// KH-Deckel nur fuer reine Base-Fahrten ohne Bloecke (Thomas/Erdman/Burke 2016, Jeukendrup 2014):
+// < 75 min nichts, bis 2,5 h hoechstens 60, darueber die Zweck-Rate. Mit Bloecken gilt er nicht (v66).
 function khDeckel(h){
   if (h < 0.75) return [0, "Fahrt unter 45 min"];
   if (h < 1.25) return [0, "Fahrt unter 75 min"];
@@ -1900,7 +1904,7 @@ function fpPacken(P, T, klasse, voll = false){
 
 // Kern ohne DOM, damit er sich nachrechnen laesst.
 // Fahrt = Grundfahrt (Zweck) + Intervallbloecke. KH: Grundrate x Grundstunden (nach Dauer gedeckelt)
-// + alpha x in den Bloecken oxidierte KH, alles unter der Aufnahmegrenze.
+// + block_g x Stunden im Intervallteil (On + Pausen), alles unter der Aufnahmegrenze. Mit Bloecken kein Dauerdeckel.
 // Wasser: Schweiss minus Budget, mindestens aber KH / 80 g/l, sobald es warm ist oder Bloecke drin sind.
 function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = "30/30" }){
   const z = ZWECK[zk], seg = blockSegmente(bloecke, format), hart = seg.length > 0;
@@ -1917,11 +1921,11 @@ function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = 
   const ges = bew * stand, km = modus === "dauer" ? Math.round(grundH * vGrund + bkm) : kmEin;
   const wMittel = bew ? (grundH * z.w + seg.reduce((s, x) => s + x.h * x.w, 0)) / bew : z.w;
   // Kohlenhydrate
-  const [cap, grund] = khDeckel(bew);
-  const grundRate = Math.min(z.g, cap);
+  const [cap, grund] = hart ? [Infinity, null] : khDeckel(bew);
+  const grundRate = hart ? Math.max(z.g, FP.grund_hart) : Math.min(z.g, cap);
   const khGrund = grundRate * grundH;
   const khOxBlock = seg.reduce((s, x) => s + khOxH(x.w) * x.h, 0);
-  const khBlock = FP.alpha * khOxBlock;
+  const khBlock = FP.block_g * bh;
   let kh = khGrund + khBlock, aufnahme = false;
   if (kh > FP.kh_max * bew){ kh = FP.kh_max * bew; aufnahme = true; }
   const deckel = grundH > 0 && grundRate < z.g ? grund : null;
@@ -1996,7 +2000,7 @@ function fpRechnen(){
   const khText = m.kh
     ? `${Math.round(m.kh)} g KH (${Math.round(m.rate)} g/h): Grundfahrt ${hm(m.grundH)} × ${m.grundRate} g/h = ${Math.round(m.khGrund)} g` +
       (m.deckel ? ` (gedeckelt: ${m.deckel}, sonst ${m.z.g} g/h)` : "") +
-      (m.hart ? ` + Blöcke ${Math.round(m.khOxBlock)} g verbrannt × ${Math.round(FP.alpha * 100)} % = ${Math.round(m.khBlock)} g` : "") +
+      (m.hart ? ` + Intervallteil ${Math.round(m.bh * 60)} min × ${FP.block_g} g/h = ${Math.round(m.khBlock)} g` : "") +
       (m.aufnahme ? `, auf ${FP.kh_max} g/h Aufnahme gedeckelt` : "")
     : "Keine KH nötig";
   $("#fp-fuss").textContent =
