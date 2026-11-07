@@ -298,7 +298,7 @@ body.training nav#tabs, body.training #zeitbar, body.training #heute{display:non
 </head>
 <body>
 <header>
-  <span class="brand">Logger<small>v66</small></span>
+  <span class="brand">Logger<small>v67</small></span>
   <span id="sync"><span class="dot"></span><span id="syncTxt">—</span></span>
   <button class="icon-btn" id="zahnrad" aria-label="Einstellungen">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -1715,7 +1715,8 @@ const FP = {
   // seit v66 (Leone, 18.10./07.11.): mit Bloecken vor/nach 60 g/h, im Intervallteil (On + Pausen) 90-120 g/h,
   // ohne Dauerdeckel. Ersetzt alpha 0,45 x Oxidation und den 75-min-Deckel (Jeukendrup 2014/ACSM 2016, veraltet;
   // neuere Lage: Podlogar et al. 2022, Morton et al.: bis ~120 g/h bei Glukose:Fruktose ~1:0,8).
-  grund_hart: 60,       // g/h Grundfahrt an Intervalltagen
+  grund_hart: 60,       // g/h Grundfahrt an Intervalltagen ab 2 h bewegt
+  grund_hart_kurz: 50,  // g/h Grundfahrt an Intervalltagen unter 2 h (Leone 07.11.: 45-50 reicht)
   block_g: 105,         // g/h im Intervallteil (Mitte 90-120)
   kh_max: 90,           // g/h, Aufnahmegrenze Glukose:Fruktose ~2:1 (Pulver 2,27:1)
   konz: 80,             // g KH je l GESAMTfluessigkeit, wenn warm oder mit Bloecken (Magenentleerung ueber ~75 % VO2max)
@@ -1922,7 +1923,7 @@ function fpModell({ zk, klasse, modus, km: kmEin, dauer, bloecke = [], format = 
   const wMittel = bew ? (grundH * z.w + seg.reduce((s, x) => s + x.h * x.w, 0)) / bew : z.w;
   // Kohlenhydrate
   const [cap, grund] = hart ? [Infinity, null] : khDeckel(bew);
-  const grundRate = hart ? Math.max(z.g, FP.grund_hart) : Math.min(z.g, cap);
+  const grundRate = hart ? (bew < 2 ? FP.grund_hart_kurz : Math.max(z.g, FP.grund_hart)) : Math.min(z.g, cap);
   const khGrund = grundRate * grundH;
   const khOxBlock = seg.reduce((s, x) => s + khOxH(x.w) * x.h, 0);
   const khBlock = FP.block_g * bh;
